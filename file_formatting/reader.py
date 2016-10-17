@@ -1,0 +1,568 @@
+class Movie:
+    def __init__(self, file_name):
+        self.file_name = file_name
+
+    def read_header(self):
+        self.file = open(self.file_name)
+        (self.nframes, self.nchain, self.nmolty,
+         self.nbox, nBeadType) = [int(i) for i in self.file.readline().split()]
+        rcuts = [float(i) for i in self.file.readline().split() ]
+        typeIDs = [float(i) for i in self.file.readline().split()]
+        for mol in range(self.nmolty): #this nested loops ignores all parameters
+            nbeads = int(self.file.readline())
+            for paramtype in 'bonds', 'torsions':
+                for bead in range(nbeads):
+                    self.file.readline()
+        self.frame_data = []
+
+    def read_movie_frames(self):
+        for frame_count in range(1, self.nframes+1):
+            NumPrevCycles = int(self.file.readline()) # num cycles since last frame
+            Nframe = {}; Vframe = {};
+            FRAME_DATA = {'box%s'%j: {'mlcl%i'%k:[]
+                                      for k in range(1,self.nmolty+1)} for j in range(1,self.nbox+1)}
+            for box in range(1, self.nbox+1):
+                line1 = self.file.readline()
+                line2 = self.file.readline()
+                # total number of molecules and volume in frame
+                Nframe['box%s'%box] = {'mlcl%i'%j : int(line1.split()[j-1])
+                                       for j in range(1, self.nmolty+1)}
+                Vframe['box%s'%box] = [ float(j) for j in line2.split() ]
+            for molnumber in range(1, self.nchain+1):
+                line = self.file.readline()
+                (molID, moltype, nunit,
+                 cbox, *COM) = [int(j) for j in line.split()[:4]] + [float(j) for j in line.split()[4:]]
+                mlcl_info = {'COM':[COM] }
+                for bead in range(nunit):
+                    line = self.file.readline()
+                    xyz = line.split()[:3]
+                    BeadType = line.split()[-1] # as defined in topmon.inp
+                    if BeadType in list(mlcl_info.keys()):
+                        mlcl_info[BeadType].append([xyz])
+                    else:
+                        mlcl_info[BeadType] = [xyz]
+                FRAME_DATA['box%s'%cbox]['mlcl%i'%moltype].append(mlcl_info)
+            self.frame_data.append( copy.deepcopy(FRAME_DATA) )
+        self.file.close()
+
+    def __add__(self, other):
+        '''
+        add frame data from two movie files
+        :param other: other movie file
+        '''
+        new = Movie('masterData')
+        new.frame_data = self.frame_data + other.frame_data
+        new.nframes = self.nframes + other.nframes
+        assert self.nchain == other.nchain, 'nchain not equal for adding movie files'
+        new.nchain = self.nchain
+        assert self.nmolty == other.nmolty, 'nmolty not equal for adding movie files'
+        new.nmolty = self.nmolty
+        assert self.nbox == other.nbox, 'nbox not equal for adding movie files'
+        new.nbox = self.nbox
+        return new
+
+
+    def getCoords(self, mlcl, box, beadNames):
+        assert self.nframes == len(self.frame_data), 'Error in adding frames'
+        print('Total amount of frames analyzed was %i'%self.nframes)
+        xyz_data = {'atoms':[], 'coords':[]}
+        for FRAME_DATA in self.frame_data:
+            for each_molecule in FRAME_DATA['box%s'%box]['mlcl%s'%mlcl]:
+                for beadType in beadNames:
+                    for each_coord in each_molecule[beadType]:
+                        # for all beads of given bead type in molecule
+                        xyz_data['atoms'].append(beadType)
+                        xyz_data['coords'].append(each_coord)
+        return xyz_data
+
+    def foldMovieToUC(self, a, b, c, box):
+        '''
+        :param a: lattice parameter x-dir
+        :param b: lattice parameter y-dir
+        :param c: lattice parameter z-dir
+        :param box: integer box number. Folds all coordinates of all beads
+        of all molecules in this box
+        :return: folded FRAME_DATA for box # given
+        '''
+        for i in range(self.frame_data):
+            FRAME_DATA = self.frame_data[i] # will change this
+            for molType in FRAME_DATA['box%s'%box].keys():
+                for mlcl in range(len(FRAME_DATA['box%s'%box][molType])):
+                    for beadType in FRAME_DATA['box%s'%box][molType][mlcl].keys():
+                        foldedBeads = []
+                        for bead in FRAME_DATA['box%s'%box][molType][mlcl][beadType]:
+                            (x, y, z) = bead
+                            beadFolded = [superCoord%lattice for (superCoord, lattice) in zip([x, y ,z], [a, b, c])]
+                            foldedBeads.append(beadFolded)
+                        FRAME_DATA['box%s'%box][molType][mlcl][beadType] = foldedBeads
+
+
+
+
+def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
+    def initVars(nbox, nmolty):
+        chemical_potential = properties.MolProperty(nbox, nmolty)
+        number_density = properties.MolProperty(nbox, nmolty)
+        volume = properties.Property(nbox)
+        return chemical_potential, number_density, volume
+    swap_info = {} # note, swap info will include swatches
+    cbmc_info = {} # includes SAFE-CBMC
+    avg_weights = []
+    totalComposition = {}
+    zeolite = {}
+    runBegin = False
+    for j in range(start_of_runs, start_of_runs + num_files):
+        f = open(tag+str(j)+'/'+'run.' + tag + str(j))
+        swap_section = False #need to find a better way to read the files than this
+        swatch_section = False
+        cbmc_section = False
+        safe_cbmc = False
+        for line in f:
+            if line.startswith('number of cycles'):
+                avg_weights.append( int(line.split()[3])/ncycle_total )
+            elif line.startswith('number of boxes in the system'):
+                nBox = int(line.split()[-1])
+            elif line.startswith('number of molecule types'):
+                nMolTy = int(line.split()[-1])
+                if j == start_of_runs:
+                    chemical_potential, number_density, volume = initVars(nBox, nMolTy)
+            elif ('number of chains of type' in line) and runBegin and j == start_of_runs:
+                molName = ' '.join(line.split()[5:-1])
+                if molName not in totalComposition.keys():
+                    totalComposition[molName] = 0
+                totalComposition[molName] += int(line.split()[-1])
+            elif line.startswith('   temperature:'):
+                T = float(line.split()[-2])
+            elif 'start of markov chain' in line:
+                runBegin = True
+            elif line.startswith(' number density      itype'):
+                mol = line.split()[3]
+                box = int(line.split()[5])
+                number_density.data[mol]['box%i'%box].append( float(line.split()[7]) )
+            elif line.startswith(' chemical potential  itype'):
+                mol = line.split()[3]
+                box = int(line.split()[5])
+                chemical_potential.data[mol]['box%i'%box].append( float(line.split()[7]) )
+            elif line.startswith('Molecule type, biasing potential 1 through nbox [K]:'):
+                biasPot = {}
+                for mol in range(1, nMolTy+1):
+                    biasPot[str(mol)] = {}
+                    line = f.readline().split()
+                    for box in range(len(line)):
+                        if '*****' not in line[box]:
+                            bp = float(line[box])
+                        else:
+                            bp = 10**5
+                        biasPot[str(mol)]['box%i'%(box+1)] = bp
+            elif 'number of unit cells' in line:
+                zeolite['unit cells'] = (int(line.split()[-3])*
+                                         int(line.split()[-2])*int(line.split()[-1]))
+            elif 'framework mass' in line:
+                zeolite['mass (g)'] = float(line.split()[3])
+            elif 'framework volume' in line:
+                zeolite['volume'] = float(line.split()[3])
+            elif 'one adsorbed molecule in sim box' in line:
+                zeolite[' mol/kg / 1 mlcl adsorbed'] = float(line.split()[-2])
+            elif '###' in line: #find what section we are in
+                if 'Configurational-bias' in line:
+                    cbmc_section = True
+                elif 'Volume change' in line:
+                    cbmc_section = False
+                elif 'Molecule swap' in line:
+                    swap_section = True
+                elif 'Molecule swatch' in line:
+                    swatch_section = True
+                    swap_section = False
+                elif 'Charge Fluctuation' in line:
+                    swatch_section = False
+                elif 'problem' in line:
+                    print('PROBLEM PROBLEM PROBLEM PROBLEM PROBLEM !!!!')
+                    print(line)
+                    print('file is',f)
+                    print('path is', os.getcwd())
+                    print(next(f))
+            # find what molecule we are looking at
+            elif line.startswith('molecule typ') or line.startswith('moltyps'):
+                if cbmc_section:
+                    # note: not getting box specific information here
+                    mol_type = ' '.join(line.split()[3:5])
+                    box_type = line.split()[-1]
+                    safe_cbmc = False
+                elif swap_section:
+                    mol_type = ' '.join(line.split()[3:])
+                elif swatch_section:
+                    mol_type = ' '.join(line.split()[2:])
+            # cbmc section analysis
+            elif cbmc_section and (len(line) > 2):
+                if line.split()[0].isdecimal():
+                    if mol_type not in cbmc_info.keys(): cbmc_info[mol_type] = {} # only want mols that do CBMC
+                    if box_type not in cbmc_info[mol_type].keys(): cbmc_info[mol_type][box_type] = {}
+                    length = line.split()[0]
+                    if safe_cbmc:
+                        if 'SAFE' not in cbmc_info[mol_type].keys():
+                            cbmc_info[mol_type]['SAFE'] = {length :{'accepted':0, 'attempted':0} }
+                        elif length not in cbmc_info[mol_type]['SAFE'].keys():
+                            cbmc_info[mol_type]['SAFE'][length] = {'accepted':0, 'attempted':0}
+                        cbmc_info[mol_type]['SAFE'][length]['accepted'] += int(float(line.split()[3]))
+                        cbmc_info[mol_type]['SAFE'][length]['attempted'] += int(float(line.split()[1]))
+                    else:
+                        if length not in cbmc_info[mol_type][box_type].keys():
+                            cbmc_info[mol_type][box_type][length] = {'accepted':0, 'attempted':0}
+                        # the float call here is needed because our code currently
+                        # outputs att and acct for CBMC as floats (i.e. 64546525.0)
+                        cbmc_info[mol_type][box_type][length]['accepted'] += int(float(line.split()[3]))
+                        cbmc_info[mol_type][box_type][length]['attempted'] += int(float(line.split()[1]))
+                elif 'SAFE-CBMC' in line:
+                    safe_cbmc = True
+            # swap section analysis
+            elif line.startswith('between box') and swap_section:
+                if mol_type not in swap_info.keys(): swap_info[mol_type] = {}
+                boxpair = line.split()[2] + line.split()[4] #does not account for box from and box to
+                if boxpair not in swap_info[mol_type].keys():
+                    swap_info[mol_type][boxpair] = {'accepted': 0, 'attempted': 0}
+                swap_info[mol_type][boxpair]['accepted'] += int(line.split()[-1])
+                swap_info[mol_type][boxpair]['attempted'] += int(line.split()[10])
+            # swatch section analysis
+            elif line.startswith('pair typ') and swatch_section:
+                swatchPairNum = int(line.split()[-1])
+            elif line.startswith('between box') and swatch_section:
+                if mol_type not in swap_info.keys(): swap_info[mol_type] = {}
+                boxpair = line.split()[2] + line.split()[4]
+                if boxpair not in swap_info[mol_type].keys():
+                    swap_info[mol_type][boxpair] = {'accepted': 0, 'attempted': 0}
+                    swap_info[mol_type][boxpair]['swatchNum']  = swatchPairNum
+                swap_info[mol_type][boxpair]['accepted'] += int(line.split()[-1])
+                swap_info[mol_type][boxpair]['attempted'] += int(line.split()[10])
+            # volume of box section
+            elif line.startswith(' boxlength'):
+                offset = 2
+                boxlx = line
+                boxly = next(f)
+                boxlz = next(f)
+                for boxNum in range(1, nBox+1):
+                    x, y, z = [ float(direction.split()[offset+boxNum])
+                                                          for direction in (boxlx, boxly, boxlz)]
+                    volume.data['box%i'%boxNum].append( [x*y*z]  )
+    return (number_density.avgOverRuns(avg_weights), chemical_potential.avgOverRuns(avg_weights),
+             swap_info, biasPot, volume.avgOverRuns(avg_weights), totalComposition, cbmc_info, T,
+            zeolite)
+
+
+def read_fort12(path, start_of_runs, num_files, tag='equil-'):
+    os.chdir(path)
+    ncycle = 0
+    for j in range(start_of_runs, start_of_runs + num_files):
+        try:
+            f = open(path +'/'+tag+str(j)+'/'+'fort12.' + tag + str(j))
+        except:
+            print(path+'/'+tag+str(j)+'/'+'fort12.' + tag + str(j) + ' not found')
+            quit()
+        nline = 0
+        line1 = next(f)
+        if j == start_of_runs:
+            nbox = int(line1.split()[2])
+            nmolty = int(line1.split()[3])
+            N_mlcls = properties.MolProperty(nbox, nmolty)
+            Pressure = properties.Property(nbox)
+            InternalEnergy = properties.Property(nbox)
+            Volume = properties.Property(nbox)
+            boxlength = properties.Property(nbox)
+            # note that boxlength should only be used for cubic boxes--or should I store as volume?
+            molWeights = {}
+            mol_num = 0
+            for MW in list(map(float, line1.split()[4:])):
+                mol_num += 1
+                molWeights[str(mol_num)] = MW
+
+        for line in f: #starting on 2nd line
+            nline += 1
+            box = nline % nbox
+            if box == 0:
+                box = nbox
+                ncycle += 1
+            offset = len(line.split()) - nmolty - 1
+            for mol in range(1, nmolty+1):
+                try:
+                    N_mlcls.data[str(mol)]['box%i'%box].append( int(line.split()[offset+mol]) )
+                except:
+                    print(path,'run=',j,'fort.12 is binary')
+            if (nline >= nbox*10+1):
+                Pressure.data['box%i'%box].append(float(line.split()[4]))
+            InternalEnergy.data['box%i'%box].append( float(line.split()[3]))
+            boxlength.data['box%i'%box].append( float(line.split()[0]) )
+    return N_mlcls.data, Pressure.data, boxlength.data, ncycle, molWeights, InternalEnergy.data
+
+def read_hbond(path, start_of_runs, num_files):
+    n_hBond_oneSim = {j:{'Soln':[], 'Zeo':[]} for j in ('Water', 'BuOH')}
+    n_hType_oneSim = { mol : { typ : [] for typ in ('Self', 'Other', 'Zeo')} for mol in ('1','2')}
+    for run in range(start_of_runs, num_files+1):
+        movie_nHBond = open(path + '/prod-%i/movie_Hbonds.txt'%run)
+        movie_nHBondByType = open(path + '/prod-%i/movie_Hbond_moltype.txt'%run)
+        next(movie_nHBond) # skip first line
+        next(movie_nHBondByType) # skip first line
+        for line in movie_nHBond:
+            n_hBond_oneSim['Water']['Soln'].append(float(line.split()[1]))
+            if line.split()[2] != 'NaN': n_hBond_oneSim['BuOH']['Soln'].append(float(line.split()[2]))
+            if line.split()[3] != 'NaN': n_hBond_oneSim['Water']['Zeo'].append(float(line.split()[3]))
+            if line.split()[4] != 'NaN': n_hBond_oneSim['BuOH']['Zeo'].append(float(line.split()[4]))
+        for line in movie_nHBondByType:
+            if 'NaN' not in line:
+                mlcl = int(line.split()[1])
+                (Hself, Hother, Hzeo) = [float(i) for i in line.split()[2:]]
+                n_hType_oneSim[str(mlcl)]['Self'].append(Hself)
+                n_hType_oneSim[str(mlcl)]['Other'].append(Hother)
+                n_hType_oneSim[str(mlcl)]['Zeo'].append(Hzeo)
+    return n_hBond_oneSim, n_hType_oneSim
+
+def getNumMolList(composition, nmolty):
+    molTypeCount = []
+    for mol in range(1, nmolty+1):
+        for molName in composition.keys():
+            if str(mol) in molName:
+                molTypeCount.append(composition['molName'])
+    return molTypeCount
+
+def read_restart(file, nmolty, nbox):
+    config_data = {'max displacement':{}}
+    moltyp = 0
+    ibox = 0
+    charge_moves = []
+    nunit = []
+    mol_types = []
+    box_types = []
+    f = open(file)
+    nline = 0
+    for line in f:
+        nline += 1
+        if 'number of cycles' not in config_data.keys():
+            config_data['number of cycles'] = line
+        elif 'atom translation' not in config_data['max displacement'].keys():
+            config_data['max displacement']['atom translation'] = line
+        elif (moltyp != nmolty) and (ibox != nbox):
+            for ibox in range(1,nbox+1):
+                for moltyp in range(1, nmolty+1):
+                    if 'translation' not in config_data['max displacement'].keys():
+                        # first time
+                        config_data['max displacement']['translation'] = {'box%i'%i:{'mol%i'%j:''
+                                                                                     for j in range(1, nmolty+1)}
+                                                                          for i in range(1, nbox+1)}
+                        config_data['max displacement']['rotation'] = {'box%i'%i:{'mol%i'%j:''
+                                                                                     for j in range(1, nmolty+1)}
+                                                                          for i in range(1, nbox+1)}
+                        config_data['max displacement']['translation']['box%i'%ibox]['mol%i'%moltyp] = line
+                        config_data['max displacement']['rotation']['box%i'%ibox]['mol%i'%moltyp] = next(f)
+                    elif not config_data['max displacement']['translation']['box%i'%ibox]['mol%i'%moltyp]:
+                        config_data['max displacement']['translation']['box%i'%ibox]['mol%i'%moltyp] = next(f)
+                        config_data['max displacement']['rotation']['box%i'%ibox]['mol%i'%moltyp] = next(f)
+        elif len(charge_moves) < nbox*nmolty:
+            if 'fluctuating charge' not in config_data['max displacement'].keys():
+                config_data['max displacement']['fluctuating charge'] = {'box%i'%i:{'mol%i'%j:''
+                                                                                     for j in range(1, nmolty+1)}
+                                                                          for i in range(1, nbox+1)}
+            charge_moves = charge_moves + line.split()
+            if len(charge_moves) == nbox*nmolty:
+                for i in range(len(charge_moves)):
+                    c_box = i // nmolty + 1
+                    c_mol = i % nmolty + 1
+                    config_data['max displacement']['fluctuating charge']['box%i'%c_box]['mol%i'%c_mol] = charge_moves[i]
+            elif len(charge_moves) > nbox*nmolty:
+                print('error reading max displ for translation and rotation')
+                print(config_data['max displacement'])
+                print(nline)
+                quit()
+        elif 'volume' not in config_data['max displacement'].keys():
+            config_data['max displacement']['volume'] = {}
+            for index, value in enumerate(line.split()):
+                config_data['max displacement']['volume']['box%i'%(index+1)] = value
+        elif 'box dimensions' not in config_data.keys():
+            if (len(line.split()) == 9):
+                config_data['box dimensions']={'box1': next(f) }
+            else:
+                config_data['box dimensions']={'box1': line }
+            for i in range(2,nbox+1):
+                config_data['box dimensions']['box%i'%i] = next(f)
+        elif 'nchain' not in config_data.keys():
+            config_data['nchain'] = line
+            nchain = int(line.split()[0])
+        elif 'nmolty' not in config_data.keys():
+            config_data['nmolty'] = line
+            nmolty = int(line.split()[0])
+        elif len(nunit) < nmolty:
+            nunit += line.split()
+            if 'nunit' not in config_data.keys(): config_data['nunit'] = {}
+            if len(nunit) == nmolty:
+                for i in range(1,len(nunit)+1):
+                    config_data['nunit']['mol%i'%i] = nunit[i-1]
+        elif len(mol_types) < nchain:
+            mol_types += line.split()
+            if len(mol_types) == nchain:
+                config_data['mol types'] = mol_types
+        elif len(box_types) < nchain:
+            box_types += line.split()
+            if len(box_types) == nchain:
+                config_data['box types'] = box_types
+        else:
+            config_data['coords'] = []
+            icoords = ''
+            for mol_number in config_data['mol types']:
+                nbead_mol = int(config_data['nunit']['mol%s'%mol_number])
+                molecule_coords = []
+                for bead in range(1, nbead_mol+1):
+                    if icoords == '':
+                        icoords = line
+                    else:
+                        icoords= next(f)
+                    if len(icoords.split()) == 4:
+                        q = icoords.split()[3] + '\n'
+                        xyz = ' '.join(icoords.split()[:3]) + ' '
+                    else:
+                        xyz = icoords
+                        q = next(f)
+                    molecule_coords.append({'xyz':xyz,'q':q})
+                config_data['coords'].append(molecule_coords)
+    return config_data
+
+def read_fort4(file):
+    input_data = {}
+    f = open(file)
+    nmolty = -1
+    nbox = -1
+    for line in f:
+        if len(line.split()) == 0:
+            continue
+        elif line.split()[0].startswith('&'):
+            # in namelist section
+            namelist = line.split()[0]
+            input_data[namelist] = {}
+        elif line.split()[0].startswith('/'):
+            namelist = ''
+        elif namelist:
+            variable = line.split()[0]
+            values = line[(line.find('=')+1):]
+            my_val = 'None'
+            if (variable == 'pmsatc'):
+                my_val = {'swatch%i'%i:values.split()[i-1]
+                          for i in range(1, len(values.split())+1)}
+            elif (len(values.split()) == 1) and (variable != 'pmvlmt'):
+                my_val = values.rstrip('\n')
+                if variable == 'nmolty':
+                    nmolty = int(values)
+                elif variable == 'nbox':
+                    nbox = int(values)
+            elif len(values.split()) == nbox:
+                my_val = {'box%i'%i:values.split()[i-1] for i in range(1,nbox+1)}
+            elif len(values.split()) == nmolty:
+                my_val = {'mol%i'%i:values.split()[i-1] for i in range(1,nmolty+1)}
+            else:
+                print('error in input file for variable',variable)
+                # there was an error in previous input file
+                if variable == 'pmswmt':
+                    print('there were too many swap types in pmswmt')
+                    my_val = {'mol%i'%i:values.split()[i-1] for i in range(1,nmolty+1)}
+            input_data[namelist][variable] = my_val
+        elif (len(line.split()) == 1) and line.split()[0].isupper():
+            section = line.split()[0]
+            itype = 0
+            input_data[section] = {}
+        elif line.split()[0] == 'END':
+            section = ''
+        elif section == 'SIMULATION_BOX':
+            while ((itype != nbox) or (not line.split())):
+                if 'box%i'%(itype+1) not in input_data[section].keys():
+                    input_data[section]['box%i'%(itype+1)] = {}
+                line = next(f)
+                if not line.startswith('!'):
+                    if (len(line.split()) == 13) and ('F' in line):
+                        (boxlx, boxly, boxlz, rcut, kalp, rcutnn,
+                        NDII, lsolid, lrect, lideal, ltwice, T, P) = line.split()
+                        input_data[section]['box%i'%(itype+1)]['dimensions'] = '%s %s %s'%(boxlx, boxly, boxlz)
+                        input_data[section]['box%i'%(itype+1)]['rcut'] = rcut
+                        input_data[section]['box%i'%(itype+1)]['defaults'] = '{} {} {} {} {} {} {}'.format(kalp, rcutnn, NDII,
+                                                                                        lsolid, lrect,lideal, ltwice)
+                        input_data[section]['box%i'%(itype+1)]['temperature'] = T
+                        input_data[section]['box%i'%(itype+1)]['pressure'] = P
+                    elif len(line.split()) == nmolty + 1:
+                        nmols = line.split()[:-1]
+                        nghost = line.split()[-1]
+                        for i in range(1,len(nmols)+1):
+                            input_data[section]['box%i'%(itype+1)]['mol%i'%i] = nmols[i-1]
+                        input_data[section]['box%i'%(itype+1)]['nghost'] = nghost
+                    elif (len(line.split()) == 9) and ('F' in line):
+                        input_data[section]['box%i'%(itype+1)]['initialization data'] = line
+                        itype += 1
+        elif section == 'MOLECULE_TYPE':
+            if 'nunit' in line:
+                itype += 1
+                input_data[section]['mol%i'%itype] = ''
+            if line.split():
+                input_data[section]['mol%i'%itype] += line
+        elif section == 'MC_SWAP':
+            if 'nswapb' in line:
+                itype += 1
+                input_data[section]['mol%i'%itype] = {'nswapb':0,'pmswapb':[]}
+            if line.split() and line[0].isdigit():
+                if len([i for i in line.split() if i.isdigit()]) == 2:
+                    # line is box1, box2
+                    swap_pair += 1
+                    input_data[section]['mol%i'%itype]['box1 box2'][swap_pair] = list(map(int,line.split()))
+                else:
+                    nswapb = int(line.split()[0])
+                    input_data[section]['mol%i'%itype]['nswapb'] = nswapb
+                    input_data[section]['mol%i'%itype]['pmswapb'] = list(map(float, [i.rstrip('d0') for i in line.split()[1:]]))
+                    input_data[section]['mol%i'%itype]['box1 box2'] = [0 for i in range(nswapb)]
+                    swap_pair = -1
+        elif section == 'MC_SWATCH':
+            if 'moltyp1<->moltyp2' in line:
+                itype += 1
+                input_data[section]['swatch%i'%itype] = ''
+            if (itype > 0) and line.split():
+                input_data[section]['swatch%i'%itype] += line
+        elif section == 'INTERMOLECULAR_EXCLUSION':
+            if (line.rstrip('\n').replace(' ','').isdigit()):
+                mol1, unit1, mol2, unit2 = map(int,line.split())
+                if 'mol%i'%mol1 not in input_data[section].keys():
+                    input_data[section]['mol%i'%mol1] = {}
+                if 'unit%i'%unit1 not in input_data[section]['mol%i'%mol1].keys():
+                    input_data[section]['mol%i'%mol1]['unit%i'%unit1] = {}
+                if 'mol%i'%mol2 not in input_data[section]['mol%i'%mol1]['unit%i'%unit1].keys():
+                    input_data[section]['mol%i'%mol1]['unit%i'%unit1]['mol%i'%mol2] = []
+                input_data[section]['mol%i'%mol1]['unit%i'%unit1]['mol%i'%mol2].append( 'unit%i'%unit2 )
+        elif section == 'INTRAMOLECULAR_OH15':
+            if (line.rstrip('\n').replace(' ','').isdigit()):
+                mol = int(line.split()[0])
+                if 'mol%i'%mol not in input_data[section].keys():
+                    input_data[section]['mol%i'%mol] = []
+                input_data[section]['mol%i'%mol] += [line[line.find(' '):]]
+        elif section == 'UNIFORM_BIASING_POTENTIALS':
+            if line[0].isdigit():
+                itype += 1
+                input_data[section]['mol%i'%itype] = {'box%i'%(i+1):line.split()[i] for i in range(len(line.split()))}
+    return input_data
+
+def readPDB(file):
+    data = {'coords':[],'atoms':[]}
+    for line in open(file):
+        if line.startswith('CRYST1'):
+            a, b, c, alpha, beta, gamma = map(float,line.split()[1:7])
+            data['box info'] = {'a':a,'b':b,'c':c,
+                                'alpha':alpha,'beta':beta,'gamma':gamma}
+        elif line.startswith('ATOM'):
+            atom = line.split()[2]
+            x, y, z = map(float, line.split()[5:8])
+            data['atoms'].append(atom)
+            data['coords'].append([x,y,z])
+    return data
+
+def xyz(file):
+    data = {'atoms':[], 'coords':[]}
+    for line in open(file):
+        if len(line.split()) == 4:
+            x, y, z = map(float, line.split()[1:])
+            atom = line.split()[0]
+            data['atoms'].append( atom )
+            data['coords'].append( [x,y,z] )
+    return data
+
+import os
+import properties
+import copy

@@ -1,0 +1,65 @@
+class Main:
+    def __init__(self):
+
+        self.parser = argparse.ArgumentParser()
+        self.parser.add_argument("-v", "--verbosity", action="count", default=0)
+        self.parser.add_argument('-t','--type',
+                             help='type of run (equil- or prod-)',
+                             type = str, default='equil-')
+        self.parser.add_argument('-p','--path',
+                                 help='main path to feeds (see --feeds)',
+                                 type=str,default=os.getcwd())
+        self.parser.add_argument('-f','--feeds',
+                                 help ='state point (ex: temperature or pressure);'
+                                             ' must be in ls ${path}',
+                             nargs = '+', type=str)
+        self.parser.add_argument('-i','--indep',
+                        help='RANGE of independent simulations',
+                        nargs = '+',type=int, default = range(1,9))
+    def other(self):
+        self.parser.add_argument('-iv','--interval',
+                        help='number of runs interval to analyze',
+                        type=int,default = 0)
+        self.parser.add_argument('-s','--guessStart',help ='run to guess start at',
+                        type = int, default = 1)
+
+    def parse_args(self):
+        self.args = self.parser.parse_args()
+        assert self.args.feeds, 'No feeds to analyze'
+        return self.args
+
+class Plot(Main):
+    def __init__(self):
+        Main.__init__(self)
+        self.parser.description = 'Plot results'
+        self.parser.add_argument('-b','--box',help='box to analyze', type=str)
+        self.parser.add_argument('-m','--mol',help='Molecule to analyze', type=str)
+    def isotherm(self):
+        self.parser.add_argument('-u','--units',help='choices for units on isotherm',
+                                 choices=['molec/uc','g/g','mol/kg'])
+
+
+class Results(Plot):
+    def __init__(self):
+        Plot.__init__(self)
+        Main.other(self)
+        self.parser.description = 'Obtain results for simulations'
+
+class Change(Results):
+    def __init__(self):
+        Main.__init__(self)
+        Main.other(self)
+        self.parser.description='Change MC probabilities, and potentially ' \
+                                'obtain results from these runs'
+        self.parser.add_argument('-T','--time',
+                        help='time in seconds for next run',type = int,
+                        default=96*60*60-600)
+        self.parser.add_argument('-r','--rcut',
+                        help='rcut fraction of boxlx to use for vapor box',
+                        type=float, default=0.50)
+        self.parser.add_argument('-N','--nstep', help='number of MCCs for next run',
+                        type=int, default=50000)
+
+
+
+import argparse, os
