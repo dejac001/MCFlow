@@ -79,6 +79,7 @@ def checkRun(tag, feeds1, feeds2):
     for feed in set(feeds1 + feeds2):
         if tag in feed: data_run += feed
     assert feed in feeds1, 'More than one run found to analyze'
+    assert data_run, 'No run analyzed of run type prompted'
     return data_run
 
 def calcDGfromNumDens(rho, N_i, T):

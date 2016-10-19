@@ -321,11 +321,13 @@ def write_restart(data, newfile):
     if ((index % 6) != 0): f.write('\n')
     if ((len(data['mol types']) != nchain) or (len(data['mol types'])
                                               != len(data['box types']))):
-        print('error in restart info')
-        print('nchain: ',nchain)
-        print('mol types: ', len(data['mol types']))
-        print('box types: ', len(data['box types']))
-        print('coords: ', len(data['coords']))
+        print('error in writing restart info')
+        print('number of molecules not consistent')
+        print('error: nchain: ',nchain)
+        print('error: mol types: ', len(data['mol types']))
+        print('error: box types: ', len(data['box types']))
+        print('error: coords: ', len(data['coords']))
+        print('quitting...')
         quit()
     for identity in [data['mol types'], data['box types']]:
         index = 0

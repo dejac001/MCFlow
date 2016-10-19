@@ -60,6 +60,17 @@ class Change(Results):
         self.parser.add_argument('-N','--nstep', help='number of MCCs for next run',
                         type=int, default=50000)
 
-
+class ChangeInput(Main):
+    def __init__(self):
+        Main.__init__(self)
+        self.parser.add_argument('-I','--input',help='name of fort.4 file',type=str,
+                        default= 'fort.4')
+        self.parser.add_argument('-R','--restart',help='name of restart file',type=str,
+                        default= 'fort.77')
+    def molecules(self):
+        self.parser.description = 'Add molecules of a given type fo a given box'
+        self.parser.add_argument('-m','--molID',help='molID of molecule to add in fort.4', type=str)
+        self.parser.add_argument('-b','--box',help='number of box to add molecules to',type=str)
+        self.parser.add_argument('-n','--nAdd',help='number of molecules to add',type=int)
 
 import argparse, os

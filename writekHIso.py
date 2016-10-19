@@ -1,7 +1,7 @@
 '''
 Write isotherm from previously generated databank files
 '''
-from writeDGvC import checkRun, calc95conf
+from runAnalyzer import checkRun, calc95conf
 from file_formatting.writer import writeAGR
 from chem_constants import R, N_av
 import math
