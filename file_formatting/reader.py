@@ -1,3 +1,11 @@
+def convertMovieCoordsXYZ(each_molecule):
+    data = {'atoms':[], 'coords':[]}
+    for beadType, beads in each_molecule.items():
+        for bead_xyz in beads:
+            data['atoms'].append( beadType )
+            data['coords'].append( [float(i) for i in bead_xyz] )
+    return data
+
 class Movie:
     def __init__(self, file_name):
         self.file_name = file_name
@@ -19,13 +27,13 @@ class Movie:
         for frame_count in range(1, self.nframes+1):
             NumPrevCycles = int(self.file.readline()) # num cycles since last frame
             Nframe = {}; Vframe = {};
-            FRAME_DATA = {'box%s'%j: {'mlcl%i'%k:[]
+            FRAME_DATA = {'box%s'%j: {'mol%i'%k:[]
                                       for k in range(1,self.nmolty+1)} for j in range(1,self.nbox+1)}
             for box in range(1, self.nbox+1):
                 line1 = self.file.readline()
                 line2 = self.file.readline()
                 # total number of molecules and volume in frame
-                Nframe['box%s'%box] = {'mlcl%i'%j : int(line1.split()[j-1])
+                Nframe['box%s'%box] = {'mol%i'%j : int(line1.split()[j-1])
                                        for j in range(1, self.nmolty+1)}
                 Vframe['box%s'%box] = [ float(j) for j in line2.split() ]
             for molnumber in range(1, self.nchain+1):
@@ -38,10 +46,10 @@ class Movie:
                     xyz = line.split()[:3]
                     BeadType = line.split()[-1] # as defined in topmon.inp
                     if BeadType in list(mlcl_info.keys()):
-                        mlcl_info[BeadType].append([xyz])
+                        mlcl_info[BeadType].append(xyz)
                     else:
                         mlcl_info[BeadType] = [xyz]
-                FRAME_DATA['box%s'%cbox]['mlcl%i'%moltype].append(mlcl_info)
+                FRAME_DATA['box%s'%cbox]['mol%i'%moltype].append(mlcl_info)
             self.frame_data.append( copy.deepcopy(FRAME_DATA) )
         self.file.close()
 
@@ -61,13 +69,84 @@ class Movie:
         new.nbox = self.nbox
         return new
 
+    def filterCoords(self, region, box):
+        '''
+        :param region: function that determines whether or not in a specific region (bool)
+        :param box: box number as string
+        :param beadNames: list of bead numbers as strings as in topmon.inp
+        '''
+        my_box = 'box%s'%box
+        for FRAME_DATA in self.frame_data:
+            for molType in FRAME_DATA[my_box].keys():
+                indices_to_keep = []
+                for imol, each_molecule in enumerate(FRAME_DATA[my_box][molType]):
+                    if region(convertMovieCoordsXYZ(each_molecule)):
+                        indices_to_keep.append( imol )
+                FRAME_DATA[my_box][molType] = [value for i, value in enumerate(FRAME_DATA[my_box][molType])
+                                               if i in indices_to_keep]
 
-    def getCoords(self, mlcl, box, beadNames):
+    def countMols(self, numIndep, feed):
+        '''
+        :param box: String box number.
+        :param numIndep: number of independent simulations (integer)
+        '''
+        assert (self.nframes/numIndep)%1 == 0., 'Number of frames per independent sim =' \
+                                                ' %f, not an integer'%(self.nframes/numIndep)
+        self.averages = {}
+        frames_per_indep = int(self.nframes/numIndep)
+        N = {}
+        total_frames = -1
+        frame_by_seed = [0 for i in range(numIndep)]
+        for FRAME_DATA in self.frame_data:
+            if total_frames == -1:
+                N = {box:{mol: {'raw data':[[] for i in range(numIndep)]}
+                                        for mol in FRAME_DATA[box].keys()}
+                                        for box in FRAME_DATA.keys()}
+            # determine which independent simulation this corresponds to
+            total_frames += 1
+            seed = total_frames//frames_per_indep # floor division (ranges from 0 to numIndep - 1)
+            frame_by_seed[seed] += 1
+            for box in FRAME_DATA.keys():
+                for mol in FRAME_DATA[box].keys():
+                    N[box][mol]['raw data'][seed].append( len(FRAME_DATA[box][mol] ))
+                    if len(N[box][mol]['raw data'][seed]) == frames_per_indep:
+                        # change list of data to floating point average
+                        N[box][mol]['raw data'][seed] = np.mean(N[box][mol]['raw data'][seed])
+        assert len(set(frame_by_seed)) == 1, 'Number of frames analyzed for each seed not equal'
+        for box in N.keys():
+            for mol in N[box].keys():
+                N[box][mol]['mean'] = np.mean(N[box][mol]['raw data'])
+                N[box][mol]['stdev'] = np.std(N[box][mol]['raw data'])
+        self.averages[feed] = N
+
+    def foldMovieToUC(self, a, b, c, box):
+        '''
+        :param box: String box number. Folds all coordinates of all beads
+        of all molecules in this box
+        '''
+        my_box = 'box%s'%box
+        for FRAME_DATA in self.frame_data:
+            # changing FRAME_DATA will change self.frame_data indexes
+            for molType in FRAME_DATA[my_box].keys():
+                for each_molecule in FRAME_DATA[my_box][molType]:
+                    for beadType, beadCoords in each_molecule.items():
+                        foldedBeads = []
+                        for bead_xyz in beadCoords:
+                            beadFolded = [superCoord%lattice for (superCoord, lattice) in zip(bead_xyz, [a, b, c])]
+                            foldedBeads.append(beadFolded)
+                        FRAME_DATA['box%s'%box][molType][each_molecule][beadType] = foldedBeads
+
+    def getCoords(self, mlcl, box, beadNames=['COM']):
+        '''
+        :param mlcl: String molecule number.
+        :param box: String box number.
+        of all molecules in this box
+        '''
         assert self.nframes == len(self.frame_data), 'Error in adding frames'
         print('Total amount of frames analyzed was %i'%self.nframes)
         xyz_data = {'atoms':[], 'coords':[]}
         for FRAME_DATA in self.frame_data:
-            for each_molecule in FRAME_DATA['box%s'%box]['mlcl%s'%mlcl]:
+            for each_molecule in FRAME_DATA['box%s'%box]['mol%s'%mlcl]:
                 for beadType in beadNames:
                     for each_coord in each_molecule[beadType]:
                         # for all beads of given bead type in molecule
@@ -75,26 +154,7 @@ class Movie:
                         xyz_data['coords'].append(each_coord)
         return xyz_data
 
-    def foldMovieToUC(self, a, b, c, box):
-        '''
-        :param a: lattice parameter x-dir
-        :param b: lattice parameter y-dir
-        :param c: lattice parameter z-dir
-        :param box: integer box number. Folds all coordinates of all beads
-        of all molecules in this box
-        :return: folded FRAME_DATA for box # given
-        '''
-        for i in range(self.frame_data):
-            FRAME_DATA = self.frame_data[i] # will change this
-            for molType in FRAME_DATA['box%s'%box].keys():
-                for mlcl in range(len(FRAME_DATA['box%s'%box][molType])):
-                    for beadType in FRAME_DATA['box%s'%box][molType][mlcl].keys():
-                        foldedBeads = []
-                        for bead in FRAME_DATA['box%s'%box][molType][mlcl][beadType]:
-                            (x, y, z) = bead
-                            beadFolded = [superCoord%lattice for (superCoord, lattice) in zip([x, y ,z], [a, b, c])]
-                            foldedBeads.append(beadFolded)
-                        FRAME_DATA['box%s'%box][molType][mlcl][beadType] = foldedBeads
+
 
 
 
@@ -566,3 +626,5 @@ def xyz(file):
 import os
 import properties
 import copy
+import numpy as np
+from runAnalyzer import calc95conf
