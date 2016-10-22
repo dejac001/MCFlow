@@ -1,19 +1,3 @@
-def writeAGR(x, y, dx, dy, names, file, description = ''):
-    with open(file,'a') as f:
-        if description:
-            f.write('# %s\n'%description)
-        for i in sorted(x):
-            my_index = x.index(i)
-            my_line = ''
-            if dx and dy:
-                for data in (x, y, dx, dy):
-                    my_line += '%e '%data[my_index]
-            elif x and y:
-                for data in (x, y):
-                    my_line += '%e '%data[my_index]
-            my_line += '#%s\n'%names[my_index]
-            f.write(my_line)
-
 def makeNewLine(pad,name,val):
     #:: val is a string
     newLine = '%s%-15s = %s\n'%(pad,name,val)

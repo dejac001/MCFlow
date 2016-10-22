@@ -624,7 +624,7 @@ def xyz(file):
     return data
 
 import os
-import properties
 import copy
 import numpy as np
-from runAnalyzer import calc95conf
+from MCFlow.runAnalyzer import calc95conf
+from MCFlow import properties

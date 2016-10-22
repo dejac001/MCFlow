@@ -57,6 +57,17 @@ def getRealRho(rhoBias, bias, T):
                 rhoReal[mol][box] = rhoBias[mol][box] * math.exp(  bias[mol][box]/T )
     return rhoReal
 
+def getPi_ig(rho, T):
+    '''
+
+    :param rho: number density in molec/nm**3
+    :param T: temperature (K)
+    :return:
+    '''
+    p_mean = rho['mean']/N_av*R['nm**3*kPa/(mol*K)']*T
+    p_stdev = rho['stdev']/N_av*R['nm**3*kPa/(mol*K)']*T
+    return {'mean':p_mean,'stdev':p_stdev}
+
 def getConc(c_data, mol='', box=''):
     for key, value in sorted(c_data.items()):
         if len(key) == 1:
@@ -65,7 +76,7 @@ def getConc(c_data, mol='', box=''):
             box = key
         if isinstance(value, dict):
             if 'mean' in value.keys():
-                return mol, box, value
+                return value, mol, box
             else:
                 return getConc(value, mol, box)
 
@@ -104,6 +115,7 @@ def calcDGfromNumDens(rho, N_i, T):
 def getFileData(feeds, indep, path, type, guessStart, interval,
                 verbosity, liq=False, mol=['-1'], **kargs):
     general_data = {key:{} for key in feeds}
+    # TODO: add molec name (i.e. 15PDO or WATER) into general_data
     for feed in feeds:
         if verbosity > 0: print('-'*12 + 'Dir is %s'%feed + '-'*12)
         for seed in indep:
@@ -177,7 +189,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
             general_data[feed]['zeolite'] = zeolite
     return data, general_data
 
-import math, calc_tools
-import properties, os
-from file_formatting import reader
-from chem_constants import R
+import math, os
+from MCFlow import properties, calc_tools
+from MCFlow.file_formatting import reader
+from MCFlow.chem_constants import R, N_av

@@ -16,6 +16,7 @@ class Main:
         self.parser.add_argument('-i','--indep',
                         help='RANGE of independent simulations',
                         nargs = '+',type=int, default = range(1,9))
+
     def other(self):
         self.parser.add_argument('-iv','--interval',
                         help='number of runs interval to analyze',
@@ -32,11 +33,26 @@ class Plot(Main):
     def __init__(self):
         Main.__init__(self)
         self.parser.description = 'Plot results'
-        self.parser.add_argument('-b','--box',help='box to analyze', type=str)
+        # TODO: reformat mol pass in so pass in by str name (i.e. WATER or 15PDO)
         self.parser.add_argument('-m','--mol',help='Molecule to analyze', type=str)
+        self.parser.add_argument('-TK','--Temp',help='Temperature in Kelvin',
+                                  type=float)
+        self.parser.add_argument('-b','--box',help='box to analyze', type=str)
+    def axes(self):
+        self.parser.add_argument('-x','--xaxis', help='x axis of plot',
+                                 choices = ['C','Pig'])
+        self.parser.add_argument('-y','--yaxis',help='x axis of plot',
+                                 choices = ['Q','dG','S'])
     def isotherm(self):
-        self.parser.add_argument('-u','--units',help='choices for units on isotherm',
-                                 choices=['molec/uc','g/g','mol/kg'])
+        self.parser.add_argument('-u','--units',help='choices for units on plot',
+                                 choices=['molec/uc','g/g','mol/kg',
+                                          '(mol/mol)/(mol/mol)','(mol/mol)/(kPa/kPa)'])
+    def kH(self):
+        self.parser.add_argument('-kH','--henry',help='Henry constant (g/mL/kPa) '
+                                                       'fmt: (mean, 95%%conf.) ',
+                                  type=float, nargs= '+')
+
+
 
 
 class Results(Plot):

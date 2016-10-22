@@ -2,7 +2,7 @@
 Write isotherm from previously generated databank files
 '''
 from runAnalyzer import checkRun, calc95conf
-from file_formatting.writer import writeAGR
+from writeXvY import writeAGR
 from chem_constants import R, N_av
 import math
 
@@ -12,11 +12,7 @@ if __name__ == '__main__':
 
     my_parser = Plot()
     my_parser.isotherm()
-    my_parser.parser.add_argument('-TK','--Temp',help='Temperature in Kelvin',
-                                  type=float)
-    my_parser.parser.add_argument('-kH','--henry',help='Henry constant (g/mL/kPa) '
-                                                       'fmt: (mean, 95%%conf.) ',
-                                  type=float, nargs= '+')
+    my_parser.kH()
 
     args = vars(my_parser.parse_args())
     assert args['units'], 'Units must be defined for isotherm'
@@ -84,9 +80,10 @@ if __name__ == '__main__':
         for mol in mol_data.keys():
             iso_name = 'isotherm-mols-%s-mol%s-%s'%('_'.join(mols_adsorbed),mol, args['units'])
             iso_name = iso_name.replace('/','_')
-            help = 'C(g/mL)    Q(%s)    dC     dQ'%args['units']
+            help = ''
             x_data = mol_data[mol]['concentrations']
             y_data = mol_data[mol]['loading']
+            if feed == args['feeds'][0]: help = 'C(g/mL)    Q(%s)    dC     dQ'%args['units']
             writeAGR(x_data['mean'], y_data['mean'],
                      x_data['95conf'], y_data['95conf'],
                      x_data['feed'], iso_name, description=help)

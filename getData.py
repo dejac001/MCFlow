@@ -47,7 +47,8 @@ def outputGenDB(path, feeds, type, general_data):
 
 
 
-import os, shelve, runAnalyzer
+import os, shelve
+from MCFlow import runAnalyzer
 
 if __name__ == '__main__':
     from parser import Results

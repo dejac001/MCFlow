@@ -1,32 +1,34 @@
-def filmUC(molecule_data):
-    '''
-    :param molecule_data: {'atoms': [list,of,bead,nums],'coords':[xyz1,xyz2...]}
-    :return: whether or not molecule_data is in region
-    '''
-    number_in_region = 0
-    '''
-    all atoms in position
-    for xyz in molecule_data['coords']:
-        if (xyz[0] > 29.953) and (xyz[0] < 49.975):
-            number_in_region += 1
-    if number_in_region == len(molecule_data['coords']):
-        return True
-    else:
-        return False
-    '''
-    xyz = molecule_data['coords'][molecule_data['atoms'].index('COM')]
-    if (xyz[0] > 29.953) and (xyz[0] < 49.975):
-        return True
-    else:
-        return False
+class Region:
+    def __init__(self, func):
+        '''
+        func: function that returns for a given xyz coordinate whether or not
+                a bead is in a defined region
+        '''
+        self.my_region = func
 
-from runAnalyzer import what2Analyze
-from file_formatting.reader import Movie
-from file_formatting.writer import xyz
+    def COM(self, molecule_data):
+        '''
+        :param molecule_data: {'atoms': [list,of,bead,nums],'coords':[xyz1,xyz2...]}
+        determine if COM within region
+        '''
+        xyz = molecule_data['coords'][molecule_data['atoms'].index('COM')]
+        return self.my_region(xyz)
 
-if __name__ == '__main__':
-    from parser import Results
-    from getData import outputDB
+    def allBeads(self, molecule_data):
+        '''
+        determine if all beads are in region
+        '''
+        number_in_region = 0
+        for xyz in molecule_data['coords']:
+            if self.my_region(xyz):
+                number_in_region += 1
+        if number_in_region == len(molecule_data['coords']):
+            return True
+        else:
+            return False
+
+
+def main(filter_function=None):
     my_parser = Results()
     my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
                            type=str,default = '')
@@ -55,10 +57,19 @@ if __name__ == '__main__':
                     F.read_header()
                     F.read_movie_frames()
                     D = D + F
-        D.filterCoords(filmUC, args['box'])
+        if filter_function:
+            D.filterCoords(filter_function, args['box'])
         D.countMols(len(args['indep']),feed)
         xyz_data = D.getCoords(args['mol'], args['box'], ['COM'])
         xyz('%s/%s/movie_coords_mol%s_box%s.xyz'%(args['path'], feed, args['mol'], args['box']), xyz_data)
     if args['name']:
         outputDB(args['path'],args['feeds'],args['type'],{args['name']: D } )
 
+from MCFlow.runAnalyzer import what2Analyze
+from MCFlow.file_formatting.reader import Movie
+from MCFlow.file_formatting.writer import xyz
+from MCFlow.parser import Results
+from MCFlow.getData import outputDB
+
+if __name__ == '__main__':
+    main()

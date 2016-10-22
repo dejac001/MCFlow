@@ -1,7 +1,7 @@
 '''
 Write isotherm from previously generated databank files
 '''
-from writeDGvC import checkRun, calc95conf
+from runAnalyzer import checkRun, calc95conf
 from file_formatting.writer import writeAGR
 from chem_constants import R, N_av
 import math
@@ -11,9 +11,10 @@ if __name__ == '__main__':
     import shelve
 
     my_parser = Plot()
+    # TODO: decide to do kH adsorption if kH provided? -- gas Iso & kH iso in same file?
     my_parser.parser.add_argument('-kH','--henry',help='kH [mean, uncertainty]',
                                   type=float, nargs='+')
-    my_parser.isotherm()
+    my_parser.isotherm(gas=True)
 
     args = vars(my_parser.parse_args())
     assert args['units'], 'Units must be defined for isotherm'
