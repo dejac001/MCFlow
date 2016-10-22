@@ -22,14 +22,6 @@ def writeAGR(x, y, dx, dy, names, file, description):
             assert my_line.count('\n') == 1, 'Too many line endings %s'%my_line
             f.write(my_line)
 
-def getMolAds(num_molec):
-    mols_adsorbed = []
-    for mol in map(str,sorted(map(int,num_molec.keys()))):
-        mean = num_molec[mol]['box1']['mean']
-        ntotal = sum(num_molec[mol][box]['mean'] for box in num_molec[mol].keys())
-        if (mean > 1e-06) and (mean < ntotal):
-            mols_adsorbed.append(mol)
-    return mols_adsorbed
 
 def calculateS_ab(Na, Nb, boxFrom='box2', boxTo='box1'):
     '''
@@ -51,105 +43,184 @@ def calculateS_ab(Na, Nb, boxFrom='box2', boxTo='box1'):
                        )
     return mean, stdev
 
-def DGvC(dG, N, C, data, feed, xlabel):
-    file_description = '%s    dG(kJ/mol)    %s     dG'%(xlabel[0],xlabel[1])
-    solutes = sorted([i for i in N.keys()
-                                if ((N[i]['box2']['mean'] > 1e-06)
-                      and (N[i]['box2']['mean'] < 300))      ])
-    nIndep = data['numIndep']
-    for mol in solutes:
-        file_name = 'dG-mol%s_vs_%s.dat'%(mol, xlabel[0])
-        dG_mean, dG_stdev = (dG[mol]['box3--box2']['mean'],
-                            dG[mol]['box3--box2']['stdev'])
-        writeAGR([C['mean']],[dG_mean],
-                 [calc95conf(C['stdev'], nIndep)], [calc95conf(dG_stdev, nIndep)],
-                 [feed], file_name, file_description)
+class GasAds:
+    def __init__(self, **kwargs):
 
-def QvX(N, X, data, feed, run, units, xlabel):
-    '''
-    :param X: either solution concentration (g/mL) or pressure (kPa)
-    '''
-    file_description = '%s    Q(%s)    %s     dQ'%(xlabel[0], units,  xlabel[1])
-    nIndep = data[run]['numIndep']
-    mols_adsorbed = getMolAds(N)
-    for mol in mols_adsorbed:
-        file_name  = 'Qmol%s-%s-w%sin-zeo-vs-%s.dat'%(mol,units,''.join(mols_adsorbed),
-                                                        xlabel[0][:xlabel[0].find('(')])
-        if units == 'molec/uc':
-            qfactor = 1/data[run]['zeolite']['unit cells']
-        elif units == 'g/g':
-            qfactor = (data[run]['molecular weight'][mol]/
-                            N_av)/data[run]['zeolite']['mass (g)']
-        elif units == 'mol/kg':
-            qfactor = data[run]['zeolite'][' mol/kg / 1 mlcl adsorbed']
-        Q_mean, Q_stdev = (N[mol]['box1']['mean']*qfactor, N[mol]['box1']['stdev']*qfactor)
-        writeAGR([X['mean']],[Q_mean],
-                 [calc95conf(X['stdev'], nIndep)], [calc95conf(Q_stdev, nIndep)],
-                 [feed], file_name, file_description)
+        # TODO: make general db reader that all files can do
+        self.N = {}; self.rho = {}; self.gen_data = {}
+        self.files = ['N-data.db','rho-data.db','general-data.db']
+        self.variables = [self.N, self.rho, self.gen_data]
+        self.xlabel = ['Pig-mol%s(kPa)'%args['mol'],'dP']
+        if kwargs:
+            assert kwargs['mol'], 'Mol needed for number density to calculate P assuming I.G.'
+            assert kwargs['Temp'], 'Temperature needed for number density to calculate P assuming I.G.'
+            self.T = kwargs['Temp']
+            self.mol = kwargs['mol']
+            self.units = kwargs['units']
+            self.feeds = kwargs['feeds']
+            self.path = kwargs['path']
 
-def SvC(N, C, units, feed, nIndep, xlabel):
-    file_description = '%s    S(%s)    dC     %s'%(xlabel[0], units, xlabel[1])
-    mols_adsorbed = getMolAds(N)
-    mols_adsorbed.reverse() # start from higher number molecules (i.e. solutes)
-    for imol, mol1 in enumerate(mols_adsorbed):
-        for mol2 in mols_adsorbed[(imol+1):]:
-            s_name = '%s/%s'%(mol1,mol2)
-            S_mean, S_stdev = calculateS_ab(N[mol1], N[mol2])
-            file_name = 'S_%s-vs-%s.dat'%(s_name, xlabel[0])
-            writeAGR([C['mean']],[S_mean],
-                     [calc95conf(C['stdev'], nIndep)], [calc95conf(S_stdev, nIndep)],
+    def readDBs(self):
+        for file, var in zip(self.files, self.variables):
+            with shelve.open('%s/%s'%(self.path, file)) as db:
+                for feed in self.feeds:
+                    assert feed in db.keys(), 'Feed {} not in database for file {}'.format(feed, file)
+                    var[feed] = db[feed]
+
+    def getMolAds(self, num_molec):
+        mols_adsorbed = []
+        for mol in map(str,sorted(map(int,num_molec.keys()))):
+            mean = num_molec[mol]['box1']['mean']
+            ntotal = sum(num_molec[mol][box]['mean'] for box in num_molec[mol].keys())
+            if (mean > 1e-06) and (mean < ntotal):
+                mols_adsorbed.append(mol)
+        return mols_adsorbed
+
+    def getX(self, number_density, temperature):
+        '''
+        :param rho: number density in molec/nm**3
+        :param T: temperature (K)
+        :return:
+        '''
+        p_mean = number_density['mean']/N_av*R['nm**3*kPa/(mol*K)']*temperature
+        p_stdev = number_density['stdev']/N_av*R['nm**3*kPa/(mol*K)']*temperature
+        return {'mean':p_mean,'stdev':p_stdev}
+
+    def findVapBox(self, num_dens, mol):
+        rho_vap = 1. # molec/nm**3
+        for box, value in num_dens[mol].items():
+            if ((box != 'box1') and
+                    (value['mean'] > 2.25e-12) and
+                    (value['mean'] < rho_vap)):
+                # find non-zeolite box with minimum number density
+                # that corresponds to a pressure above 1e-10 bar
+                rho_vap = value['mean']
+                my_box = box
+        print('For mol%s, obtaining pressure'
+              ' from num dens in %s'%(mol, my_box))
+        return my_box
+    
+    def QvX(self, feed, run):
+        '''
+        :var X: either solution concentration (g/mL) or pressure (kPa)
+        '''   
+        N = self.N[feed][run]
+        gen_data = self.gen_data[feed][run]
+        file_description = '%s    Q(%s)    %s     dQ'%(self.xlabel[0], self.units,
+                                                       self.xlabel[1])
+        if 'P' in self.xlabel[0]:
+            vapor_box = self.findVapBox( self.rho[feed][run], self.mol)
+            # todo: need to choose molecule for x axis here
+            X = self.getX(self.rho[feed][run][self.mol][vapor_box], self.T)
+        elif 'C' in self.xlabel[0]:
+            X = self.getX(self.C[feed])
+        nIndep = gen_data['numIndep']
+        mols_adsorbed = self.getMolAds(N)
+        for mol in mols_adsorbed:
+            file_name  = 'Qmol%s-%s-w%sin-zeo-vs-%s.dat'%(mol,self.units,''.join(mols_adsorbed),
+                                                           self. xlabel[0][:self.xlabel[0].find('(')])
+            if self.units == 'molec/uc':
+                qfactor = 1/gen_data['zeolite']['unit cells']
+            elif self.units == 'g/g':
+                qfactor = ((gen_data['molecular weight'][mol]/N_av) / 
+                            gen_data['zeolite']['mass (g)'] )
+            elif self.units == 'mol/kg':
+                qfactor = gen_data['zeolite'][' mol/kg / 1 mlcl adsorbed']
+            Q_mean, Q_stdev = (N[mol]['box1']['mean']*qfactor, N[mol]['box1']['stdev']*qfactor)
+            writeAGR([X['mean']],[Q_mean],
+                     [calc95conf(X['stdev'], nIndep)], [calc95conf(Q_stdev, nIndep)],
                      [feed], file_name, file_description)
-
-def SvP(N, rho, P,  units, feed, nIndep, T, xlabel):
-    '''
-    this is a special case of SvC, where we plot P as opposed to C
-    and the boxFrom might not be the same for each molecule
-    (ex: in the case of IG or kH adsorption)
-    :param P: Pressure of x axis (note: not pressure data)
-    '''
-    file_description = '%s    S(%s)    dC     %s'%(xlabel[0], units, xlabel[1])
-    mols_adsorbed = getMolAds(N)
-    mols_adsorbed.reverse() # start from higher number molecules (i.e. solutes)
-    for imol, mol1 in enumerate(mols_adsorbed):
-        for mol2 in mols_adsorbed[(imol+1):]:
-            s_name = '%s/%s'%(mol1,mol2)
-            my_data = {mol1:{}, mol2:{}}
-            for my_mol in [mol1, mol2]:
+    
+    
+    def SvX(self, feed,  run):
+        '''
+        this is a special case of SvC, where we plot P as opposed to C
+        and the boxFrom might not be the same for each molecule
+        (ex: in the case of IG or kH adsorption)
+        :param P: Pressure of x axis (note: not pressure data)
+        '''
+        def getPdata(num_molec, num_dens, mola, molb):
+            my_data = {mola:{}, molb:{}}
+            for my_mol in [mola, molb]:
                 # input adsorbed info
-                my_data[my_mol]['boxTo'] = N[my_mol]['box1']
+                my_data[my_mol]['boxTo'] = num_molec[my_mol]['box1']
                 # find box for pressure info
-                num_dens = 1. # molec/nm**3
-                for box, value in rho[my_mol].items():
-                    if ((box != 'box1') and
-                            (value['mean'] > 2.25e-12) and
-                            (value['mean'] < num_dens)):
-                        # find non-zeolite box with minimum number density
-                        # that corresponds to a pressure above 1e-10 bar
-                        num_dens = value['mean']
-                        my_box = box
-                try:
-                    print('For mol%s, obtaining pressure'
-                          ' from num dens in %s'%(my_mol, my_box))
-                except UnboundLocalError:
-                    print('No gas box found for mol %s'%my_mol)
-                    print(rho[my_mol].items())
+                my_box = GasAds.findVapBox(num_dens, my_mol)
                 # input pressure info
-                my_data[my_mol]['boxFrom'] = getPi_ig(rho[my_mol][my_box], T)
-            S_mean, S_stdev = calculateS_ab(my_data[mol1],my_data[mol2],
-                                            boxFrom='boxFrom',boxTo='boxTo')
-            file_name = 'S_%s-vs-%s.dat'%(s_name, xlabel[0])
-            writeAGR([P['mean']],[S_mean],
-                     [calc95conf(P['stdev'], nIndep)], [calc95conf(S_stdev, nIndep)],
+                my_data[my_mol]['boxFrom'] = GasAds.getX(num_dens[my_mol][my_box], self.T)
+            return my_data
+        N = self.N[feed][run]
+        rho = self.rho[feed][run]
+        if 'P' in self.xlabel[0]:
+            X = self.getX(self.rho[feed][run], self.T)
+        elif 'C' in self.xlabel[0]:
+            X = self.getX(self.C[feed])
+        file_description = '%s    S(%s)    %s     dS'%(self.xlabel[0], self.units, self.xlabel[1])
+        mols_adsorbed = self.getMolAds(N)
+        mols_adsorbed.reverse() # start from higher number molecules (i.e. solutes)
+        nIndep = self.gen_data[feed][run]['numIndep']
+        for imol, mol1 in enumerate(mols_adsorbed):
+            for mol2 in mols_adsorbed[(imol+1):]:
+                s_name = '%s/%s'%(mol1,mol2)
+                if 'P' in self.xlabel[0]:
+                    box_from, box_to = 'boxFrom','boxTo'
+                    s_data = getPdata(N, rho, mol1, mol2)
+                elif 'C' in self.xlabel[0]:
+                    box_from, box_to = 'box2', 'box1'
+                    s_data = N
+                S_mean, S_stdev = calculateS_ab(s_data[mol1],s_data[mol2],
+                                                boxFrom=box_from, boxTo=box_to)
+                file_name = 'S_%s-vs-%s.dat'%(s_name, self.xlabel[0])
+                writeAGR([X['mean']],[S_mean],
+                         [calc95conf(X['stdev'], nIndep)], [calc95conf(S_stdev, nIndep)],
+                         [feed], file_name, file_description)
+
+class LiqAds(GasAds):
+    def __init__(self):
+        self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}
+        self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db']
+        self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data]
+        self.xlabel = ['C-mol%s(g/mL)'%c_mol,'dC']
+        if kwargs:
+            self.units = kwargs['units']
+            self.feeds = kwargs['feeds']
+            self.path = kwargs['path']
+    
+    def DGvX(self, feed):
+        file_description = '%s    dG(kJ/mol)    %s     dG'%(self.xlabel[0],self.xlabel[1])
+        N = self.N[feed][run]
+        dG = self.dG[feed][run]
+        nIndep = self.gen_data[feed][run]['numIndep']
+        X = self.getX(self.C[feed])
+        solutes = sorted([i for i in N.keys()
+                                    if ((N[i]['box2']['mean'] > 1e-06)
+                          and (N[i]['box2']['mean'] < 300))      ])
+        for mol in solutes:
+            file_name = 'dG-mol%s_vs_%s.dat'%(mol, self.xlabel[0])
+            dG_mean, dG_stdev = (dG[mol]['box3--box2']['mean'],
+                                dG[mol]['box3--box2']['stdev'])
+            writeAGR([X['mean']],[dG_mean],
+                     [calc95conf(X['stdev'], nIndep)], [calc95conf(dG_stdev, nIndep)],
                      [feed], file_name, file_description)
 
-from MCFlow.runAnalyzer import getConc, checkRun, calc95conf, getPi_ig
-from MCFlow.chem_constants import N_av
-import os, math
+    def getX(self, c_data, mol='', box=''):
+        for key, value in sorted(c_data.items()):
+            if len(key) == 1:
+                mol = key
+            elif 'box' in key:
+                box = key
+            if isinstance(value, dict):
+                if 'mean' in value.keys():
+                    return value, mol, box
+                else:
+                    return getX(value, mol, box)
+
+from MCFlow.runAnalyzer import checkRun, calc95conf
+from MCFlow.chem_constants import N_av, R
+from MCFlow.parser import Plot
+import os, math, shelve
 
 if __name__ == '__main__':
-    from parser import Plot
-    import shelve
-
     # TODO: find way to have conditional arguments based off of what xaxis and yaxis are
     # (in other words, we have an excess of variables as arguments)
     my_parser = Plot()
@@ -160,53 +231,20 @@ if __name__ == '__main__':
     assert args['yaxis'], 'No y axis chosen for plot'
     assert args['xaxis'], 'No x axis chosen for plot'
 
-    # TODO: make general db reader that all files can do
-    num_molec = {}; rho = {}; gen_data = {}
-    files = ['N-data.db','rho-data.db','general-data.db']
-    variables = [num_molec, rho, gen_data]
+
     if args['xaxis'] == 'C':
-        dG = {}; C = {};
-        variables.insert(0, C)
-        variables.insert(0, dG)
-        files.insert(0, 'Conc-data.db')
-        files.insert(0, 'dG-data.db')
-    # read db
-    for file, var in zip(files, variables):
-        with shelve.open('%s/%s'%(args['path'], file)) as db:
-            for feed in args['feeds']:
-                assert feed in db.keys(), 'Feed {} not in database for file {}'.format(feed, file)
-                var[feed] = db[feed]
+        my_plotter = LiqAds(**args)
+    elif args['xaxis'] == 'Pig':
+        # TODO: add alternative way to calculate P w/ P-data.db & using mole fraction in box
+        my_plotter = GasAds(**args)
+    my_plotter.readDBs()
 
     for feed in args['feeds']:
         # determine if run has been completed
-        run = checkRun(args['type'], list(num_molec[feed].keys()), list(rho[feed].keys()))
-        # gen data
-        numIndep = gen_data[feed][run]['numIndep']
-        # concentrations
-        if args['xaxis'] == 'C':
-            conc, c_mol, c_box = getConc(C[feed])
-            x_label = ['C-mol%s(g/mL)'%c_mol,'dC']
-        # if args['verbosity'] > 0:
-        #     print('liquid analysis for feed %s is with mol %s, box %s'%(feed, mol, c_box))
-        # initialize variables if needed
-            if (args['yaxis'] == 'Q'):
-                QvX(num_molec[feed][run], conc, gen_data[feed], feed,  run, args['units'], x_label)
-            elif (args['yaxis'] == 'dG'):
-                DGvC(dG[feed][run], num_molec[feed][run], conc, gen_data[feed], feed, x_label)
-            elif (args['yaxis'] == 'S'):
-                SvC(num_molec[feed][run], C[feed][run], args['units'],
-                    args['feed'], gen_data[feed][run]['numIndep'], x_label)
-        elif args['xaxis'] == 'Pig':
-            # TODO: add alternative way to calculate P w/ P-data.db & using mole fraction in box
-            assert args['mol'], 'Mol needed for number density to calculate P assuming I.G.'
-            assert args['box'], 'Box needed for number density to calculate P assuming I.G.'
-            assert args['Temp'], 'Temperature needed for number density to calculate P assuming I.G.'
-            x_label = ['Pig-mol%s(kPa)'%args['mol'],'dP']
-            press = getPi_ig(rho[feed][run][args['mol']]['box%s'%args['box']], args['Temp'])
-            if args['yaxis'] == 'Q':
-                QvX(num_molec[feed][run], press,gen_data[feed], feed,  run, args['units'], x_label)
-            elif args['yaxis'] == 'S':
-                SvP(num_molec[feed][run], rho[feed][run], press,
-                    args['units'], feed, gen_data[feed][run]['numIndep'],
-                    args['Temp'], x_label)
-
+        run = checkRun(args['type'], my_plotter.variables, feed)
+        if args['yaxis'] == 'Q':
+            my_plotter.QvX(feed, run)
+        elif args['yaxis'] == 'S':
+            my_plotter.SvX(feed, run)
+        elif args['yaxis'] == 'dG':
+            my_plotter.dGvX(feed)

@@ -57,40 +57,26 @@ def getRealRho(rhoBias, bias, T):
                 rhoReal[mol][box] = rhoBias[mol][box] * math.exp(  bias[mol][box]/T )
     return rhoReal
 
-def getPi_ig(rho, T):
-    '''
 
-    :param rho: number density in molec/nm**3
-    :param T: temperature (K)
-    :return:
-    '''
-    p_mean = rho['mean']/N_av*R['nm**3*kPa/(mol*K)']*T
-    p_stdev = rho['stdev']/N_av*R['nm**3*kPa/(mol*K)']*T
-    return {'mean':p_mean,'stdev':p_stdev}
-
-def getConc(c_data, mol='', box=''):
-    for key, value in sorted(c_data.items()):
-        if len(key) == 1:
-            mol = key
-        elif 'box' in key:
-            box = key
-        if isinstance(value, dict):
-            if 'mean' in value.keys():
-                return value, mol, box
-            else:
-                return getConc(value, mol, box)
 
 def calc95conf(stdev, numIndep):
     T_values = {'8':2.365,'4':3.182}
     assert '%i'%numIndep in T_values.keys(), 'No T-value stored for %i indep'%numIndep
     return stdev/math.pow(numIndep, 0.5)*T_values['%i'%numIndep]
 
-def checkRun(tag, feeds1, feeds2):
+def checkRun(tag, listOfDBs, feed):
+    '''
+    check to see if all DBs have data corresponding
+    to the same run
+    '''
+    run_names = []
+    for db in listOfDBs:
+        run_names += list(db[feed].keys())
     data_run = ''
-    for feed in set(feeds1 + feeds2):
-        if tag in feed: data_run += feed
-    assert feed in feeds1, 'More than one run found to analyze'
+    for run in set(run_names):
+        if tag in run: data_run += run
     assert data_run, 'No run analyzed of run type prompted'
+    assert data_run in listOfDBs[0][feed].keys(), 'More than one run found to analyze'
     return data_run
 
 def calcDGfromNumDens(rho, N_i, T):
