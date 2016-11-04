@@ -49,7 +49,7 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
 import math, copy, shutil
 from file_formatting.reader import read_restart, read_fort4
 from file_formatting.writer import write_restart, write_fort4
-from runUtil import what2Analyze
+from runAnalyzer import what2Analyze
 
 if __name__ == '__main__':
     from parser import Change

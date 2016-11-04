@@ -22,11 +22,12 @@ class Movie:
                 for bead in range(nbeads):
                     self.file.readline()
         self.frame_data = []
+        self.boxlengths = []
 
     def read_movie_frames(self):
         for frame_count in range(1, self.nframes+1):
             NumPrevCycles = int(self.file.readline()) # num cycles since last frame
-            Nframe = {}; Vframe = {};
+            Nframe = {}; boxlxFrame= {};
             FRAME_DATA = {'box%s'%j: {'mol%i'%k:[]
                                       for k in range(1,self.nmolty+1)} for j in range(1,self.nbox+1)}
             for box in range(1, self.nbox+1):
@@ -35,7 +36,8 @@ class Movie:
                 # total number of molecules and volume in frame
                 Nframe['box%s'%box] = {'mol%i'%j : int(line1.split()[j-1])
                                        for j in range(1, self.nmolty+1)}
-                Vframe['box%s'%box] = [ float(j) for j in line2.split() ]
+                boxlxFrame['box%s'%box] = [ float(j) for j in line2.split() ]
+            self.boxlengths.append( copy.deepcopy(boxlxFrame) )
             for molnumber in range(1, self.nchain+1):
                 line = self.file.readline()
                 (molID, moltype, nunit,
@@ -58,7 +60,7 @@ class Movie:
         add frame data from two movie files
         :param other: other movie file
         '''
-        new = Movie('masterData')
+        new = self.__class__('masterData')
         new.frame_data = self.frame_data + other.frame_data
         new.nframes = self.nframes + other.nframes
         assert self.nchain == other.nchain, 'nchain not equal for adding movie files'
@@ -67,6 +69,7 @@ class Movie:
         new.nmolty = self.nmolty
         assert self.nbox == other.nbox, 'nbox not equal for adding movie files'
         new.nbox = self.nbox
+        new.boxlengths = self.boxlengths + other.boxlengths
         return new
 
     def filterCoords(self, region, box):
@@ -85,7 +88,7 @@ class Movie:
                 FRAME_DATA[my_box][molType] = [value for i, value in enumerate(FRAME_DATA[my_box][molType])
                                                if i in indices_to_keep]
 
-    def countMols(self, numIndep, feed):
+    def countMols(self, numIndep, feed, frame_data):
         '''
         :param box: String box number.
         :param numIndep: number of independent simulations (integer)
@@ -97,7 +100,7 @@ class Movie:
         N = {}
         total_frames = -1
         frame_by_seed = [0 for i in range(numIndep)]
-        for FRAME_DATA in self.frame_data:
+        for FRAME_DATA in frame_data:
             if total_frames == -1:
                 N = {box:{mol: {'raw data':[[] for i in range(numIndep)]}
                                         for mol in FRAME_DATA[box].keys()}
@@ -113,11 +116,17 @@ class Movie:
                         # change list of data to floating point average
                         N[box][mol]['raw data'][seed] = np.mean(N[box][mol]['raw data'][seed])
         assert len(set(frame_by_seed)) == 1, 'Number of frames analyzed for each seed not equal'
+        num_molec_data = {}
         for box in N.keys():
             for mol in N[box].keys():
-                N[box][mol]['mean'] = np.mean(N[box][mol]['raw data'])
-                N[box][mol]['stdev'] = np.std(N[box][mol]['raw data'])
-        self.averages[feed] = N
+                mol_num = mol.strip('mol')
+                if mol_num not in num_molec_data.keys():
+                    num_molec_data[mol_num] = {}
+                if box not in num_molec_data[mol_num].keys():
+                    num_molec_data[mol_num][box] = {}
+                num_molec_data[mol_num][box]['mean'] = np.mean(N[box][mol]['raw data'])
+                num_molec_data[mol_num][box]['stdev'] = np.std(N[box][mol]['raw data'])
+        self.averages[feed] = num_molec_data
 
     def foldMovieToUC(self, a, b, c, box):
         '''
@@ -153,10 +162,6 @@ class Movie:
                         xyz_data['atoms'].append(beadType)
                         xyz_data['coords'].append(each_coord)
         return xyz_data
-
-
-
-
 
 
 def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
@@ -599,7 +604,7 @@ def read_fort4(file):
                 input_data[section]['mol%i'%itype] = {'box%i'%(i+1):line.split()[i] for i in range(len(line.split()))}
     return input_data
 
-def readPDB(file):
+def PDB(file):
     data = {'coords':[],'atoms':[]}
     for line in open(file):
         if line.startswith('CRYST1'):

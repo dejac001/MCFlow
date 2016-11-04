@@ -30,7 +30,7 @@ def calculateS_ab(Na, Nb, boxFrom='box2', boxTo='box1'):
     S_ab  = [N(z,a)/N(z,tot)/(N(z,b)/N(z,tot))]   /   [N(cbox,a)/N(cbox,tot)/(N(cbox,b)/N(cbox,tot))]
     S_ab  = [N(z,a)/N(z,b)] / [N(cbox,a)/N(cbox,b)] = N(z,a)*N(cbox,b)/(N(z,b)*N(cbox,a))
     '''
-    mean = (Na[boxTo]['mean']/Nb[boxTo]['mean']) / (Na[boxFrom]['mean']/Nb[boxTo]['mean'])
+    mean = (Na[boxTo]['mean']/Nb[boxTo]['mean']) / (Na[boxFrom]['mean']/Nb[boxFrom]['mean'])
     dS_dNa = {}; dS_dNb = {}
     dS_dNa[boxTo]   = Nb[boxFrom]['mean']      /     (Na[boxFrom]['mean']*Nb[boxTo]['mean'])
     dS_dNb[boxFrom] = Na[boxTo]['mean']        /     (Na[boxFrom]['mean']*Nb[boxTo]['mean'])
@@ -50,10 +50,10 @@ class GasAds:
         self.N = {}; self.rho = {}; self.gen_data = {}
         self.files = ['N-data.db','rho-data.db','general-data.db']
         self.variables = [self.N, self.rho, self.gen_data]
-        self.xlabel = ['Pig-mol%s(kPa)'%args['mol'],'dP']
         if kwargs:
             assert kwargs['mol'], 'Mol needed for number density to calculate P assuming I.G.'
             assert kwargs['Temp'], 'Temperature needed for number density to calculate P assuming I.G.'
+            self.xlabel = ['Pig-mol%s(kPa)'%kwargs['mol'],'dP']
             self.T = kwargs['Temp']
             self.mol = kwargs['mol']
             self.units = kwargs['units']
@@ -90,12 +90,13 @@ class GasAds:
         rho_vap = 1. # molec/nm**3
         for box, value in num_dens[mol].items():
             if ((box != 'box1') and
-                    (value['mean'] > 2.25e-12) and
+                    (value['mean'] > 1.25e-12) and
                     (value['mean'] < rho_vap)):
                 # find non-zeolite box with minimum number density
                 # that corresponds to a pressure above 1e-10 bar
                 rho_vap = value['mean']
                 my_box = box
+        assert my_box, 'Vapor box not found, maybe need to decrease min value'
         print('For mol%s, obtaining pressure'
               ' from num dens in %s'%(mol, my_box))
         return my_box
@@ -145,14 +146,15 @@ class GasAds:
                 # input adsorbed info
                 my_data[my_mol]['boxTo'] = num_molec[my_mol]['box1']
                 # find box for pressure info
-                my_box = GasAds.findVapBox(num_dens, my_mol)
+                my_box = GasAds().findVapBox(num_dens, my_mol)
                 # input pressure info
-                my_data[my_mol]['boxFrom'] = GasAds.getX(num_dens[my_mol][my_box], self.T)
+                my_data[my_mol]['boxFrom'] = GasAds().getX(num_dens[my_mol][my_box], self.T)
             return my_data
         N = self.N[feed][run]
         rho = self.rho[feed][run]
         if 'P' in self.xlabel[0]:
-            X = self.getX(self.rho[feed][run], self.T)
+            vapor_box = self.findVapBox( self.rho[feed][run], self.mol)
+            X = self.getX(self.rho[feed][run][self.mol][vapor_box], self.T)
         elif 'C' in self.xlabel[0]:
             X = self.getX(self.C[feed])
         file_description = '%s    S(%s)    %s     dS'%(self.xlabel[0], self.units, self.xlabel[1])
@@ -176,12 +178,12 @@ class GasAds:
                          [feed], file_name, file_description)
 
 class LiqAds(GasAds):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}
         self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db']
         self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data]
-        self.xlabel = ['C-mol%s(g/mL)'%c_mol,'dC']
         if kwargs:
+            self.xlabel = ['C-mol%s(g/mL)'%c_mol,'dC']
             self.units = kwargs['units']
             self.feeds = kwargs['feeds']
             self.path = kwargs['path']
@@ -213,7 +215,7 @@ class LiqAds(GasAds):
                 if 'mean' in value.keys():
                     return value, mol, box
                 else:
-                    return getX(value, mol, box)
+                    return LiqAds().getX(value, mol, box)
 
 from MCFlow.runAnalyzer import checkRun, calc95conf
 from MCFlow.chem_constants import N_av, R

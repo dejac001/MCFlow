@@ -1,9 +1,10 @@
 '''
 Write isotherm from previously generated databank files
 '''
-from runAnalyzer import getConc, checkRun, calc95conf
-from file_formatting.writer import writeAGR
-from chem_constants import R, N_av
+from MCFlow.runAnalyzer import checkRun, calc95conf
+from MCFlow.writeXvY import LiqAds, writeAGR
+from MCFlow.file_formatting import writer
+from MCFlow.chem_constants import R, N_av
 import math
 
 if __name__ == '__main__':
@@ -29,11 +30,11 @@ if __name__ == '__main__':
     mol_data = {}
     for feed in args['feeds']:
         # determine if run has been completed
-        run = checkRun(args['type'], list(C[feed].keys()), list(rho[feed].keys()))
+        run = checkRun(args['type'], [C,rho], feed)
         # gen data
         numIndep = gen_data[feed][run]['numIndep']
         # concentrations
-        c_mol, box, conc = getConc(C[feed])
+        conc, c_mol, box = LiqAds().getX(C[feed])
         # initialize variables if needed
         if c_mol not in mol_data.keys():
             mol_data[c_mol] = {}

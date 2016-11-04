@@ -17,8 +17,8 @@ class Trajectory():
                 self.traj_steps['%s'%feed][sim].append(index+offset)
                 begin_index = index
 
-from plotter import *
-
+import numpy as np
+from plotter import plotTrajectory
 if __name__ == '__main__':
     from file_formatting import reader
     import runAnalyzer

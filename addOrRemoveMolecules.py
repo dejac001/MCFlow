@@ -4,31 +4,6 @@ You will need to use this, for example, if
 too many of a given sorbate adsorb and not
 enough molecules are left in vapor phase.
 '''
-def fold(xyz, boxlengths):
-    def pbc(coord, boxlength):
-        if coord > boxlength:
-            folded = coord - boxlength
-        elif coord < 0:
-            folded = coord + boxlength
-        else:
-            folded = coord
-        return folded
-    new_coords = []
-    for i, boxl in zip(xyz, boxlengths):
-        new_coords.append( pbc(i,boxl) )
-    return new_coords
-
-def calculate_distance(xyz1, xyz2, abc):
-    vector = [xyz1[i] - xyz2[i] for i in range(len(xyz1))]
-    for i in range(len(abc)):
-        # implement minimum image
-        if vector[i] > abc[i]/2.:
-            # positive
-            vector[i] = abc[i] - vector[i]
-        elif vector[i] < -1.*abc[i]/2.:
-            vector[i] = abc[i] + vector[i]
-    return np.linalg.norm(vector, 2, 0)
-
 def makeRandomStruc(boxlengths, coordinates, previous_coords):
     boxlx, boxly, boxlz = boxlengths
     rand_x = random.random()*boxlx
@@ -150,6 +125,7 @@ def removeMolecules(feed, seed, path, box, nAdd,restart, input, molID, **kwargs)
 
 
 from file_formatting import reader, writer
+from calc_tools import fold, calculate_distance
 import random, copy
 import numpy as np
 

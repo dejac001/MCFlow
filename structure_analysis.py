@@ -34,7 +34,9 @@ def main(filter_function=None):
                            type=str,default = '')
     args = vars(my_parser.parse_args())
 
-    N_database = {}
+    if filter_function:
+        assert args['name'], 'Output ID name needed to output local structure info'
+
     for feed in args['feeds']:
         if args['verbosity'] > 0: print('-'*12 + 'Dir is %s'%feed + '-'*12)
         for seed in args['indep']:
@@ -59,11 +61,13 @@ def main(filter_function=None):
                     D = D + F
         if filter_function:
             D.filterCoords(filter_function, args['box'])
-        D.countMols(len(args['indep']),feed)
-        xyz_data = D.getCoords(args['mol'], args['box'], ['COM'])
-        xyz('%s/%s/movie_coords_mol%s_box%s.xyz'%(args['path'], feed, args['mol'], args['box']), xyz_data)
-    if args['name']:
-        outputDB(args['path'],args['feeds'],args['type'],{args['name']: D } )
+        D.countMols(len(args['indep']),feed, D.frame_data)
+        for mol_num in D.averages[feed].keys():
+            xyz_data = D.getCoords(mol_num, args['box'], ['COM'])
+            xyz('%s/%s/movie_coords_mol%s_box%s.xyz'%(args['path'], feed,
+                                                        mol_num, args['box']), xyz_data)
+        if args['name']:
+            outputDB(args['path'],[feed],args['type'],{args['name']: D } )
 
 from MCFlow.runAnalyzer import what2Analyze
 from MCFlow.file_formatting.reader import Movie

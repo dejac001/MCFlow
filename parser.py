@@ -52,8 +52,15 @@ class Plot(Main):
                                                        'fmt: (mean, 95%%conf.) ',
                                   type=float, nargs= '+')
 
-
-
+class MultMols(Plot):
+    def __init__(self):
+        Main.__init__(self)
+        Main.other(self)
+        self.parser.description = 'Obtain results for multiple molecules'
+        self.parser.add_argument('-m','--mol',help='MoleculeS to analyze', type=str, nargs='+')
+        self.parser.add_argument('-TK','--Temp',help='Temperature in Kelvin',
+                                  type=float)
+        self.parser.add_argument('-b','--box',help='box to analyze', type=str)
 
 class Results(Plot):
     def __init__(self):

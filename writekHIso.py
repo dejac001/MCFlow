@@ -35,7 +35,7 @@ if __name__ == '__main__':
         if args['verbosity'] > 0:
             print('starting feed {}'.format(feed))
         # determine if run has been completed
-        run = checkRun(args['type'], list(rho[feed].keys()), list(N[feed].keys()))
+        run = checkRun(args['type'], [rho, N], feed)
         # gen data
         numIndep = gen_data[feed][run]['numIndep']
         # initialize variables if needed
