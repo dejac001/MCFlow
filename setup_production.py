@@ -30,7 +30,8 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
     new_input_data['&mc_shared']['time_limit'] = ' %i'%total_time
     for var in ['iprint','iblock']:
         new_input_data['&analysis'][var] = ' %i'%(math.ceil(nstep/10))
-    new_input_data['&mc_volume'].pop( 'allow_cutoff_failure' )
+    if 'allow_cutoff_failure' in new_input_data['&mc_volume'].keys():
+        new_input_data['&mc_volume'].pop( 'allow_cutoff_failure' )
     rcut = {}
     for box in new_input_data['SIMULATION_BOX'].keys():
         rcut[box] = float(new_input_data['SIMULATION_BOX'][box]['rcut'].rstrip('d0'))
