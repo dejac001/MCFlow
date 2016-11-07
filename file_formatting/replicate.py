@@ -21,19 +21,19 @@ def replicate(coordinates, abc, lmn):
 def replicate_mol(molecule_coords, abc, lmn):
     a,b,c = abc
     replicated = []
-    for xcell in range(lmn[0]):
+    for xcell in range(lmn[0]): # start from 1 so don't duplicate
         for ycell in range(lmn[1]):
             for zcell in range(lmn[2]):
                 # make ONE new molecule each time here
                 new_mol_coords = []
                 for bead in molecule_coords:
-                    x, y, z = bead['xyz']
+                    x, y, z = map(float,bead['xyz'].split())
                     new_xyz = [x + xcell*a, y + ycell*b, z + zcell*c]
-                    new_mol_coords.append({'xyz':new_xyz,'q':bead['q']})
+                    new_mol_coords.append({'xyz':' '.join(['%e'%k for k in new_xyz]),'q':bead['q']})
                 replicated.append(new_mol_coords)
     return replicated
 
-def replicate_file(parser):
+def replicate_file(parent_parser):
     parser.add_argument('-abc','--boxlengths',help='dimensions of orthorhombic box',
                         type=float,nargs='+')
     parser.add_argument('-f','--file',help='file to replicate',
@@ -56,6 +56,7 @@ def replicate_file(parser):
 
 def replicate_box(parser):
     import copy
+    parser = argparse.ArgumentParser(description='replicate box',parents=[parent_parser])
     parser.add_argument('-b','--box',help='box to replicate',type=str)
     parser.add_argument('-r','--restart',help='restart file',type=str)
     parser.add_argument('-p','--path',help='path to main directories',
@@ -64,18 +65,22 @@ def replicate_box(parser):
     parser.add_argument('-w','--extension',help='new file extension', type=str,
                         default='replicated')
     args =  vars(parser.parse_args())
+    assert args['input'], parser.print_help()
     input_data = reader.read_fort4(args['input'])
     nmolty = int(input_data['&mc_shared']['nmolty'])
     restart_data = reader.read_restart(args['restart'],
                                        nmolty,
                                        int(input_data['&mc_shared']['nbox']))
     mol_added = {'%i'%i:0 for i in range(1,nmolty+1)}
-    box_dimensions = list(map(float,restart_data['box dimensions']['box%s'%args['box']]))
+    box_dimensions = list(map(float,restart_data['box dimensions']['box%s'%args['box']].split()))
     new_restart_data = copy.deepcopy(restart_data)
     new_input_data = copy.deepcopy(input_data)
+    for key in 'mol types', 'box types', 'coords':
+        new_restart_data[key] = []
     for c, ibox in enumerate(restart_data['box types']):
+        imolty = restart_data['mol types'][c]
         if ibox == args['box']:
-            imolty = restart_data['mol types'][c]
+            mol_added[imolty] -= 1 # dont double count
             # we need to replicate these coordinates
             new_mol = replicate_mol(restart_data['coords'][c], box_dimensions, args['replicate'])
             # keep track of added mols
@@ -84,6 +89,10 @@ def replicate_box(parser):
                 new_restart_data['box types'].append(ibox)
                 new_restart_data['coords'].append(new_mol[m])
                 mol_added[imolty] += 1
+        else:
+            # keep
+            for key in 'mol types', 'box types', 'coords':
+                new_restart_data[key].append( restart_data[key][c] )
     # tell how many mols added
     total_added = sum(mol_added.values())
     old_nchain = int(input_data['&mc_shared']['nchain'])
@@ -97,9 +106,9 @@ def replicate_box(parser):
     for mol, nAdded in mol_added.items():
         nOld = int(new_input_data['SIMULATION_BOX']['box%s'%args['box']]['mol%s'%mol])
         new_input_data['SIMULATION_BOX']['box%s'%args['box']]['mol%s'%mol] = '%i'%(nOld+nAdded)
+        molID = input_data['MOLECULE_TYPE']['mol%s'%mol].split('\n')[1].split()[0]
         print('For input dir %s , %i molecules of type %s added '%(
-            args['input'][:args['input']].rfind('/'), nAdded,
-                        input_data['MOLECULE_TYPE']['mol%s'%mol].split()[0])
+            args['input'][:args['input'].rfind('/')], nAdded,molID)
               )
     writer.write_restart(new_restart_data, '%s/%s/fort.77.%s'%(
         args['path'],args['restart'][:args['restart'].rfind('/')],args['extension']))
@@ -108,20 +117,13 @@ def replicate_box(parser):
 
 from MCFlow.file_formatting import reader
 from MCFlow.file_formatting import writer
-import os
+import os, argparse
 
 if __name__ == '__main__':
-    import argparse
-    parent_parser = argparse.ArgumentParser(description='replicate xyz or pdb file or box')
+    parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('-t','--type',choices=['replicate_box','replicate_file'])
 
     parent_parser.add_argument('-lmn','--replicate',help='integer number of cells in each dimension '
                                                   '(1 does no replication)',
                         type=int, nargs='+')
-    parent_args = vars(parent_parser.parse_args())
-
-    assert args['file'], parent_parser.print_help()
-    if parent_args['type'] == 'replicate_box':
-        replicate_box(parent_parser)
-    elif parent_args['type'] == 'replicate_file':
-        replicate_file(parent_parser)
+    replicate_box(parent_parser)

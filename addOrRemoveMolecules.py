@@ -65,7 +65,7 @@ def addMolecules(full_path, nAdd, box, restart, input, molID, **kwargs):
         mol_coord_data[key] = []
     for my_mol, my_box, my_coords in zip(restart_data['mol types'], restart_data['box types'],
                                          restart_data['coords']):
-        if (my_mol == mol_num) and (my_box == box):
+        if (my_mol == mol_num):
             for key, value in zip(['mol types','box types','coords'], [my_mol, my_box, my_coords]):
                 mol_coord_data[key].append(value)
     assert len(mol_coord_data['mol types']) > 0, 'No mols found for moltype in boxtype provided'
@@ -88,10 +88,10 @@ def addMolecules(full_path, nAdd, box, restart, input, molID, **kwargs):
         restart_data['nchain'] = restart_data['nchain'].replace(
             restart_data['nchain'].split()[0], '%i'%(int(restart_data['nchain'].split()[0])+1)
         )
-        input_data['&mc_shared']['nchain'] = restart_data['nchain'].split()[0]
         input_data['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num] = '%i'%(
             int(input_data['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num]) + 1
         )
+    input_data['&mc_shared']['nchain'] = restart_data['nchain'].split()[0]
     return copy.deepcopy(restart_data), copy.deepcopy(input_data)
 
 def removeMolecules(full_path, box, nAdd,restart, input, molID, **kwargs):
@@ -118,7 +118,7 @@ def removeMolecules(full_path, box, nAdd,restart, input, molID, **kwargs):
     new_restart_data['nchain']  = restart_data['nchain'].replace(
                 restart_data['nchain'].split()[0], '%i'%(int(restart_data['nchain'].split()[0])+taken_out)
                 )
-    input_data['&mc_shared']['nchain'] = restart_data['nchain'].split()[0]
+    input_data['&mc_shared']['nchain'] = new_restart_data['nchain'].split()[0]
     input_data['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num] = '%i'%(
         int(input_data['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num]) + taken_out
     )
