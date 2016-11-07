@@ -4,7 +4,7 @@ Write isotherm from previously generated databank files
 from runAnalyzer import checkRun, calc95conf
 from writeXvY import writeAGR
 from chem_constants import R, N_av
-import math
+import math, copy
 
 if __name__ == '__main__':
     from parser import Plot
@@ -22,14 +22,19 @@ if __name__ == '__main__':
             len(args['henry']) == 2), 'kH(mean) and kH(95% conf) needed'
     assert args['mol'], 'Mol needed for x axis'
 
+    original_feeds = copy.deepcopy(args['feeds'])
     N = {}; rho = {}; gen_data = {}
     for file, var in zip(['N-data.db','rho-data.db', 'general-data.db'],
                          [N, rho, gen_data]):
         with shelve.open('%s/%s'%(args['path'], file)) as db:
-            for feed in args['feeds']:
-                assert feed in db.keys(), 'Feed {} not in database'.format(feed)
-                var[feed] = db[feed]
-
+            for feed in original_feeds:
+                try:
+                    var[feed] = db[feed]
+                except KeyError:
+                    if feed in args['feeds']:
+                        args['feeds'].remove(feed)
+                        print('No feed of %s found in database--removing from feeds'%feed)
+            
     kH_mean, kH_95conf = args['henry']
     for feed in args['feeds']:
         if args['verbosity'] > 0:

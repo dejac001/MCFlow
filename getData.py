@@ -52,7 +52,7 @@ from MCFlow import runAnalyzer
 
 if __name__ == '__main__':
     from parser import Results
-    from runAnalyzer import getFileData
+    from runAnalyzer import getFileData, NoFilesAnalyzed
 
     my_parser = Results()
     my_parser.parser.add_argument('-F','--force',help='whether or not to force update of '
@@ -82,10 +82,10 @@ if __name__ == '__main__':
 
     feeds = args['feeds']
     for feed in feeds:
-        args['feeds'] = [feed]
-
-        data, gen_data = getFileData(**args_to_send)
-
-        outputDB(args['path'], args['feeds'], args['type'], data)
-
-        outputGenDB(args['path'], args['feeds'], args['type'], gen_data)
+        try:
+            args['feeds'] = [feed]
+            data, gen_data = getFileData(**args_to_send)
+            outputDB(args['path'], args['feeds'], args['type'], data)
+            outputGenDB(args['path'], args['feeds'], args['type'], gen_data)
+        except NoFilesAnalyzed:
+            print('No files to analyzed for feed %s'%feed)
