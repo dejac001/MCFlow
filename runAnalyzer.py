@@ -100,6 +100,7 @@ def calcDGfromNumDens(rho, N_i, T):
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
                 verbosity, liq=False, mol=['-1'], **kargs):
+    from file_formatting import reader
     general_data = {key:{} for key in feeds}
     # TODO: add molec name (i.e. 15PDO or WATER) into general_data
     for feed in feeds:
@@ -175,7 +176,6 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
             general_data[feed]['zeolite'] = zeolite
     return data, general_data
 
-import math, os
-from MCFlow import properties, calc_tools
-from MCFlow.file_formatting import reader
+import math, os, sys
+from MCFlow import properties, calc_tools, file_formatting
 from MCFlow.chem_constants import R, N_av

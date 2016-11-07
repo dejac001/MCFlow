@@ -341,9 +341,11 @@ if __name__ == '__main__':
     from parser import Change
 
     args = vars(Change().parse_args())
+    feeds = args.pop('feeds')
 
-    data, gen_data = getFileData(**args)
-    for feed in args['feeds']:
+    for feed in feeds:
+        args['feeds'] = [feed]
+        data, gen_data = getFileData(**args)
         nbox = len(data['rho'].averages[feed].keys())
         # TODO: format return from analyzeTransfers to fit well with fort4 data dict
         (newSwaps, newSwatches, pctAct,
@@ -366,7 +368,7 @@ if __name__ == '__main__':
                               gen_data[feed]['compositions'], args['indep'], data['boxlx'].averages[feed],
                               args['rcut'], args['time'], nstepnew=args['nstep'],
                               Pdir1=Prob_dir1)
-    outputDB(args['path'], args['feeds'],args['type'], data )
-    outputGenDB(args['path'], args['feeds'],args['type'], gen_data )
+        outputDB(args['path'], args['feeds'],args['type'], data )
+        outputGenDB(args['path'], args['feeds'],args['type'], gen_data )
 
 

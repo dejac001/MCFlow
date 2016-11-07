@@ -25,11 +25,11 @@ def makeRandomStruc(boxlengths, coordinates, previous_coords):
                 return makeRandomStruc(boxlengths, coordinates, previous_coords)
     return coords
 
-def initialize(path, feed, seed, restart_name, input_name,  molID, box):
-    input_data = reader.read_fort4('%s/%s/%i/%s'%(path,feed,seed,input_name))
+def initialize(full_path, restart_name, input_name,  molID, box):
+    input_data = reader.read_fort4('%s%s'%(full_path,input_name))
     nmolty, nbox = (int(input_data['&mc_shared']['nmolty']),
                     int(input_data['&mc_shared']['nbox']))
-    restart_data = reader.read_restart('%s/%s/%i/%s'%(path,feed,seed,restart_name),nmolty, nbox)
+    restart_data = reader.read_restart('%s%s'%(full_path,restart_name),nmolty, nbox)
 
     boxlx, boxly, boxlz = map(float,restart_data['box dimensions']['box%s'%box].split())
 
@@ -51,14 +51,14 @@ def initialize(path, feed, seed, restart_name, input_name,  molID, box):
         q.append( float(bead['q'].rstrip('\n')) )
     return restart_data, input_data, (boxlx, boxly, boxlz), mol_number, old_coords, q
 
-def addMolecules(feed, seed, path, nAdd, box, restart, input, molID, **kwargs):
+def addMolecules(full_path, nAdd, box, restart, input, molID, **kwargs):
     def getXYZCoords(mol_coords):
         coords = []
         for bead in mol_coords:
             coords.append(list(map(float,bead['xyz'].split())))
         return coords
     (restart_data, input_data, boxlengths,
-     mol_num, old_coordinates, charges) = initialize(path, feed, seed, restart,input, molID, box)
+     mol_num, old_coordinates, charges) = initialize(full_path, restart,input, molID, box)
     # get info of old structures of molecules to choose from in making new structures
     mol_coord_data = {}
     for key in ['box types','mol types', 'coords']:
@@ -68,6 +68,7 @@ def addMolecules(feed, seed, path, nAdd, box, restart, input, molID, **kwargs):
         if (my_mol == mol_num) and (my_box == box):
             for key, value in zip(['mol types','box types','coords'], [my_mol, my_box, my_coords]):
                 mol_coord_data[key].append(value)
+    assert len(mol_coord_data['mol types']) > 0, 'No mols found for moltype in boxtype provided'
     for newMol in range(nAdd):
         # find random molecule to copy configuration of
         random_mol = random.randint(0, len(mol_coord_data['mol types'])-1)
@@ -93,12 +94,12 @@ def addMolecules(feed, seed, path, nAdd, box, restart, input, molID, **kwargs):
         )
     return copy.deepcopy(restart_data), copy.deepcopy(input_data)
 
-def removeMolecules(feed, seed, path, box, nAdd,restart, input, molID, **kwargs):
+def removeMolecules(full_path, box, nAdd,restart, input, molID, **kwargs):
     def keepMol():
         for key in ['box types', 'mol types', 'coords']:
             new_restart_data[key].append(restart_data[key][i])
     (restart_data, input_data, boxlengths,
-     mol_num, old_coordinates, charges) = initialize(path, feed, seed, restart,input, molID, box)
+     mol_num, old_coordinates, charges) = initialize(full_path, restart,input, molID, box)
     taken_out = 0
     new_restart_data = copy.deepcopy(restart_data)
     # initialize new restart data
@@ -138,9 +139,13 @@ if __name__ == '__main__':
 
     for feed in args['feeds']:
         for seed in args['indep']:
+            if (feed == '.'):
+                base_dir = ''
+            else:
+                base_dir = '%s/%s/%i/'%(args['path'],feed,seed)
             if args['nAdd'] > 0:
-                new_restart_data, new_input_data = addMolecules(feed, seed, **args)
+                new_restart_data, new_input_data = addMolecules(base_dir, **args)
             elif args['nAdd'] < 0:
-                new_restart_data, new_input_data = removeMolecules(feed, seed, **args)
-            writer.write_fort4(new_input_data, '%s/%s/%i/fort.4.newMols'%(args['path'],feed,seed))
-            writer.write_restart(new_restart_data, '%s/%s/%i/fort.77.newMols'%(args['path'],feed,seed))
+                new_restart_data, new_input_data = removeMolecules(base_dir, **args)
+            writer.write_fort4(new_input_data, '%sfort.4.newMols'%base_dir)
+            writer.write_restart(new_restart_data, '%sfort.77.newMols'%base_dir)

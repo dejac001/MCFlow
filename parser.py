@@ -27,6 +27,8 @@ class Main:
     def parse_args(self):
         self.args = self.parser.parse_args()
         assert self.args.feeds, 'No feeds to analyze'
+        if self.args.feeds == ['.']:
+            self.args.indep = ['.']
         return self.args
 
 class Plot(Main):

@@ -80,8 +80,12 @@ if __name__ == '__main__':
         if key in args_to_send.keys():
             args_to_send.pop(key)
 
-    data, gen_data = getFileData(**args_to_send)
+    feeds = args['feeds']
+    for feed in feeds:
+        args['feeds'] = [feed]
 
-    outputDB(args['path'], args['feeds'], args['type'], data)
+        data, gen_data = getFileData(**args_to_send)
 
-    outputGenDB(args['path'], args['feeds'], args['type'], gen_data)
+        outputDB(args['path'], args['feeds'], args['type'], data)
+
+        outputGenDB(args['path'], args['feeds'], args['type'], gen_data)
