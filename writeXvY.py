@@ -43,7 +43,7 @@ def calculateS_ab(Na, Nb, boxFrom='box2', boxTo='box1'):
                        )
     return mean, stdev
 
-class GasAds:
+class IdealGasAds:
     def __init__(self, **kwargs):
 
         # TODO: make general db reader that all files can do
@@ -109,12 +109,14 @@ class GasAds:
         gen_data = self.gen_data[feed][run]
         file_description = '%s    Q(%s)    %s     dQ'%(self.xlabel[0], self.units,
                                                        self.xlabel[1])
-        if 'P' in self.xlabel[0]:
+        if 'Pig' in self.xlabel[0]:
             vapor_box = self.findVapBox( self.rho[feed][run], self.mol)
             # todo: need to choose molecule for x axis here
             X = self.getX(self.rho[feed][run][self.mol][vapor_box], self.T)
         elif 'C' in self.xlabel[0]:
             X = self.getX(self.C[feed])
+        elif 'P-box' in self.xlabel[0]:
+            X = self.P[feed][run]['box%s'%self.vapor_box]
         nIndep = gen_data['numIndep']
         mols_adsorbed = self.getMolAds(N)
         for mol in mols_adsorbed:
@@ -146,17 +148,19 @@ class GasAds:
                 # input adsorbed info
                 my_data[my_mol]['boxTo'] = num_molec[my_mol]['box1']
                 # find box for pressure info
-                my_box = GasAds().findVapBox(num_dens, my_mol)
+                my_box = IdealGasAds().findVapBox(num_dens, my_mol)
                 # input pressure info
-                my_data[my_mol]['boxFrom'] = GasAds().getX(num_dens[my_mol][my_box], self.T)
+                my_data[my_mol]['boxFrom'] = IdealGasAds().getX(num_dens[my_mol][my_box], self.T)
             return my_data
         N = self.N[feed][run]
         rho = self.rho[feed][run]
-        if 'P' in self.xlabel[0]:
+        if 'Pig' in self.xlabel[0]:
             vapor_box = self.findVapBox( self.rho[feed][run], self.mol)
             X = self.getX(self.rho[feed][run][self.mol][vapor_box], self.T)
         elif 'C' in self.xlabel[0]:
             X = self.getX(self.C[feed])
+        elif 'P-box' in self.xlabel[0]:
+            X = self.P[feed][run]['box%s'%self.vapor_box]
         file_description = '%s    S(%s)    %s     dS'%(self.xlabel[0], self.units, self.xlabel[1])
         mols_adsorbed = self.getMolAds(N)
         mols_adsorbed.reverse() # start from higher number molecules (i.e. solutes)
@@ -170,6 +174,8 @@ class GasAds:
                 elif 'C' in self.xlabel[0]:
                     box_from, box_to = 'box2', 'box1'
                     s_data = N
+                elif 'P-box' in self.xlabel[0]:
+                    print('P-box not implemented for SvX yet')
                 S_mean, S_stdev = calculateS_ab(s_data[mol1],s_data[mol2],
                                                 boxFrom=box_from, boxTo=box_to)
                 file_name = 'S_%s-vs-%s.dat'%(s_name, self.xlabel[0])
@@ -177,7 +183,20 @@ class GasAds:
                          [calc95conf(X['stdev'], nIndep)], [calc95conf(S_stdev, nIndep)],
                          [feed], file_name, file_description)
 
-class LiqAds(GasAds):
+class GasAds(IdealGasAds):
+    def __init__(self, **kwargs):
+        self.N = {}; self.P = {}; self.gen_data = {};
+        self.files = ['N-data.db','P-data.db','general-data.db']
+        self.variables = [self.N, self.P, self.gen_data]
+        if kwargs:
+            assert kwargs['box'], 'Box needed to calculate pressure (box)'
+            self.xlabel = ['P-box%s(kPa)'%kwargs['box'],'dP']
+            self.vapor_box = kwargs['box']
+            self.units = kwargs['units']
+            self.feeds = kwargs['feeds']
+            self.path = kwargs['path']
+
+class LiqAds(IdealGasAds):
     def __init__(self, **kwargs):
         self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}
         self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db']
@@ -238,6 +257,8 @@ if __name__ == '__main__':
         my_plotter = LiqAds(**args)
     elif args['xaxis'] == 'Pig':
         # TODO: add alternative way to calculate P w/ P-data.db & using mole fraction in box
+        my_plotter = IdealGasAds(**args)
+    elif args['xaxis'] == 'Pbox':
         my_plotter = GasAds(**args)
     my_plotter.readDBs()
 

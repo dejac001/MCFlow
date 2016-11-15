@@ -42,7 +42,7 @@ class Plot(Main):
         self.parser.add_argument('-b','--box',help='box to analyze', type=str)
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',
-                                 choices = ['C','Pig'])
+                                 choices = ['C','Pig', 'Pbox'])
         self.parser.add_argument('-y','--yaxis',help='x axis of plot',
                                  choices = ['Q','dG','S'])
     def isotherm(self):

@@ -128,10 +128,8 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                  T, zeolite) = reader.go_through_runs(my_dir, ncycle_old,
                                                                           old_begin, nfiles,
                                                                           tag=type)
-                print(biasPot)
                 # do calculations for other data that may be needed
                 number_dens_real = getRealRho(number_densities, biasPot, T)
-                print(number_dens_real)
                 if liq:
                     concentrations = {}
                     for mlcl in mol:

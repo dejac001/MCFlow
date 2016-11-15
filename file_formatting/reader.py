@@ -626,6 +626,8 @@ def xyz(file):
             atom = line.split()[0]
             data['atoms'].append( atom )
             data['coords'].append( [x,y,z] )
+        elif len(line.split()) == 9:
+            data['hmatrix']=list(map(float,line.split()))
     return data
 
 import os
