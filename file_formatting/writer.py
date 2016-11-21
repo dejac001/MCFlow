@@ -39,7 +39,9 @@ def write_new_bias(PATH, old_begin, nfiles, boxlx_vapor, biasPotNew, nGhost,
             elif 'iprint' in line:
                 fnew.write(makeNewLine(indent, 'iprint','%i'%int(nstepnew/10)))
             elif 'iblock' in line:
-                fnew.write(makeNewLine(indent, 'iblock','%i'%int(nstepnew/10)))
+                iblock = int(nstepnew/10)
+                if iblock > 1000: iblock = 1000
+                fnew.write(makeNewLine(indent, 'iblock','%i'%iblock))
             elif ('nmolty' in line) and ('nmolty' == line.split()[0]):
                 nMolTy = int(line.split()[-1])
                 fnew.write(line)
@@ -132,7 +134,9 @@ def write_new_prob(PATH, pswapMolTy, pswatchMolTy, pmvol, pmswap, pswatch,
             elif line.find('iprint') != -1:
                 fnew.write(makeNewLine(indent,'iprint','%-7i' % int(nstepnew/10)))
             elif line.find('iblock') != -1:
-                fnew.write(makeNewLine(indent,'iblock','%-7i' % int(nstepnew/10)))
+                iblock = int(nstepnew/10)
+                if iblock > 1000: iblock = 1000
+                fnew.write(makeNewLine(indent,'iblock','%-7i' % iblock))
             elif line.find('pmswmt') != -1:
                 value = writePMT(pswapMolTy)
                 if len(pswapMolTy) < molReadInFort4:

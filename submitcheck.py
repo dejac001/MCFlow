@@ -31,16 +31,14 @@ def checkYoSelf(path, feeds, nindep, count_start, tag='equil-'):
             elif count < count_prev:
                 print(os.getcwd(), 'is only on ',tag ,count
                       ,'while all others are on ',tag ,count_prev)
-                sys.exit([1])
             elif count > count_prev:
                 print(feed + '/1', 'is only on ', tag , count_prev,
                       'while another one is on', tag ,count)
-                sys.exit([1])
 
         if not error:
             print('all runs for ',feed,'finished up through', tag, count)
 
-import os, sys
+import os
 
 if __name__ == '__main__':
 
