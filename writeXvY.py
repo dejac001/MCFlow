@@ -114,7 +114,7 @@ class IdealGasAds:
             # todo: need to choose molecule for x axis here
             X = self.getX(self.rho[feed][run][self.mol][vapor_box], self.T)
         elif 'C' in self.xlabel[0]:
-            X = self.getX(self.C[feed])
+            X, cmol, cbox = self.getX(self.C[feed])
         elif 'P-box' in self.xlabel[0]:
             X = self.P[feed][run]['box%s'%self.vapor_box]
         nIndep = gen_data['numIndep']
@@ -158,7 +158,7 @@ class IdealGasAds:
             vapor_box = self.findVapBox( self.rho[feed][run], self.mol)
             X = self.getX(self.rho[feed][run][self.mol][vapor_box], self.T)
         elif 'C' in self.xlabel[0]:
-            X = self.getX(self.C[feed])
+            X, cmol, cbox = self.getX(self.C[feed])
         elif 'P-box' in self.xlabel[0]:
             X = self.P[feed][run]['box%s'%self.vapor_box]
         file_description = '%s    S(%s)    %s     dS'%(self.xlabel[0], self.units, self.xlabel[1])
@@ -202,17 +202,17 @@ class LiqAds(IdealGasAds):
         self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db']
         self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data]
         if kwargs:
-            self.xlabel = ['C-mol%s(g/mL)'%c_mol,'dC']
+            self.xlabel = ['C(g/mL)','dC']
             self.units = kwargs['units']
             self.feeds = kwargs['feeds']
             self.path = kwargs['path']
     
-    def DGvX(self, feed):
+    def dGvX(self, feed):
         file_description = '%s    dG(kJ/mol)    %s     dG'%(self.xlabel[0],self.xlabel[1])
         N = self.N[feed][run]
         dG = self.dG[feed][run]
         nIndep = self.gen_data[feed][run]['numIndep']
-        X = self.getX(self.C[feed])
+        X, cmol, cbox = self.getX(self.C[feed])
         solutes = sorted([i for i in N.keys()
                                     if ((N[i]['box2']['mean'] > 1e-06)
                           and (N[i]['box2']['mean'] < 300))      ])
@@ -226,7 +226,7 @@ class LiqAds(IdealGasAds):
 
     def getX(self, c_data, mol='', box=''):
         for key, value in sorted(c_data.items()):
-            if len(key) == 1:
+            if (len(key) == 1) or (len(key) == 2):
                 mol = key
             elif 'box' in key:
                 box = key

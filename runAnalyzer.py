@@ -65,7 +65,7 @@ def getRealRho(rhoBias, bias, T):
 
 
 def calc95conf(stdev, numIndep):
-    T_values = {'8':2.365,'4':3.182}
+    T_values = {'8':2.365,'4':3.182, '16':2.131}
     assert '%i'%numIndep in T_values.keys(), 'No T-value stored for %i indep'%numIndep
     return stdev/math.pow(numIndep, 0.5)*T_values['%i'%numIndep]
 
@@ -104,7 +104,7 @@ def calcDGfromNumDens(rho, N_i, T):
     return dG
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
-                verbosity, liq=False, mol=['-1'], **kargs):
+                verbosity, liq, mol=['-1'], **kargs):
     from file_formatting import reader
     general_data = {key:{} for key in feeds}
     # TODO: add molec name (i.e. 15PDO or WATER) into general_data
@@ -132,10 +132,9 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 number_dens_real = getRealRho(number_densities, biasPot, T)
                 if liq:
                     concentrations = {}
-                    for mlcl in mol:
-                        c = calc_tools.g_mL(N[mlcl]['box2'], boxLengths['box2'],
-                                            MW=molWeights[mlcl])
-                        concentrations[mlcl] = {'box2':c}
+                    c = calc_tools.g_mL(N[mol]['box2'], boxLengths['box2'],
+                                            MW=molWeights[mol])
+                    concentrations[mol] = {'box2':c}
                     deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
                 # initialize vars
                 if (seed == indep[0]) and (feed == feeds[0]):

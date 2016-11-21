@@ -23,9 +23,9 @@ if __name__ == '__main__':
     assert args['mol'], 'Mol needed for x axis'
 
     original_feeds = copy.deepcopy(args['feeds'])
-    N = {}; rho = {}; gen_data = {}
-    for file, var in zip(['N-data.db','rho-data.db', 'general-data.db'],
-                         [N, rho, gen_data]):
+    N = {}; P={}; rho = {}; gen_data = {}
+    for file, var in zip(['N-data.db','rho-data.db', 'P-data.db','general-data.db'],
+                         [N, rho, P, gen_data]):
         with shelve.open('%s/%s'%(args['path'], file)) as db:
             for feed in original_feeds:
                 try:
@@ -48,8 +48,19 @@ if __name__ == '__main__':
         mols_adsorbed = sorted([i for i in N[feed][run].keys()
                                     if N[feed][run][i]['box1']['mean'] > 1e-06])
         # pressure info ----------------------
-        rho_mean, rho_stdev = (rho[feed][run][args['mol']]['box%s'%args['box']]['mean'],
-                                rho[feed][run][args['mol']]['box%s'%args['box']]['stdev'])
+        try:
+            rho_mean, rho_stdev = (rho[feed][run][args['mol']]['box%s'%args['box']]['mean'],
+                                    rho[feed][run][args['mol']]['box%s'%args['box']]['stdev'])
+            # convert number density to pressure [kPa]
+            # (molec/nm**3)*(mol/molec)*(nm**3*kPa/(mol*K))*K = kPa
+            p_mean = rho_mean/N_av*R['nm**3*kPa/(mol*K)']*args['Temp']
+            p_stdev = rho_stdev/N_av*R['nm**3*kPa/(mol*K)']*args['Temp']
+        except KeyError:
+            print('No num dens. data for feed {}, using box pressure'.format(feed))
+            print(' - This assumes box is unary')
+            pressure = P[feed][run]['box%s'%args['box']]
+            p_mean, p_stdev = pressure['mean'], pressure['stdev']
+        p_95conf = calc95conf(p_stdev, numIndep)
         for mol in mols_adsorbed:
             if mol not in mol_data.keys():
                 mol_data[mol] = {}
@@ -70,11 +81,6 @@ if __name__ == '__main__':
                 N[feed][run][mol]['box1']['stdev']*qfactor, numIndep ) )
             loadings['feed'].append( feed )
             # pressure info ----------------------
-            # convert number density to pressure [kPa]
-            # (molec/nm**3)*(mol/molec)*(nm**3*kPa/(mol*K))*K = kPa
-            p_mean = rho_mean/N_av*R['nm**3*kPa/(mol*K)']*args['Temp']
-            p_stdev = rho_stdev/N_av*R['nm**3*kPa/(mol*K)']*args['Temp']
-            p_95conf = calc95conf(p_stdev, numIndep)
             C_95conf = p_mean*kH_mean*math.pow(
                         math.pow(kH_95conf/kH_mean, 2) +
                         math.pow(p_95conf/p_mean, 2), 0.5 )

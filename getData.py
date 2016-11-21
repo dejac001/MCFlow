@@ -58,6 +58,8 @@ if __name__ == '__main__':
     my_parser.parser.add_argument('-F','--force',help='whether or not to force update of '
                                                       'feed info', type=bool,
                                   default=False)
+    my_parser.parser.add_argument('-l','--liq',help='whether or not liqid',type=bool,
+                                  default=False)
     args = vars(my_parser.parse_args())
 
     old_feeds = []
