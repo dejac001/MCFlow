@@ -447,6 +447,20 @@ def read_restart(file, nmolty, nbox):
             for i in range(2,nbox+1):
                 config_data['box dimensions']['box%i'%i] = next(f)
         elif 'nchain' not in config_data.keys():
+            if len(line.split()) == 3:
+                box_info  = ''
+                missing_lines = 5
+                for key, value in config_data['box dimensions'].items():
+                    box_info += value
+                for i in range(missing_lines):
+                    box_info += line
+                    line = next(f)
+                config_data['box dimensions'] = {'box%i'%i:'' for i in range(1, nbox+1)}
+                for c, box_d in enumerate(box_info.split('\n')):
+                    if box_d:
+                        ibox = c + 1 - missing_lines
+                        if ibox < 1: ibox = 1
+                        config_data['box dimensions']['box%i'%ibox] += box_d + '\n'
             config_data['nchain'] = line
             nchain = int(line.split()[0])
         elif 'nmolty' not in config_data.keys():
