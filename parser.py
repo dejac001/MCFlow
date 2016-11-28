@@ -39,7 +39,7 @@ class Plot(Main):
         self.parser.add_argument('-m','--mol',help='Molecule to analyze', type=str)
         self.parser.add_argument('-TK','--Temp',help='Temperature in Kelvin',
                                   type=float)
-        self.parser.add_argument('-b','--box',help='box to analyze', type=str)
+        self.parser.add_argument('-b','--box',help='box number to analyze', type=str)
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',
                                  choices = ['C','Pig', 'Pbox'])
@@ -97,5 +97,20 @@ class ChangeInput(Main):
         self.parser.add_argument('-m','--molID',help='molID of molecule to add in fort.4', type=str)
         self.parser.add_argument('-b','--box',help='number of box to add molecules to',type=str)
         self.parser.add_argument('-n','--nAdd',help='number of molecules to add',type=int)
+
+class Structure:
+    def __init__(self):
+        self.parser = argparse.ArgumentParser()
+        self.parser.add_argument('-f', '--file',help='input file for analysis',type=str)
+        self.parser.add_argument('-b','--bins',help='bin size for analysis',type=float)
+        self.parser.add_argument('-abc','--vectors',help='unit cell vectors',type=float,nargs='+',
+                                 default = [20.022,19.899,13.383])
+        self.parser.add_argument('-B','--bead',help='bead to analyze', type = str)
+    def analysis(self):
+        self.parser.add_argument('-ref','--reference',help='reference density for dGmap (molec/nm**3)',type=float)
+        self.parser.add_argument('-n','--numFrames',help='total number of frames',type=int)
+        self.parser.add_argument('-T','--Temp',help='Temperature [ K ]',type=float)
+    def parse_args(self):
+        return self.parser.parse_args()
 
 import argparse, os

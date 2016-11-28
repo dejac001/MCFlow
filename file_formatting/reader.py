@@ -23,10 +23,16 @@ class Movie:
                     self.file.readline()
         self.frame_data = []
         self.boxlengths = []
+        self.frame_seed = []
 
-    def read_movie_frames(self):
+    def read_movie_frames(self, seed):
         for frame_count in range(1, self.nframes+1):
-            NumPrevCycles = int(self.file.readline()) # num cycles since last frame
+            try:
+                NumPrevCycles = int(self.file.readline()) # num cycles since last frame
+            except ValueError:
+                self.nframes = frame_count - 1
+                break
+            self.frame_seed.append( seed )
             Nframe = {}; boxlxFrame= {};
             FRAME_DATA = {'box%s'%j: {'mol%i'%k:[]
                                       for k in range(1,self.nmolty+1)} for j in range(1,self.nbox+1)}
@@ -57,11 +63,12 @@ class Movie:
 
     def __add__(self, other):
         '''
-        add frame data from two movie files
+        add frame datafrom two movie files
         :param other: other movie file
         '''
         new = self.__class__('masterData')
         new.frame_data = self.frame_data + other.frame_data
+        new.frame_seed = self.frame_seed + other.frame_seed
         new.nframes = self.nframes + other.nframes
         assert self.nchain == other.nchain, 'nchain not equal for adding movie files'
         new.nchain = self.nchain
@@ -88,34 +95,31 @@ class Movie:
                 FRAME_DATA[my_box][molType] = [value for i, value in enumerate(FRAME_DATA[my_box][molType])
                                                if i in indices_to_keep]
 
-    def countMols(self, numIndep, feed, frame_data):
+    def countMols(self, indepRange, feed, frame_data):
         '''
         :param box: String box number.
-        :param numIndep: number of independent simulations (integer)
+        :param indepRange: range of indep simulations
         '''
-        assert (self.nframes/numIndep)%1 == 0., 'Number of frames per independent sim =' \
-                                                ' %f, not an integer'%(self.nframes/numIndep)
+
         self.averages = {}
-        frames_per_indep = int(self.nframes/numIndep)
         N = {}
         total_frames = -1
-        frame_by_seed = [0 for i in range(numIndep)]
+        frame_by_seed = [0 for i in indepRange]
         for FRAME_DATA in frame_data:
             if total_frames == -1:
-                N = {box:{mol: {'raw data':[[] for i in range(numIndep)]}
+                N = {box:{mol: {'raw data':[[] for i in indepRange]}
                                         for mol in FRAME_DATA[box].keys()}
                                         for box in FRAME_DATA.keys()}
             # determine which independent simulation this corresponds to
             total_frames += 1
-            seed = total_frames//frames_per_indep # floor division (ranges from 0 to numIndep - 1)
-            frame_by_seed[seed] += 1
+            seed_index = self.frame_seed[total_frames] - 1
+            if len(frame_by_seed) == 1: seed_index = 0
             for box in FRAME_DATA.keys():
                 for mol in FRAME_DATA[box].keys():
-                    N[box][mol]['raw data'][seed].append( len(FRAME_DATA[box][mol] ))
-                    if len(N[box][mol]['raw data'][seed]) == frames_per_indep:
+                    N[box][mol]['raw data'][seed_index].append( len(FRAME_DATA[box][mol] ))
+                    if len(N[box][mol]['raw data'][seed_index]) == self.frame_seed.count(seed_index + 1):
                         # change list of data to floating point average
-                        N[box][mol]['raw data'][seed] = np.mean(N[box][mol]['raw data'][seed])
-        assert len(set(frame_by_seed)) == 1, 'Number of frames analyzed for each seed not equal'
+                        N[box][mol]['raw data'][seed_index] = np.mean(N[box][mol]['raw data'][seed_index])
         num_molec_data = {}
         for box in N.keys():
             for mol in N[box].keys():
@@ -124,16 +128,21 @@ class Movie:
                     num_molec_data[mol_num] = {}
                 if box not in num_molec_data[mol_num].keys():
                     num_molec_data[mol_num][box] = {}
-                num_molec_data[mol_num][box]['mean'] = np.mean(N[box][mol]['raw data'])
-                num_molec_data[mol_num][box]['stdev'] = np.std(N[box][mol]['raw data'])
+                if len(indepRange) > 1:
+                    mean, stdev = weighted_avg_and_std(N[box][mol]['raw data'], frame_by_seed)
+                else:
+                    mean, stdev = np.mean(N[box][mol]['raw data'][0]), np.std(N[box][mol]['raw data'][0])
+                num_molec_data[mol_num][box]['mean'] = mean
+                num_molec_data[mol_num][box]['stdev'] = stdev
         self.averages[feed] = num_molec_data
 
-    def foldMovieToUC(self, a, b, c, box):
+    def foldMovieToUC(self, uc_vectors):
         '''
         :param box: String box number. Folds all coordinates of all beads
         of all molecules in this box
         '''
-        my_box = 'box%s'%box
+        my_box = 'box1' # no volume moves
+        a, b, c = uc_vectors
         for FRAME_DATA in self.frame_data:
             # changing FRAME_DATA will change self.frame_data indexes
             for molType in FRAME_DATA[my_box].keys():
@@ -141,9 +150,9 @@ class Movie:
                     for beadType, beadCoords in each_molecule.items():
                         foldedBeads = []
                         for bead_xyz in beadCoords:
-                            beadFolded = [superCoord%lattice for (superCoord, lattice) in zip(bead_xyz, [a, b, c])]
+                            beadFolded = [float(superCoord)%lattice for (superCoord, lattice) in zip(bead_xyz, [a, b, c])]
                             foldedBeads.append(beadFolded)
-                        FRAME_DATA['box%s'%box][molType][each_molecule][beadType] = foldedBeads
+                        each_molecule[beadType] = foldedBeads
 
     def getCoords(self, mlcl, box, beadNames=['COM']):
         '''
@@ -157,10 +166,13 @@ class Movie:
         for FRAME_DATA in self.frame_data:
             for each_molecule in FRAME_DATA['box%s'%box]['mol%s'%mlcl]:
                 for beadType in beadNames:
-                    for each_coord in each_molecule[beadType]:
-                        # for all beads of given bead type in molecule
-                        xyz_data['atoms'].append(beadType)
-                        xyz_data['coords'].append(each_coord)
+                    try:
+                        for each_coord in each_molecule[beadType]:
+                            # for all beads of given bead type in molecule
+                            xyz_data['atoms'].append(beadType)
+                            xyz_data['coords'].append(each_coord)
+                    except KeyError:
+                        print('No beads of type %s found for mol%s'%(beadType, mlcl))
         return xyz_data
 
 
@@ -649,3 +661,4 @@ import copy
 import numpy as np
 from MCFlow.runAnalyzer import calc95conf
 from MCFlow import properties
+from MCFlow.calc_tools import weighted_avg_and_std

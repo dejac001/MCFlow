@@ -31,11 +31,18 @@ class Region:
 def main(filter_function=None):
     my_parser = Results()
     my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
-                           type=str,default = '')
+                           type=str)
+    my_parser.parser.add_argument('-B','--bead',help='bead for structure analysis',default=['COM'],
+                                 type = str, nargs = '+')
+    my_parser.parser.add_argument('-abc','--vectors', help='unit cell vectors. For folding coordinates into a unit cell',
+                                  type = float, nargs = '+', default = [20.022,19.899,13.383])
     args = vars(my_parser.parse_args())
 
+    if args['vectors']:
+        assert args['box'] == '1', 'It doesnt make sense to fold into a non replicated cell'
     if filter_function:
         assert args['name'], 'Output ID name needed to output local structure info'
+    assert args['box'], 'Need to specify box for structure analysis'
 
     for feed in args['feeds']:
         if args['verbosity'] > 0: print('-'*12 + 'Dir is %s'%feed + '-'*12)
@@ -53,19 +60,20 @@ def main(filter_function=None):
                     # keep track of info only for each feed
                     D = Movie(movie_file)
                     D.read_header()
-                    D.read_movie_frames()
+                    D.read_movie_frames(seed)
                 else:
                     F = Movie(movie_file)
                     F.read_header()
-                    F.read_movie_frames()
+                    F.read_movie_frames(seed)
                     D = D + F
         if filter_function:
             D.filterCoords(filter_function, args['box'])
-        D.countMols(len(args['indep']),feed, D.frame_data)
+        D.countMols(args['indep'],feed, D.frame_data)
         for mol_num in D.averages[feed].keys():
-            xyz_data = D.getCoords(mol_num, args['box'], ['COM'])
-            xyz('%s/%s/movie_coords_mol%s_box%s.xyz'%(args['path'], feed,
-                                                        mol_num, args['box']), xyz_data)
+            if args['vectors']: D.foldMovieToUC(args['vectors'])
+            xyz_data = D.getCoords(mol_num, args['box'], args['bead'])
+            xyz('%s/%s/movie_coords_mol%s_box%s_sim%s.xyz'%(args['path'], feed,
+                                                        mol_num, args['box'], ''.join(map(str,args['indep']))), xyz_data)
         if args['name']:
             outputDB(args['path'],[feed],args['type'],{args['name']: D } )
 

@@ -56,6 +56,16 @@ def convertg_mL_to_x(c, MW):
     mol_water = rho_solution*v/18.02
     return mol_solute/(mol_solute + mol_water)
 
+def weighted_avg_and_std(values, weights):
+    """
+    Return the weighted average and standard deviation.
+
+    values, weights -- Numpy ndarrays with the same shape.
+    """
+    average = np.average(values, weights=weights)
+    variance = np.average((values-average)**2, weights=weights)  # Fast and numerically precise
+    return (average, math.sqrt(variance))
+
 
 import numpy as np
 import math

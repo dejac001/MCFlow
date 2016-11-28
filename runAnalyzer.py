@@ -104,7 +104,7 @@ def calcDGfromNumDens(rho, N_i, T):
     return dG
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
-                verbosity, liq, mol=['-1'], **kargs):
+                verbosity, liq=False, mol='-1', **kargs):
     from file_formatting import reader
     general_data = {key:{} for key in feeds}
     # TODO: add molec name (i.e. 15PDO or WATER) into general_data

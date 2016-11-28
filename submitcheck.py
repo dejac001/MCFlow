@@ -29,7 +29,7 @@ def checkYoSelf(path, feeds, nindep, count_start, tag='equil-'):
             if i == 1:
                 count_prev = count
             elif count < count_prev:
-                print(os.getcwd(), 'is only on ',tag ,count
+                print('%s/%i'%(feed,i), 'is only on ',tag ,count
                       ,'while all others are on ',tag ,count_prev)
             elif count > count_prev:
                 print(feed + '/1', 'is only on ', tag , count_prev,
