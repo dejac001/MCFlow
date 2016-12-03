@@ -95,8 +95,9 @@ class ChangeInput(Main):
     def molecules(self):
         self.parser.description = 'Add molecules of a given type fo a given box'
         self.parser.add_argument('-m','--molID',help='molID of molecule to add in fort.4', type=str)
-        self.parser.add_argument('-b','--box',help='number of box to add molecules to',type=str)
-        self.parser.add_argument('-n','--nAdd',help='number of molecules to add',type=int)
+        self.parser.add_argument('-bR','--boxRemove',help='number of box to remove molecules from',type=str)
+        self.parser.add_argument('-bA','--boxAdd',help='number of box to add molecules to')
+        self.parser.add_argument('-n','--nAdd',help='number of molecules to add. If ==all, all molecules in box',type=int)
 
 class Structure:
     def __init__(self):

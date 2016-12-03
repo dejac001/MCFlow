@@ -25,46 +25,41 @@ def makeRandomStruc(boxlengths, coordinates, previous_coords):
                 return makeRandomStruc(boxlengths, coordinates, previous_coords)
     return coords
 
-def initialize(full_path, restart_name, input_name,  molID, box):
-    input_data = reader.read_fort4('%s%s'%(full_path,input_name))
-    nmolty, nbox = (int(input_data['&mc_shared']['nmolty']),
-                    int(input_data['&mc_shared']['nbox']))
-    restart_data = reader.read_restart('%s%s'%(full_path,restart_name),nmolty, nbox)
+def initialize(input, restart,  molID, box):
 
-    boxlx, boxly, boxlz = map(float,restart_data['box dimensions']['box%s'%box].split())
+    boxlx, boxly, boxlz = map(float,restart['box dimensions']['box%s'%box].split())
 
     # find mol number
-    for mol in input_data['MOLECULE_TYPE'].keys():
-        if molID in input_data['MOLECULE_TYPE'][mol]:
+    for mol in input['MOLECULE_TYPE'].keys():
+        if molID in input['MOLECULE_TYPE'][mol]:
             mol_number = mol.strip('mol')
 
     # get list of coordinates previously in box
     old_coords = []
-    for i, ibox in enumerate(restart_data['box types']):
+    for i, ibox in enumerate(restart['box types']):
         if ibox == box:
-            for bead in restart_data['coords'][i]:
+            for bead in restart['coords'][i]:
                 old_coords.append( list(map(float,bead['xyz'].split())) )
 
     # get charges from previous molecule
     q = []
-    for bead in restart_data['coords'][restart_data['mol types'].index(mol_number)]:
+    for bead in restart['coords'][restart['mol types'].index(mol_number)]:
         q.append( float(bead['q'].rstrip('\n')) )
-    return restart_data, input_data, (boxlx, boxly, boxlz), mol_number, old_coords, q
+    return (boxlx, boxly, boxlz), mol_number, old_coords, q
 
-def addMolecules(full_path, nAdd, box, restart, input, molID, **kwargs):
+def addMolecules(input_dat, restart_dat, nAdd, box, molID):
     def getXYZCoords(mol_coords):
         coords = []
         for bead in mol_coords:
             coords.append(list(map(float,bead['xyz'].split())))
         return coords
-    (restart_data, input_data, boxlengths,
-     mol_num, old_coordinates, charges) = initialize(full_path, restart,input, molID, box)
+    (boxlengths, mol_num, old_coordinates, charges) = initialize(input_dat, restart_dat, molID, box)
     # get info of old structures of molecules to choose from in making new structures
     mol_coord_data = {}
     for key in ['box types','mol types', 'coords']:
         mol_coord_data[key] = []
-    for my_mol, my_box, my_coords in zip(restart_data['mol types'], restart_data['box types'],
-                                         restart_data['coords']):
+    for my_mol, my_box, my_coords in zip(restart_dat['mol types'], restart_dat['box types'],
+                                         restart_dat['coords']):
         if (my_mol == mol_num):
             for key, value in zip(['mol types','box types','coords'], [my_mol, my_box, my_coords]):
                 mol_coord_data[key].append(value)
@@ -76,37 +71,36 @@ def addMolecules(full_path, nAdd, box, restart, input, molID, **kwargs):
         #  get new coordinates
         my_coordinates = makeRandomStruc(boxlengths, new_config, old_coordinates)
         # add to fort.77 file
-        restart_data['mol types'].append( mol_num )
-        restart_data['box types'].append( box )
+        restart_dat['mol types'].append( mol_num )
+        restart_dat['box types'].append( box )
         new_coordinates = []
         for i in range(len(my_coordinates)):
             new_coordinates.append(
                 {'xyz': ' '.join(['%f'%j for j in my_coordinates[i]]) + '\n',
                  'q': '%f\n'%charges[i]}
             )
-        restart_data['coords'].append( new_coordinates )
-        restart_data['nchain'] = restart_data['nchain'].replace(
-            restart_data['nchain'].split()[0], '%i'%(int(restart_data['nchain'].split()[0])+1)
+        restart_dat['coords'].append( new_coordinates )
+        restart_dat['nchain'] = restart_dat['nchain'].replace(
+            restart_dat['nchain'].split()[0], '%i'%(int(restart_dat['nchain'].split()[0])+1)
         )
-        input_data['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num] = '%i'%(
-            int(input_data['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num]) + 1
+        input_dat['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num] = '%i'%(
+            int(input_dat['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num]) + 1
         )
-    input_data['&mc_shared']['nchain'] = restart_data['nchain'].split()[0]
-    return copy.deepcopy(restart_data), copy.deepcopy(input_data)
+    input_dat['&mc_shared']['nchain'] = restart_dat['nchain'].split()[0]
+    return copy.deepcopy(input_dat), copy.deepcopy(restart_dat)
 
-def removeMolecules(full_path, box, nAdd,restart, input, molID, **kwargs):
+def removeMolecules(input_dat, restart_dat, nAdd, box, molID):
     def keepMol():
         for key in ['box types', 'mol types', 'coords']:
-            new_restart_data[key].append(restart_data[key][i])
-    (restart_data, input_data, boxlengths,
-     mol_num, old_coordinates, charges) = initialize(full_path, restart,input, molID, box)
+            new_restart_data[key].append(restart_dat[key][i])
+    (boxlengths, mol_num, old_coordinates, charges) = initialize(input_dat, restart_dat, molID, box)
     taken_out = 0
-    new_restart_data = copy.deepcopy(restart_data)
+    new_restart_data = copy.deepcopy(restart_dat)
     # initialize new restart data
     for key in ['box types', 'mol types', 'coords']:
         new_restart_data[key] = []
-    for i in range(len(restart_data['box types'])):
-        if (restart_data['mol types'][i] == mol_num) and (restart_data['box types'][i] == box):
+    for i in range(len(restart_dat['box types'])):
+        if (restart_dat['mol types'][i] == mol_num) and (restart_dat['box types'][i] == box):
             # don't keep
             if taken_out > nAdd:
                 taken_out -= 1
@@ -114,16 +108,17 @@ def removeMolecules(full_path, box, nAdd,restart, input, molID, **kwargs):
                 keepMol()
         else:
             keepMol()
+    assert taken_out == nAdd, 'Not enough mols of type {} taken out'.format(mol_num)
 
-    new_restart_data['nchain']  = restart_data['nchain'].replace(
-                restart_data['nchain'].split()[0], '%i'%(int(restart_data['nchain'].split()[0])+taken_out)
+    new_restart_data['nchain']  = restart_dat['nchain'].replace(
+                restart_dat['nchain'].split()[0], '%i'%(int(restart_dat['nchain'].split()[0])+taken_out)
                 )
-    input_data['&mc_shared']['nchain'] = new_restart_data['nchain'].split()[0]
-    input_data['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num] = '%i'%(
-        int(input_data['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num]) + taken_out
+    input_dat['&mc_shared']['nchain'] = new_restart_data['nchain'].split()[0]
+    assert int(new_restart_data['nchain']) ==  int(input_dat['&mc_shared']['nchain']), 'Conflicting info in rest & control files'
+    input_dat['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num] = '%i'%(
+        int(input_dat['SIMULATION_BOX']['box%s'%box]['mol%s'%mol_num]) + taken_out
     )
-    return new_restart_data, copy.deepcopy(input_data)
-
+    return copy.deepcopy(input_dat), copy.deepcopy(new_restart_data)
 
 from file_formatting import reader, writer
 from calc_tools import fold, calculate_distance
@@ -143,9 +138,18 @@ if __name__ == '__main__':
                 base_dir = ''
             else:
                 base_dir = '%s/%s/%i/'%(args['path'],feed,seed)
-            if args['nAdd'] > 0:
-                new_restart_data, new_input_data = addMolecules(base_dir, **args)
-            elif args['nAdd'] < 0:
-                new_restart_data, new_input_data = removeMolecules(base_dir, **args)
+            input_data = reader.read_fort4('%s%s'%(base_dir,args['input']))
+            nmolty, nbox = (int(input_data['&mc_shared']['nmolty']),
+                    int(input_data['&mc_shared']['nbox']))
+            restart_data = reader.read_restart('%s%s'%(base_dir,args['restart']),nmolty, nbox)
+            if args['boxAdd']:
+                new_input_data, new_restart_data = addMolecules(input_data, restart_data,
+                                                args['nAdd'], args['boxAdd'],args['molID'])
+                if args['boxRemove']:
+                    new_input_data, new_restart_data = removeMolecules(new_input_data, new_restart_data,
+                        -1*args['nAdd'], args['boxRemove'],args['molID'])
+            elif args['boxRemove']:
+                new_input_data, new_restart_data = removeMolecules(input_data, restart_data,
+                        -1*args['nAdd'], args['boxRemove'],args['molID'])
             writer.write_fort4(new_input_data, '%sfort.4.newMols'%base_dir)
             writer.write_restart(new_restart_data, '%sfort.77.newMols'%base_dir)
