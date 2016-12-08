@@ -5,7 +5,7 @@ class Main:
         self.parser.add_argument("-v", "--verbosity", action="count", default=0)
         self.parser.add_argument('-t','--type',
                              help='type of run (equil- or prod-)',
-                             type = str, default='equil-')
+                             type = str, default='equil-',choices = ['equil-','prod-'])
         self.parser.add_argument('-p','--path',
                                  help='main path to feeds (see --feeds)',
                                  type=str,default=os.getcwd())
