@@ -70,10 +70,12 @@ class IdealGasAds:
     def getMolAds(self, num_molec):
         mols_adsorbed = []
         for mol in map(str,sorted(map(int,num_molec.keys()))):
-            mean = num_molec[mol]['box1']['mean']
+            mean, stdev = (num_molec[mol]['box1']['mean'], num_molec[mol]['box1']['stdev'])
             ntotal = sum(num_molec[mol][box]['mean'] for box in num_molec[mol].keys())
-            if (mean > 1e-06) and (mean < ntotal):
+            if (mean > 0.) and (mean < ntotal):
                 mols_adsorbed.append(mol)
+        assert mols_adsorbed, 'No molecules adsorbed. Mean: %3.2e, stdev: %3.2e'%(mean, stdev)
+        if not mols_adsorbed: mols_adsorbed = ['1']
         return mols_adsorbed
 
     def getX(self, number_density, temperature):
