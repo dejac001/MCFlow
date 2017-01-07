@@ -62,7 +62,6 @@ if __name__ == '__main__':
                                   default=False)
     args = vars(my_parser.parse_args())
 
-    old_feeds = []
     # determine which feeds we actually need to analyze
     if not args['force']:
         for testDB in [i for i in os.listdir(args['path']) if '.db' in i]: # only need to do once
