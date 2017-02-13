@@ -53,6 +53,19 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID):
         for bead in mol_coords:
             coords.append(list(map(float,bead['xyz'].split())))
         return coords
+    # initialize volume to ideal gas volume in new box
+    p = float(input_dat['SIMULATION_BOX']['box%s'%box]['pressure'])
+    N = restart_dat['box types'].count(box) + nAdd
+    T = float(input_dat['SIMULATION_BOX']['box%s'%box]['temperature'])
+    V = N/N_av*R['\AA**3*MPa/(mol*K)']*T/p
+    boxlx = pow(V, 1/3)
+    restart_dat['box dimensions']['box%s'%box] = '{} {} {}\n'.format(boxlx, boxlx, boxlx)
+    input_dat['SIMULATION_BOX']['box%s'%box]['rcut'] = '%e'%(boxlx/2)
+    input_dat['&mc_shared']['iratio'] = '500'
+    input_dat['&analysis']['imv'] = '50000'
+    input_dat['&mc_volume']['iratv'] = '500'
+    if float(restart_dat['max displacement']['volume']['box%s'%box]) < 100000.0:
+        restart_dat['max displacement']['volume']['box%s'%box] = '100000.0'
     (boxlengths, mol_num, old_coordinates, charges) = initialize(input_dat, restart_dat, molID, box)
     # get info of old structures of molecules to choose from in making new structures
     mol_coord_data = {}
@@ -70,6 +83,7 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID):
         new_config = getXYZCoords(mol_coord_data['coords'][random_mol])
         #  get new coordinates
         my_coordinates = makeRandomStruc(boxlengths, new_config, old_coordinates)
+        old_coordinates += my_coordinates
         # add to fort.77 file
         restart_dat['mol types'].append( mol_num )
         restart_dat['box types'].append( box )
@@ -122,6 +136,7 @@ def removeMolecules(input_dat, restart_dat, nAdd, box, molID):
 
 from file_formatting import reader, writer
 from calc_tools import fold, calculate_distance
+from chem_constants import N_av, R
 import random, copy
 import numpy as np
 

@@ -203,11 +203,14 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
                 nMolTy = int(line.split()[-1])
                 if j == start_of_runs:
                     chemical_potential, number_density, volume = initVars(nBox, nMolTy)
+            elif line.startswith('number of chains:'):
+                nchains = int(line.split()[-1])
             elif ('number of chains of type' in line) and runBegin and j == start_of_runs:
                 molName = ' '.join(line.split()[5:-1])
                 if molName not in totalComposition.keys():
                     totalComposition[molName] = 0
-                totalComposition[molName] += int(line.split()[-1])
+                if (sum(i for i in totalComposition.values()) < nchains):
+                    totalComposition[molName] += int(line.split()[-1])
             elif line.startswith('   temperature:'):
                 T = float(line.split()[-2])
             elif 'start of markov chain' in line:
@@ -320,6 +323,8 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
                     x, y, z = [ float(direction.split()[offset+boxNum])
                                                           for direction in (boxlx, boxly, boxlz)]
                     volume.data['box%i'%boxNum].append( [x*y*z]  )
+    if (nchains != sum(i for i in totalComposition.values())):
+        print('{} {}'.format(nchains, totalComposition))
     return (number_density.avgOverRuns(avg_weights), chemical_potential.avgOverRuns(avg_weights),
              swap_info, biasPot, volume.avgOverRuns(avg_weights), totalComposition, cbmc_info, T,
             zeolite)
