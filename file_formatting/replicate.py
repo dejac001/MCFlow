@@ -34,6 +34,7 @@ def replicate_mol(molecule_coords, abc, lmn):
     return replicated
 
 def replicate_file(parent_parser):
+    parser = argparse.ArgumentParser(description='replicate struxture file',parents=[parent_parser])
     parser.add_argument('-abc','--boxlengths',help='dimensions of orthorhombic box',
                         type=float,nargs='+')
     parser.add_argument('-f','--file',help='file to replicate',
@@ -52,7 +53,7 @@ def replicate_file(parent_parser):
         raise TypeError('File type not known')
 
     my_coords = replicate(coordinates, args['boxlengths'] ,args['replicate'])
-    writer.xyz(args['writeFile'], my_coords)
+    writer.PDB(args['writeFile'], my_coords)
 
 def replicate_box(parser):
     import copy
@@ -126,4 +127,4 @@ if __name__ == '__main__':
     parent_parser.add_argument('-lmn','--replicate',help='integer number of cells in each dimension '
                                                   '(1 does no replication)',
                         type=int, nargs='+')
-    replicate_box(parent_parser)
+    replicate_file(parent_parser)

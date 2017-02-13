@@ -40,15 +40,21 @@ class Plot(Main):
         self.parser.add_argument('-TK','--Temp',help='Temperature in Kelvin',
                                   type=float)
         self.parser.add_argument('-b','--box',help='box number to analyze', type=str)
+
+        self.parser.add_argument('-B','--boxes',help='box numbers to use',
+                                 type=str,nargs='+',default=['box3','box2'])
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',
-                                 choices = ['C','Pig', 'Pbox'])
+                                 choices = ['C','Pig', 'Pbox','Pi','Q'])
         self.parser.add_argument('-y','--yaxis',help='x axis of plot',
-                                 choices = ['Q','dG','S'])
+                                 choices = ['Q','dG','S','R',
+                                            'X','dH'])
     def isotherm(self):
         self.parser.add_argument('-u','--units',help='choices for units on plot',
                                  choices=['molec/uc','g/g','mol/kg',
                                           '(mol/mol)/(mol/mol)','(mol/mol)/(kPa/kPa)'])
+        self.parser.add_argument('-V','--ZeoVolume',help='Volume of zeolite box (\AA**3)',
+                                 type = float, default = 40.044*39.798*40.149 )
     def kH(self):
         self.parser.add_argument('-kH','--henry',help='Henry constant (g/mL/kPa) '
                                                        'fmt: (mean, 95%%conf.) ',
@@ -69,6 +75,9 @@ class Results(Plot):
         Plot.__init__(self)
         Main.other(self)
         self.parser.description = 'Obtain results for simulations'
+        self.parser.add_argument('-M','--molecules',help='Molecules to analyze for trajectory',
+                                  type = str, nargs = '+')
+        
 
 class Change(Results):
     def __init__(self):
