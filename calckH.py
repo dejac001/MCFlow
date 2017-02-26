@@ -1,8 +1,20 @@
 '''
 Write isotherm from previously generated databank files
 '''
+def getX(c_data, mol='', box=''):
+    for key, value in sorted(c_data.items()):
+        if (len(key) == 1) or (len(key) == 2):
+            mol = key
+        elif 'box' in key:
+            box = key
+        if isinstance(value, dict):
+            if 'mean' in value.keys():
+                return value, mol, box
+            else:
+                return getX(value, mol, box)
+
 from MCFlow.runAnalyzer import checkRun, calc95conf
-from MCFlow.writeXvY import LiqAds, writeAGR
+from MCFlow.writeXvY import writeAGR
 from MCFlow.file_formatting import writer
 from MCFlow.chem_constants import R, N_av
 import math
@@ -34,7 +46,7 @@ if __name__ == '__main__':
         # gen data
         numIndep = gen_data[feed][run]['numIndep']
         # concentrations
-        conc, c_mol, box = LiqAds().getX(C[feed])
+        conc, c_mol, box = getX(C[feed])
         # initialize variables if needed
         if c_mol not in mol_data.keys():
             mol_data[c_mol] = {}
@@ -70,4 +82,3 @@ if __name__ == '__main__':
         writeAGR(x_data['mean'], y_data['mean'],
                  x_data['95conf'], y_data['95conf'],
                  x_data['feed'], file_name, description=message)
-

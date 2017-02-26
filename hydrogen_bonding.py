@@ -3,19 +3,31 @@ def findHydroxylHydrogen(Oxyz, Hcoords, abc):
         if calculate_distance2(Oxyz, Hxyz, abc) < 1.0:
             return Hxyz
 
-def findLooseHB(beadsFrom, molsTo, abc):
-    rOO_max = 10.89 # 3.3*3.3
+def findHB(beadsFrom, molsTo, abc, criteria):
+    aOHO_min = 150./180*3.1415926535897931 # degrees
     rOH_max = 6.25 # 2.5*2.5
+    rOO_max = 10.89 # 3.3*3.3
     nHB = 0
     for O1 in beadsFrom['O']:
-        H1 = findHydroxylHydrogen(O1, beadsFrom['H'], abc)
-        for mol in molsTo:
-            for O2 in mol['O']:
-                H2 = findHydroxylHydrogen(O2, mol['H'], abc)
-                if ((calculate_distance2(O1, O2, abc) < rOO_max) and
-                    ((calculate_distance2(O1, H2, abc) < rOH_max) or
-                     (calculate_distance2(O2, H1, abc) < rOH_max))):
-                    nHB += 1
+        for H1 in [i for i in beadsFrom['H'] if calculate_distance2(O1,i,abc) < 1.0]:
+            for mol in molsTo:
+                for O2 in [j for j in mol['O'] if calculate_distance2(O1,j,abc) > 0.1]:
+                    # do not consider same molecule
+                    for H2 in [i for i in mol['H'] if calculate_distance2(O2,i,abc) < 1.0]:
+                        if criteria == 'loose':
+                            if ((calculate_distance2(O1, O2, abc) < rOO_max) and
+                                ((calculate_distance2(O1, H2, abc) < rOH_max) or
+                                (calculate_distance2(O2, H1, abc) < rOH_max))):
+                                nHB += 1
+                        elif criteria == 'strict':
+                            if calculate_distance2(H1,O2,abc) < rOH_max:
+                                # 1 can be charge acceptor
+                                if calculate_angle(O1,H1,O2,abc) > aOHO_min:
+                                    nHB +=1
+                            elif calculate_distance2(H2,O1,abc) < rOH_max:
+                                # 2 can be charge acceptor
+                                if calculate_angle(O2,H2,O1,abc) > aOHO_min:
+                                    nHB += 1
     return nHB
 
 from MCFlow.file_formatting.reader import Movie
@@ -24,20 +36,24 @@ class HydrogenBond(Movie):
     def __init__(self, file_name):
         Movie.__init__(self, file_name)
 
-    def calcLooseHB(self, mols, box):
+    def calcHB(self, mols, box):
         '''
         In this case, hydrogen bonding will be found for anything hydrogen bonding with mol
         Only keep molecules in movie files that are hydrogen bonding to mol
         '''
         my_box = 'box%s'%box
-        self.looseHB = []
+        self.HB = []
         OTypes = {'62':'alkanol','114':'water','178':'zeo','181':'silanol'}
         HTypes ={'61':'alkanol','115':'water','182':'silanol'}
         for iframe, FRAME_DATA in enumerate(self.frame_data):
-            if (iframe+1)%(self.nframes//4) == 0:
+            try:
+                if (iframe+1)%(self.nframes//4) == 0:
+                    print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/self.nframes))
+            except ZeroDivisionError:
                 print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/self.nframes))
-            self.looseHB.append( {my_box:{}  } )
-            # store H and O for mols
+            self.HB.append( {my_box:{}  } )
+            # store H and O for mols that you want to calculate hydrogen bonds with
+            # i.e., to_mols = mols you specified
             HB_to_mols = []
             for mlcl in mols:
                 HB_to_beads = {'H':[],'O':[]}
@@ -52,7 +68,7 @@ class HydrogenBond(Movie):
                 HB_to_mols.append( HB_to_beads )
             # store H and O for all other mols
             for molType in FRAME_DATA[my_box].keys():
-                self.looseHB[iframe][my_box][molType] = []
+                self.HB[iframe][my_box][molType] = []
                 for imol, each_molecule in enumerate(FRAME_DATA[my_box][molType]):
                     HB_from_beads = {'H':[],'O':[]}
                     for bead in each_molecule.keys():
@@ -63,12 +79,12 @@ class HydrogenBond(Movie):
                             for coord in each_molecule[bead]:
                                 HB_from_beads['H'].append( list(map(float,coord)) )
                     # determine hydrogen bonds with molecules of interest
-                    my_nHB = findLooseHB(HB_from_beads, HB_to_mols, self.boxlengths[iframe][my_box])
-                    self.looseHB[iframe][my_box][molType].append( my_nHB )
+                    my_nHB = findHB(HB_from_beads, HB_to_mols, self.boxlengths[iframe][my_box], self.criteria)
+                    self.HB[iframe][my_box][molType].append( my_nHB )
                     
-    def filterLooseHB(self):
+    def filterHB(self):
         for iframe, FRAME_DATA in enumerate(self.frame_data):
-            for box, values in self.looseHB[iframe].items():
+            for box, values in self.HB[iframe].items():
                 for mol in values.keys():
                     indices_to_keep = []
                     for imol, nHB in enumerate(values[mol]):
@@ -85,8 +101,11 @@ class HydrogenBond(Movie):
 
 def main():
     my_parser = MultMols()
+    #TODO: make able to do multiple boxes at same time
     my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
                            type=str,default = '')
+    my_parser.parser.add_argument('-H','--htype',help='hydrogen bonding criteria type',
+                                  type=str, choices = ['loose','strict'],default='strict')
     args = vars(my_parser.parse_args())
 
     assert args['name'], 'Output ID name needed to output local structure info'
@@ -107,27 +126,31 @@ def main():
                     # keep track of info only for each feed
                     D = HydrogenBond(movie_file)
                     D.read_header()
-                    D.read_movie_frames()
+                    D.read_movie_frames(seed)
                 else:
                     F = HydrogenBond(movie_file)
                     F.read_header()
-                    F.read_movie_frames()
+                    F.read_movie_frames(seed)
                     D = D + F
-        D.calcLooseHB(args['mol'], args['box'])
-        D.filterLooseHB()
-        D.countMols(len(args['indep']),feed, D.frame_data)
-        HB = D.countHB(len(args['indep']),feed, D.looseHB)
+        D.criteria = args['htype']
+        D.calcHB(args['mol'], args['box'])
+        HB = D.countHB(args['indep'],feed, D.HB)
+        D.filterHB()
+        D.countMols(args['indep'],feed, D.frame_data)
         for mol_num in D.averages[feed].keys():
             xyz_data = D.getCoords(mol_num, args['box'], ['COM'])
             xyz('%s/%s/movie_HB_coords_mol%s_box%s.xyz'%(args['path'], feed,
                                                         mol_num, args['box']), xyz_data)
-        outputDB(args['path'],[feed],args['type'],{args['name']: D,
-                        'HB':HB } )
+        #TODO: make so updates recent file--does not overwrite it
+        outputDB(args['path'],[feed],args['type'],{args['name']+'-' + args['htype'] + '-box'+args['box']:HB})
+#                args['name']: D })
+                #{args['name']: D
+#                       'HB':HB } )
     
 
 from MCFlow.runAnalyzer import what2Analyze
 from MCFlow.file_formatting.writer import xyz
-from MCFlow.calc_tools import calculate_distance2
+from MCFlow.calc_tools import calculate_distance2, calculate_angle
 from MCFlow.parser import MultMols
 from MCFlow.getData import outputDB
 

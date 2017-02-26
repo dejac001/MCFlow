@@ -22,7 +22,7 @@ def fold(xyz, boxlengths):
         new_coords.append( pbc(i,boxl) )
     return new_coords
 
-def calculate_distance(xyz1, xyz2, abc):
+def get_vector(xyz1, xyz2, abc):
     vector = [xyz1[i] - xyz2[i] for i in range(len(xyz1))]
     for i in range(len(abc)):
         # implement minimum image
@@ -31,18 +31,15 @@ def calculate_distance(xyz1, xyz2, abc):
             vector[i] = abc[i] - vector[i]
         elif vector[i] < -1.*abc[i]/2.:
             vector[i] = abc[i] + vector[i]
-    return np.linalg.norm(vector, 2, 0)
+    return vector
+
+def calculate_distance(xyz1, xyz2, abc):
+    my_vector = get_vector(xyz1, xyz2, abc)
+    return np.linalg.norm(my_vector, 2, 0)
 
 def calculate_distance2(xyz1, xyz2, abc):
-    vector = [xyz1[i] - xyz2[i] for i in range(len(xyz1))]
-    for i in range(len(abc)):
-        # implement minimum image
-        if vector[i] > abc[i]/2.:
-            # positive
-            vector[i] = abc[i] - vector[i]
-        elif vector[i] < -1.*abc[i]/2.:
-            vector[i] = abc[i] + vector[i]
-    return sum(r*r for r in vector)
+    my_vector = get_vector(xyz1, xyz2, abc)
+    return sum(r*r for r in my_vector)
 
 def convertg_mL_to_x(c, MW):
     '''
@@ -65,6 +62,22 @@ def weighted_avg_and_std(values, weights):
     average = np.average(values, weights=weights)
     variance = np.average((values-average)**2, weights=weights)  # Fast and numerically precise
     return (average, math.sqrt(variance))
+
+def calculate_angle(c1,c2,c3,abc):
+    '''
+
+    :param c1: xyz coords of bead 1
+    :param c2: xyz coords of middle bead
+    :param c3: xyz coords of final bead
+    :param abc:
+    :return: angle in radians!!
+    '''
+    a = get_vector(c2,c1,abc)
+    b = get_vector(c2,c3,abc)
+    theta = np.arccos(
+        np.dot(a,b) / ( np.linalg.norm(a,2,0)*np.linalg.norm(b,2,0) )
+    )
+    return theta
 
 
 import numpy as np

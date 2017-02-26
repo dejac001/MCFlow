@@ -59,6 +59,7 @@ class Movie:
                         mlcl_info[BeadType] = [xyz]
                 FRAME_DATA['box%s'%cbox]['mol%i'%moltype].append(mlcl_info)
             self.frame_data.append( copy.deepcopy(FRAME_DATA) )
+        # TODO: assert that all seeds at least have 1 frame
         self.file.close()
 
     def __add__(self, other):
@@ -104,7 +105,7 @@ class Movie:
         self.averages = {}
         N = {}
         total_frames = -1
-        frame_by_seed = [0 for i in indepRange]
+        frame_by_seed = [self.frame_seed.count(i) for i in indepRange]
         for FRAME_DATA in frame_data:
             if total_frames == -1:
                 N = {box:{mol: {'raw data':[[] for i in indepRange]}
@@ -116,20 +117,30 @@ class Movie:
             if len(frame_by_seed) == 1: seed_index = 0
             for box in FRAME_DATA.keys():
                 for mol in FRAME_DATA[box].keys():
-                    N[box][mol]['raw data'][seed_index].append( len(FRAME_DATA[box][mol] ))
-                    if len(N[box][mol]['raw data'][seed_index]) == self.frame_seed.count(seed_index + 1):
-                        # change list of data to floating point average
-                        N[box][mol]['raw data'][seed_index] = np.mean(N[box][mol]['raw data'][seed_index])
+                    if FRAME_DATA[box][mol]:
+                        if type(FRAME_DATA[box][mol][0]) == type(1):
+                            N[box][mol]['raw data'][seed_index].append( np.mean(FRAME_DATA[box][mol] ))
+                        elif type(FRAME_DATA[box][mol][0]) == type([]):
+                            N[box][mol]['raw data'][seed_index].append( len(FRAME_DATA[box][mol] ))
+                        if len(N[box][mol]['raw data'][seed_index]) == self.frame_seed.count(seed_index + 1):
+                            # change list of data to floating point average
+                            N[box][mol]['raw data'][seed_index] = np.mean(N[box][mol]['raw data'][seed_index])
         num_molec_data = {}
         for box in N.keys():
             for mol in N[box].keys():
                 mol_num = mol.strip('mol')
+                if not N[box][mol]:
+                    continue
                 if mol_num not in num_molec_data.keys():
                     num_molec_data[mol_num] = {}
                 if box not in num_molec_data[mol_num].keys():
                     num_molec_data[mol_num][box] = {}
                 if len(indepRange) > 1:
-                    mean, stdev = weighted_avg_and_std(N[box][mol]['raw data'], frame_by_seed)
+                    try:
+                        mean, stdev = weighted_avg_and_std(N[box][mol]['raw data'], frame_by_seed)
+                    except:
+                        print(box, mol, N[box][mol]['raw data'], frame_by_seed)
+                        mean, stdev = 0.0, 0.0
                 else:
                     mean, stdev = np.mean(N[box][mol]['raw data'][0]), np.std(N[box][mol]['raw data'][0])
                 num_molec_data[mol_num][box]['mean'] = mean
