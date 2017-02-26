@@ -434,8 +434,8 @@ def write_fort4(data, newfile):
                 f.write('\n')
                 f.write('! nchain_1 ... nchain_nmolty ghost_particles\n')
                 if __debug__: import pprint
-                assert (len([i for i in data[SEC][box].keys() if 'mol' in i]) == int(data['&mc_shared']['nmolty']),
-                            '%s'pprint.pformat(data[SEC]) + ' error in box%s molecule specs'%box)
+                assert (len([i for i in data[SEC][box].keys() if 'mol' in i]) 
+                        == int(data['&mc_shared']['nmolty'])), '%s'%pprint.pformat(data[SEC]) + ' error in box%s molecule specs'%box
                 for molnum in sort_keys([i for i in data[SEC][box].keys() if 'mol' in i]):
                     f.write(data[SEC][box][molnum] + ' ')
                 if 'nghost' in data[SEC][box].keys():
