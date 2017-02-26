@@ -370,8 +370,11 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
                     print(path,'run=',j,'fort.12 is binary')
             if (nline >= nbox*10+1):
                 Pressure.data['box%i'%box].append(float(line.split()[4]))
-            InternalEnergy.data['box%i'%box].append( float(line.split()[3]))
-            boxlength.data['box%i'%box].append( float(line.split()[0]) )
+            try:
+                InternalEnergy.data['box%i'%box].append( float(line.split()[3]))
+                boxlength.data['box%i'%box].append( float(line.split()[0]) )
+            except:
+                print(path,'run=',j,'fort.12 is binary')
     return N_mlcls.data, Pressure.data, boxlength.data, ncycle, molWeights, InternalEnergy.data
 
 def read_hbond(path, start_of_runs, num_files):
@@ -549,6 +552,10 @@ def read_fort4(file):
                 my_val = {'box%i'%i:values.split()[i-1] for i in range(1,nbox+1)}
             elif len(values.split()) == nmolty:
                 my_val = {'mol%i'%i:values.split()[i-1] for i in range(1,nmolty+1)}
+            elif len(values.split()) > nbox and len(values.split()) < nmolty:
+                my_val = {'box%i'%i:values.split()[i-1] for i in range(1,nbox+1)}
+            elif len(values.split()) > nmolty:
+                my_val = {'box%i'%i:values.split()[i-1] for i in range(1,nbox+1)}
             else:
                 print('error in input file for variable',variable)
                 # there was an error in previous input file
@@ -567,6 +574,8 @@ def read_fort4(file):
                 if 'box%i'%(itype+1) not in input_data[section].keys():
                     input_data[section]['box%i'%(itype+1)] = {}
                 line = next(f)
+                if 'END' in line:
+                    print(itype, input_data[section])
                 if not line.startswith('!'):
                     if (len(line.split()) == 13) and ('F' in line):
                         (boxlx, boxly, boxlz, rcut, kalp, rcutnn,
@@ -577,15 +586,15 @@ def read_fort4(file):
                                                                                         lsolid, lrect,lideal, ltwice)
                         input_data[section]['box%i'%(itype+1)]['temperature'] = T
                         input_data[section]['box%i'%(itype+1)]['pressure'] = P
+                    elif (len(line.split()) == 9) and ('F' in line):
+                        input_data[section]['box%i'%(itype+1)]['initialization data'] = line
+                        itype += 1
                     elif len(line.split()) == nmolty + 1:
                         nmols = line.split()[:-1]
                         nghost = line.split()[-1]
                         for i in range(1,len(nmols)+1):
                             input_data[section]['box%i'%(itype+1)]['mol%i'%i] = nmols[i-1]
                         input_data[section]['box%i'%(itype+1)]['nghost'] = nghost
-                    elif (len(line.split()) == 9) and ('F' in line):
-                        input_data[section]['box%i'%(itype+1)]['initialization data'] = line
-                        itype += 1
         elif section == 'MOLECULE_TYPE':
             if 'nunit' in line:
                 itype += 1

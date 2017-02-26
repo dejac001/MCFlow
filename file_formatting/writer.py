@@ -387,7 +387,7 @@ def write_fort4(data, newfile):
                                   'pmbias','pmbsmt','pmbias2','pmfix','lrig','lpresim',
                                   'iupdatefix'),
                       '&mc_simple':('armtra','rmtra','rmrot','tatra','tarot','pmtra',
-                                    'pmtrmt','pmromt')}
+                                    'pmtrmt','pmromt','pm_atom_tra')}
     namelist_order = ['&mc_shared','&analysis','&mc_volume','&mc_swatch','&mc_swap',
                      '&mc_cbmc','&mc_simple']
     section_order = ['SIMULATION_BOX','MOLECULE_TYPE','SAFE_CBMC','MC_SWAP','MC_SWATCH',
@@ -430,6 +430,8 @@ def write_fort4(data, newfile):
                 f.write('\n')
                 f.write('! nchain_1 ... nchain_nmolty ghost_particles\n')
                 if len([i for i in data[SEC][box].keys() if 'mol' in i]) != int(data['&mc_shared']['nmolty']):
+                    import pprint
+                    pprint.pprint(data[SEC])
                     print('error in box molecule specs')
                     print(box)
                     print([i for i in data[SEC][box].keys() if 'mol' in i],  int(data['&mc_shared']['nmolty']))
