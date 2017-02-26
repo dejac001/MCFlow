@@ -129,7 +129,8 @@ def vtkRectilinearMesh(file_name, edges3d, binnedData):
     v.close()
 
 def write_new_prob(PATH, pswapMolTy, pswatchMolTy, pmvol, pmswap, pswatch,
-                   composition, nindep, boxLengths, rcut_vapor, time, nstepnew=25000, tag='equil-',Pdir1=False):
+                   composition, nindep, boxLengths, rcut_vapor, time, 
+                    nstepnew=25000, tag='equil-',Pdir1=False):
     import runAnalyzer
     def writePMT(probs):
         val = ''
@@ -403,14 +404,17 @@ def write_fort4(data, newfile):
         section_order = [i for i in section_order if i in sections]
     for NL in namelist_order:
         f.write(NL + '\n')
+        my_vars = [i for i in variable_order[NL] if i in data[NL].keys()]
         if len(variable_order[NL]) > len(data[NL].keys()):
             print('Expected more variables for namelist: {} '
                   'including {}'.format(NL, [i for i in variable_order[NL] if i not in data[NL].keys()]))
         elif len(variable_order[NL]) < len(data[NL].keys()):
             print('More variables from previous input than expected for namelist {} '
                   'including {}'.format(NL, [i for i in data[NL].keys() if i not in variable_order[NL]]))
+            print(' - using variables anyway')
+            my_vars = data[NL].keys()
 
-        for variable in [i for i in variable_order[NL] if i in data[NL].keys()]:
+        for variable in my_vars:
             value = data[NL][variable]
             if type(value) == type(''):
                 f.write(makeNewLine(indent,variable,value))
@@ -429,17 +433,13 @@ def write_fort4(data, newfile):
                     f.write(data[SEC][box][var] + ' ')
                 f.write('\n')
                 f.write('! nchain_1 ... nchain_nmolty ghost_particles\n')
-                if len([i for i in data[SEC][box].keys() if 'mol' in i]) != int(data['&mc_shared']['nmolty']):
-                    import pprint
-                    pprint.pprint(data[SEC])
-                    print('error in box molecule specs')
-                    print(box)
-                    print([i for i in data[SEC][box].keys() if 'mol' in i],  int(data['&mc_shared']['nmolty']))
-                    print('newfile going to be: ',newfile)
-                    quit()
+                if __debug__: import pprint
+                assert (len([i for i in data[SEC][box].keys() if 'mol' in i]) == int(data['&mc_shared']['nmolty']),
+                            '%s'pprint.pformat(data[SEC]) + ' error in box%s molecule specs'%box)
                 for molnum in sort_keys([i for i in data[SEC][box].keys() if 'mol' in i]):
                     f.write(data[SEC][box][molnum] + ' ')
-                f.write(data[SEC][box]['nghost'] + '\n')
+                if 'nghost' in data[SEC][box].keys():
+                    f.write(data[SEC][box]['nghost'] + '\n')
                 f.write('! inix iniy iniz inirot inimix zshift dshift use_linkcell rintramax\n')
                 f.write(data[SEC][box]['initialization data'])
                 f.write('\n')

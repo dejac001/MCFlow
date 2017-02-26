@@ -346,6 +346,7 @@ if __name__ == '__main__':
     for feed in feeds:
         args['feeds'] = [feed]
         data, gen_data = getFileData(**args)
+        print(dir(data['CBMC']))
         nbox = len(data['rho'].averages[feed].keys())
         # TODO: format return from analyzeTransfers to fit well with fort4 data dict
         (newSwaps, newSwatches, pctAct,
@@ -370,5 +371,3 @@ if __name__ == '__main__':
                               Pdir1=Prob_dir1)
         outputDB(args['path'], args['feeds'],args['type'], data )
         outputGenDB(args['path'], args['feeds'],args['type'], gen_data )
-
-

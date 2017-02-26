@@ -13,10 +13,12 @@ def findFinalSimRun(path, tag):
     return nfiles
 
 def findNextRun(path, tag):
-    runNum = 1
-    while os.path.isfile(path +'/%s%i/run.%s%i'%(tag, runNum, tag, runNum)):
-        runNum += 1
-    return runNum
+    Runs = [i for i in os.listdir(path) if ((tag in i) and (os.path.isdir(path+'/'+i)))]
+    sorted_numbers = sorted([int(i.split('-')[-1]) for i in Runs])
+    sorted_numbers.reverse()
+    for runNum in sorted_numbers:
+        if os.path.isfile(path +'/%s%i/run.%s%i'%(tag, runNum, tag, runNum)):
+            return runNum+1
 
 def findFinalSimIntvl(path, fileNumStart, numIntvl, tag='equil-'):
     '''
