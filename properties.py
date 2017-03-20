@@ -39,24 +39,26 @@ class AnyProperty():
                     print(value)
         appendValues(newData, self.data)
 
-    def getRawStdev(self, newData):
+    def getRunAvg(self, newData, newKey):
         '''
         self.data is a nested dictionary ending in a list containing a value for each independent simulation.
         The mean of this simulation is the data point for the simulation.
         '''
-        def appendValues(newRunData, storageData):
-            for key, value in newRunData.items():
+        def averageValues(dataToAverage, allAverages):
+            for key, value in dataToAverage.items():
                 if isinstance(value, dict):
-                    appendValues(newRunData[key], storageData[key])
+                    allAverages[key] = {}
+                    averageValues(dataToAverage[key], allAverages[key])
                 elif isinstance(value, list):
-                    if value: # if non-empty
-                        storageData[key].append(np.std(value))
-                    else:
-                        print('tried to take mean of empty slice; ignoring')
-                elif isinstance(value, int):
-                    storageData[key].append(value)
-        self.rawStderr = initializeData(newData, {})
-        appendValues(newData, self.rawStderr)
+                    mean = np.mean(value)
+                    stdev = np.std(value)
+                    allAverages[key] = {'mean':mean, 'stdev':stdev}
+                    dataToAverage[key].clear()
+        if not self.averaging: # if havent started averaging need to make new dict
+            self.averages = {}
+            self.averaging = True
+        self.averages[newKey] = {}
+        averageValues(newData, self.averages[newKey])
 
     def avgVals(self, newKey):
         '''
@@ -141,6 +143,7 @@ class MolProperty(Property, AnyProperty):
         self.averaging = False
 
     def avgOverRuns(self, weights):  # should probably make unbound method so function
+        assert sum(weights) == 1., 'Weights not calculated correctly'
         self.avgOverRuns = {}
         for mlcl in list(self.data.keys()):
             self.avgOverRuns[mlcl] = {}

@@ -473,7 +473,7 @@ def write_fort4(data, newfile):
         elif (SEC == 'UNIFORM_BIASING_POTENTIALS') and (SEC in data.keys()):
             for molnum in sort_keys(data[SEC].keys()):
                 for box in sort_keys(data[SEC][molnum].keys()):
-                    f.write(data[SEC][molnum][box] + ' ')
+                    f.write('%8.2f '%data[SEC][molnum][box])
                 f.write('\n')
         f.write('END ' + SEC + '\n\n')
     f.close()

@@ -104,11 +104,15 @@ class Movie:
 
         self.averages = {}
         N = {}
+        raw_data = {}
         total_frames = -1
         frame_by_seed = [self.frame_seed.count(i) for i in indepRange]
         for FRAME_DATA in frame_data:
             if total_frames == -1:
                 N = {box:{mol: {'raw data':[[] for i in indepRange]}
+                                        for mol in FRAME_DATA[box].keys()}
+                                        for box in FRAME_DATA.keys()}
+                raw_data = {box:{mol: {'raw data':[[] for i in indepRange]}
                                         for mol in FRAME_DATA[box].keys()}
                                         for box in FRAME_DATA.keys()}
             # determine which independent simulation this corresponds to
@@ -120,8 +124,11 @@ class Movie:
                     if FRAME_DATA[box][mol]:
                         if type(FRAME_DATA[box][mol][0]) == type(1):
                             N[box][mol]['raw data'][seed_index].append( np.mean(FRAME_DATA[box][mol] ))
+                            raw_data[box][mol]['raw data'][seed_index] += FRAME_DATA[box][mol]
                         elif type(FRAME_DATA[box][mol][0]) == type([]):
+                            print('b:',FRAME_DATA[box][mol][0],' this hasn\'t been implemented yet!?')
                             N[box][mol]['raw data'][seed_index].append( len(FRAME_DATA[box][mol] ))
+                            raw_data[box][mol]['raw data'][seed_index] += len(FRAME_DATA[box][mol])
                         if len(N[box][mol]['raw data'][seed_index]) == self.frame_seed.count(seed_index + 1):
                             # change list of data to floating point average
                             N[box][mol]['raw data'][seed_index] = np.mean(N[box][mol]['raw data'][seed_index])
@@ -138,13 +145,24 @@ class Movie:
                 if len(indepRange) > 1:
                     try:
                         mean, stdev = weighted_avg_and_std(N[box][mol]['raw data'], frame_by_seed)
-                    except:
-                        print(box, mol, N[box][mol]['raw data'], frame_by_seed)
+                    except TypeError:
+                        print('no molecules of type %s in %s! -->'%(mol,box), N[box][mol]['raw data'])
                         mean, stdev = 0.0, 0.0
                 else:
                     mean, stdev = np.mean(N[box][mol]['raw data'][0]), np.std(N[box][mol]['raw data'][0])
                 num_molec_data[mol_num][box]['mean'] = mean
                 num_molec_data[mol_num][box]['stdev'] = stdev
+                # make histogram
+                try:
+                    all_data = []
+                    for seed_data in raw_data[box][mol]['raw data']:
+                        all_data += seed_data
+                    histogram, edges = np.histogram(all_data, bins=list(range(max(all_data)+1)))
+                    num_molec_data[mol_num][box]['histogram'] = histogram
+                    num_molec_data[mol_num][box]['edges'] = edges
+                except ValueError:
+                    num_molec_data[mol_num][box]['histogram'] = np.array([0,0])
+                    num_molec_data[mol_num][box]['edges'] = np.array([0,1,2])
         self.averages[feed] = num_molec_data
 
     def foldMovieToUC(self, uc_vectors):
@@ -195,7 +213,7 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
         return chemical_potential, number_density, volume
     swap_info = {} # note, swap info will include swatches
     cbmc_info = {} # includes SAFE-CBMC
-    avg_weights = []
+    avg_weights = [i/sum(ncycle_total) for i in ncycle_total]
     totalComposition = {}
     zeolite = {}
     runBegin = False
@@ -206,9 +224,7 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
         cbmc_section = False
         safe_cbmc = False
         for line in f:
-            if line.startswith('number of cycles'):
-                avg_weights.append( int(line.split()[3])/ncycle_total )
-            elif line.startswith('number of boxes in the system'):
+            if line.startswith('number of boxes in the system'):
                 nBox = int(line.split()[-1])
             elif line.startswith('number of molecule types'):
                 nMolTy = int(line.split()[-1])
@@ -343,8 +359,9 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
 
 def read_fort12(path, start_of_runs, num_files, tag='equil-'):
     os.chdir(path)
-    ncycle = 0
+    ncycles = [0 for i in range(start_of_runs, start_of_runs + num_files)]
     for j in range(start_of_runs, start_of_runs + num_files):
+        run_index = j - start_of_runs
         try:
             f = open(path +'/'+tag+str(j)+'/'+'fort12.' + tag + str(j))
         except:
@@ -372,7 +389,7 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
             box = nline % nbox
             if box == 0:
                 box = nbox
-                ncycle += 1
+                ncycles[run_index] += 1
             offset = len(line.split()) - nmolty - 1
             for mol in range(1, nmolty+1):
                 try:
@@ -386,7 +403,7 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
                 boxlength.data['box%i'%box].append( float(line.split()[0]) )
             except:
                 print(path,'run=',j,'fort.12 is binary')
-    return N_mlcls.data, Pressure.data, boxlength.data, ncycle, molWeights, InternalEnergy.data
+    return N_mlcls.data, Pressure.data, boxlength.data, ncycles, molWeights, InternalEnergy.data
 
 def read_hbond(path, start_of_runs, num_files):
     n_hBond_oneSim = {j:{'Soln':[], 'Zeo':[]} for j in ('Water', 'BuOH')}

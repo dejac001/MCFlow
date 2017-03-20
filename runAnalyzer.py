@@ -67,7 +67,7 @@ def getRealRho(rhoBias, bias, T):
 
 
 def calc95conf(stdev, numIndep):
-    T_values = {'8':2.365,'4':3.182, '16':2.131}
+    T_values = {'8':2.365,'4':3.182, '16':2.131, '32':2.04}
     assert '%i'%numIndep in T_values.keys(), 'No T-value stored for %i indep'%numIndep
     return stdev/math.pow(numIndep, 0.5)*T_values['%i'%numIndep]
 
@@ -76,6 +76,7 @@ def checkRun(tag, listOfDBs, feed):
     check to see if all DBs have data corresponding
     to the same run
     '''
+    assert tag != None, 'No tag provided to find run'
     run_names = []
     for db in listOfDBs:
         run_names += list(db[feed].keys())
@@ -175,12 +176,28 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 continue
         if nNotFound == len(indep): raise NoFilesAnalyzed
         for cls in data.values():
-            cls.avgVals(feed)
+            if len(indep) > 1:
+                cls.avgVals(feed)
+                general_data[feed]['numIndep'] = len(indep)
+                general_data[feed]['indepSims'] = indep
+            else:
+                CBMC.getRunAvg(cbmc_info,feed)
+                Press.getRunAvg(P,feed)
+                Nmlcl.getRunAvg(N,feed)
+                SWAP.getRunAvg(swap_info,feed)
+                U.getRunAvg(E,feed)
+                rho.getRunAvg(number_dens_real,feed)
+                boxlx.getRunAvg(boxLengths,feed)
+                if liq:
+                    C.getRunAvg(concentrations,feed)
+                    dG.getRunAvg(deltaG,feed)
+                general_data[feed]['numIndep'] = nfiles
+
         # get general data
         general_data[feed]['compositions'] = totalComposition
         general_data[feed]['ncycle'] = ncycle_old
         general_data[feed]['molecular weight'] = molWeights
-        general_data[feed]['numIndep'] = len(indep)
+        general_data[feed]['temperature'] = T
         if zeolite:
             general_data[feed]['zeolite'] = zeolite
     return data, general_data
