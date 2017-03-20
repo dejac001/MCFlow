@@ -392,7 +392,8 @@ def write_fort4(data, newfile):
     namelist_order = ['&mc_shared','&analysis','&mc_volume','&mc_swatch','&mc_swap',
                      '&mc_cbmc','&mc_simple']
     section_order = ['SIMULATION_BOX','MOLECULE_TYPE','SAFE_CBMC','MC_SWAP','MC_SWATCH',
-                     'INTERMOLECULAR_EXCLUSION','INTRAMOLECULAR_OH15','UNIFORM_BIASING_POTENTIALS',
+                     'INTERMOLECULAR_EXCLUSION','INTRAMOLECULAR_SPECIAL',
+                     'INTRAMOLECULAR_OH15','UNIFORM_BIASING_POTENTIALS',
                      'SPECIFIC_ATOM_TRANSL']
     if len(namelists) != len(namelist_order):
         print('amount of namelists not provided correctly')
@@ -465,7 +466,11 @@ def write_fort4(data, newfile):
             for itype in sort_keys(data[SEC].keys()):
                 for intra in data[SEC][itype]:
                     f.write(itype.strip('mol') + intra)
-        elif SEC == 'UNIFORM_BIASING_POTENTIALS':
+        elif (SEC == 'INTRAMOLECULAR_SPECIAL') and (SEC in data.keys()):
+            for mol in data[SEC].keys():
+                for params in data[SEC][mol]:
+                    f.write('%s %s\n'%(mol.strip('mol'), params))
+        elif (SEC == 'UNIFORM_BIASING_POTENTIALS') and (SEC in data.keys()):
             for molnum in sort_keys(data[SEC].keys()):
                 for box in sort_keys(data[SEC][molnum].keys()):
                     f.write(data[SEC][molnum][box] + ' ')

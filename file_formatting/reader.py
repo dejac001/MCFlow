@@ -548,6 +548,7 @@ def read_fort4(file):
             namelist = ''
         elif namelist:
             variable = line.split()[0]
+            if '=' == variable[-1]: variable = variable.rstrip('=')
             values = line[(line.find('=')+1):]
             my_val = 'None'
             if (variable == 'pmsatc'):
@@ -649,10 +650,19 @@ def read_fort4(file):
                 if 'mol%i'%mol not in input_data[section].keys():
                     input_data[section]['mol%i'%mol] = []
                 input_data[section]['mol%i'%mol] += [line[line.find(' '):]]
+        elif section == 'INTRAMOLECULAR_SPECIAL':
+            params = line.split()
+            if params[0].isdigit():
+                mol, i, j, logic, sLJ, sQ = list(map(int,params[:4])) +  list(map(float,params[-2:]))
+                if 'mol%i'%mol not in input_data[section].keys():
+                    input_data[section]['mol%i'%mol] = []
+                input_data[section]['mol%i'%mol].append( '%i %i %i %2.1f %2.1f'%(i,j,logic,sLJ, sQ))
         elif section == 'UNIFORM_BIASING_POTENTIALS':
             if line[0].isdigit():
                 itype += 1
                 input_data[section]['mol%i'%itype] = {'box%i'%(i+1):line.split()[i] for i in range(len(line.split()))}
+        else:
+            print( section, 'is missing formatting')
     return input_data
 
 def PDB(file):

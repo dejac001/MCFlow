@@ -16,6 +16,15 @@ def avg_displ(iline, *maxvalue):
     myline = '  %f       %f       %f'%((avgxyz,)*3)
     return myline
 
+def iaverage(nstep):
+    iprint = math.ceil(nstep/10)
+    if iprint > 1000:
+        iblock = 1000
+    else:
+        iblock = iprint
+    return iprint, iblock
+
+
 def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
     'Note: chdir to correct directory first'
     input_data = read_fort4(path + 'fort.4')
@@ -25,11 +34,13 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
     new_input_data['&analysis']['iratp'] = ' 5'
     new_input_data['&mc_shared']['iratio'] = ' %i'%(nstep+100)
     new_input_data['&mc_volume']['iratv'] = ' %i'%(nstep+100)
+    new_input_data['&mc_cbmc']['iupdatefix'] = ' %i'%(nstep+100)
     new_input_data['&mc_shared']['nstep'] = ' %i'%nstep
     new_input_data['&analysis']['imv'] = ' %i'%imv
     new_input_data['&mc_shared']['time_limit'] = ' %i'%total_time
-    for var in ['iprint','iblock']:
-        new_input_data['&analysis'][var] = ' %i'%(math.ceil(nstep/10))
+    iprint, iblock = iaverage(nstep)
+    new_input_data['&analysis']['iprint'] = ' %i'%iprint
+    new_input_data['&analysis']['iblock'] = ' %i'%iblock
     if 'allow_cutoff_failure' in new_input_data['&mc_volume'].keys():
         new_input_data['&mc_volume'].pop( 'allow_cutoff_failure' )
     rcut = {}
