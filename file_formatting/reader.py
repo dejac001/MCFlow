@@ -675,7 +675,7 @@ def read_fort4(file):
                     input_data[section]['mol%i'%mol] = []
                 input_data[section]['mol%i'%mol].append( '%i %i %i %2.1f %2.1f'%(i,j,logic,sLJ, sQ))
         elif section == 'UNIFORM_BIASING_POTENTIALS':
-            if line[0].isdigit():
+            if '!' not in line:
                 itype += 1
                 input_data[section]['mol%i'%itype] = {'box%i'%(i+1):line.split()[i] for i in range(len(line.split()))}
         else:
