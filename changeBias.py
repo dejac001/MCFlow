@@ -8,7 +8,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure, vaporBox='box
     :param N:
     :param biasOld:
     :param T:
-    :param pressure: pressure in bar
+    :param pressure: pressure passed in as kPa
     :param vaporBox:
     :return:
     '''
@@ -40,11 +40,11 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure, vaporBox='box
             # we have multiple sorbates
             Kmin = 10**5
             for mol in sorbates:
-                K = rhoReal[mol][vaporBox]['mean']/rhoReal[mol][liquidBox]['mean']
+                K = rhoReal[mol.strip('mol')][vaporBox]['mean']/rhoReal[mol.strip('mol')][liquidBox]['mean']
                 if K < Kmin:
                     Kmin = K
                     least_volatile = mol
-                    volume_AA3 = nVapor[sorbates.index(mol)]/rhoReal[mol][vaporBox]['mean']*1000
+                    volume_AA3 = nVapor[sorbates.index(mol)]/rhoReal[mol.strip('mol')][vaporBox]['mean']*1000
                     boxlx_AA3 = math.pow( volume_AA3, 1/3 )
             print('- To have {} molecules of least volatile mol#{} in vapor phase,'
                                     ' boxlength should be {}'.format(
@@ -71,7 +71,8 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure, vaporBox='box
         nGhost = int(   vapor_volume*10**(-24)*P/(83.14*T)*N_av    )
         return nGhost
 
-    pressure = pressure[vapor_box]['mean']
+    pressure = pressure[vapor_box]['mean']/100. # convert to bar
+    print('pressure was %5.2f bar'%pressure)
     N = {'mol%s'%mol: {box: N[mol][box] for box in N[mol].keys()} for mol in N.keys()} # get same notation
     bias_new = {mol: {box: 0 for box in N[mol].keys()} for mol in N.keys()}
     nbox = len(N['mol1'].keys())
@@ -129,14 +130,9 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure, vaporBox='box
                 nSorbate_vapor.append( 2 )
 
     print('nSorbate_vapor is   ', nSorbate_vapor)
-    print('vaporBox is ',vaporBox)
     boxlength_vapor_AA3, volume_vapor_AA3, least_volatile = getVaporVolume(sorbates, rho,
                                                                            vaporBox=vaporBox, nVapor=nSorbate_vapor)
-    if boxlength_vapor_AA3 > 10000.:
-        print(' ### boxlength too high, making 10,000 \AA and putting biasing potential on sorbate')
-        boxlength_vapor_AA3 = 10000.
-        volume_vapor_AA3 = 10000.**3
-        least_volatile = '-1'
+    assert boxlength_vapor_AA3 < 10000., 'predicted boxlength not realistic'
     nGhost = themGhosts(volume_vapor_AA3,T,pressure)
     liquid_volume_AA3 = math.pow( boxLengths['box2']['mean'], 3)
     for mol in impurities:
@@ -198,7 +194,8 @@ if __name__ == '__main__':
                                                   data['P'].averages[feed], vaporBox=vapor_box)
         # change data
         input_data['SIMULATION_BOX'][vapor_box]['dimensions'] = '%8.2f %8.2f %8.2f'%(vapor_boxlx_AA3,
-                                                                            vapor_boxlx_AA3,vapor_boxlx_AA3)
+                                                                            vapor_boxlx_AA3,
+                                                                                     vapor_boxlx_AA3)
         input_data['UNIFORM_BIASING_POTENTIALS'] = bias
         input_data['SIMULATION_BOX'][vapor_box]['rcut'] = '14.0d0'
         input_data['SIMULATION_BOX'][vapor_box]['nghost'] = '%i'%nGhost
