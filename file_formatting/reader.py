@@ -577,10 +577,12 @@ def read_fort4(file):
                     nmolty = int(values)
                 elif variable == 'nbox':
                     nbox = int(values)
-            elif len(values.split()) == nbox:
+            elif (variable  == 'pmvlmt'):
                 my_val = {'box%i'%i:values.split()[i-1] for i in range(1,nbox+1)}
             elif len(values.split()) == nmolty:
                 my_val = {'mol%i'%i:values.split()[i-1] for i in range(1,nmolty+1)}
+            elif len(values.split()) == nbox:
+                my_val = {'box%i'%i:values.split()[i-1] for i in range(1,nbox+1)}
             elif len(values.split()) > nbox and len(values.split()) < nmolty:
                 my_val = {'box%i'%i:values.split()[i-1] for i in range(1,nbox+1)}
             elif len(values.split()) > nmolty:

@@ -49,8 +49,8 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
             nActCycle += accepted/ncycle
             if attempted > 0.:
                 pctAct[moveType][boxpair] = accepted/attempted
-#           else:
-#               print('no moves attempted for move: {} b/t boxes {}'.format(moveType, boxpair))
+            else:
+                print('no moves attempted for move: {} b/t boxes {}'.format(moveType, boxpair))
             if (accepted == 0.):
                 if ' and ' in moveType:
                     molecules = moveType.split(' and ')
@@ -154,15 +154,15 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
         if len(swapInfo[moveType].keys()) == 2:
             # molecule is swapping in two directions
             dir1, dir2 = swapInfo[moveType].keys()
-            A = np.matrix([[pctAct[moveType][dir1], -1*pctAct[moveType][dir2]],
-                           [1                      , 1                       ]])
-            b = np.matrix([[0],
-                           [1]])
-            pDir1, pDir2 = np.linalg.solve(A, b)
-            newSwaps[moveType][dir1] = pDir1[0]
-            newSwaps[moveType][dir2] = pDir2[0]
-            effective_acceptance = pDir1[0]*pctAct[moveType][dir1]
             if (swapInfo[moveType][dir1]['attempted']['mean'] > 0) and (swapInfo[moveType][dir2]['attempted']['mean'] > 0):
+                A = np.matrix([[pctAct[moveType][dir1], -1*pctAct[moveType][dir2]],
+                               [1                      , 1                       ]])
+                b = np.matrix([[0],
+                               [1]])
+                pDir1, pDir2 = np.linalg.solve(A, b)
+                newSwaps[moveType][dir1] = pDir1[0]
+                newSwaps[moveType][dir2] = pDir2[0]
+                effective_acceptance = pDir1[0]*pctAct[moveType][dir1]
                 index += 1
                 addToMatrix(swapMatrix, index, effective_acceptance)
         elif len(swapInfo[moveType].keys()) == 1:
@@ -215,14 +215,15 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
     molNum = -1
     for moveType in sorted(numMolType.keys()): # sorted here is key!
         if (numMolType[moveType] > 0) and (moveType in swapInfo.keys()):
-            dirn = list(swapInfo[moveType].keys())[0]
-            accepted = swapInfo[moveType][dirn]['accepted']['mean']
-            if accepted > 0:
-                molNum += 1
-                newSwaps[moveType]['total'] = pSwap[molNum]
-            else:
-                newSwaps[moveType]['total'] = 0.
-                pctAct[moveType][dirn] = 0.
+            for dirn in swapInfo[moveType].keys():
+                accepted = swapInfo[moveType][dirn]['accepted']['mean']
+                if (accepted > 0) and ('total' not in newSwaps[moveType].keys()):
+                    molNum += 1
+                    newSwaps[moveType]['total'] = pSwap[molNum]
+                elif (accepted == 0.):
+                    newSwaps[moveType][dirn] = 0.
+                    newSwaps[moveType]['total'] = 0.
+                    pctAct[moveType][dirn] = 0.
         else:
             if moveType not in newSwaps.keys(): newSwaps[moveType] = {}
             newSwaps[moveType]['total'] = 0.
@@ -266,14 +267,14 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
 
         # determine alpha
         for mol in swapInfo.keys():
-            if len(swapInfo[mol].keys()) == 1: # if only 1 direction
-                dirn = list(swapInfo[mol].keys())[0]
-                if swapInfo[mol][dirn]['accepted']['mean'] > 0.:
-                    swapDir = list(swapInfo[mol].keys())[0]
-                    swapMol = mol
+#           if len(swapInfo[mol].keys()) == 1: # if only 1 direction
+            dirn = list(swapInfo[mol].keys())[0]
+            if swapInfo[mol][dirn]['accepted']['mean'] > 0.:
+                swapDir = dirn
+                swapMol = mol
         for mol in swatchInfo.keys():
-            if ((numMolType[molecules[0]] > 0) and (numMolType[molecules[1]] > 0)
-                and (len(swatchInfo[mol].keys())==1)):
+            if ((numMolType[molecules[0]] > 0) and (numMolType[molecules[1]] > 0)):
+#               and (len(swatchInfo[mol].keys())==1)):
                 swatchDir = list(swatchInfo[mol].keys())[0]
                 swatchMol = mol
 
@@ -290,6 +291,7 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
     for mol in swapInfo.keys():
         if len(swapInfo[mol].keys()) > 1:
             for dirn in swapInfo[mol].keys():
+                print(mol,dirn)
                 denominator += newSwaps[mol]['total']*newSwaps[mol][dirn]*pctAct[mol][dirn]
         else:
             dirn = list(swapInfo[mol].keys())[0]
@@ -331,10 +333,11 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
             pmvol, pmvol+pSwapTot*alpha, pmvol+pSwapTot*alpha+pSwapTot)
 
 from runAnalyzer import getFileData
-from file_formatting import writer
+from file_formatting import writer, reader
 from getData import outputDB, outputGenDB
+from runAnalyzer import findNextRun
 import numpy as np
-import os
+import os, shutil
 from dataUtil import sortMolKeys
 
 if __name__ == '__main__':
@@ -346,7 +349,6 @@ if __name__ == '__main__':
     for feed in feeds:
         args['feeds'] = [feed]
         data, gen_data = getFileData(**args)
-        print(dir(data['CBMC']))
         nbox = len(data['rho'].averages[feed].keys())
         # TODO: format return from analyzeTransfers to fit well with fort4 data dict
         (newSwaps, newSwatches, pctAct,
@@ -354,20 +356,110 @@ if __name__ == '__main__':
         pmvol, pswatch_norm, pswap_norm) = analyzeTransfers(data['SWAP'].averages[feed],
                                                             gen_data[feed]['ncycle'],
                                                             gen_data[feed]['compositions'])
-        # write new files
-        # TODO: add function to update new probabilities in fort4 data dictionary. Then write
-        water_key = None
-        for i in newSwaps:
-            if 'WATER' in i: water_key = i
-        if (nbox > 2) and water_key and (len(newSwaps[water_key].keys()) > 1):
-            # water has more than 1 swap pair
-            Prob_dir1 = newSwaps[water_key]['13']
-        else:
-            Prob_dir1 = False
-        writer.write_new_prob('%s/%s'%(args['path'], feed), normSwaps,
-                              normSwatches, pmvol, pswap_norm, pswatch_norm,
-                              gen_data[feed]['compositions'], args['indep'], data['boxlx'].averages[feed],
-                              args['rcut'], args['time'], nstepnew=args['nstep'],
-                              Pdir1=Prob_dir1)
+        # read and write
+        for sim in args['indep']:
+            my_path = '%s/%s/%i/'%(args['path'],feed,sim)
+            input_data = reader.read_fort4(my_path + 'fort.4')
+            # add in swaps
+            pswap_old = float(input_data['&mc_swap']['pmswap'].rstrip('d0'))
+            input_data['&mc_swap']['pmswap'] = '%e'%pswap_norm
+            assert len(newSwaps) == int(input_data['&mc_shared']['nmolty']), 'Incorrect swaps: too many'
+            for key, val in newSwaps.items():
+                mol = 'mol%s'%(key.split()[0])
+                # total value for molecule type
+                total = val['total']
+                if (total < 1e-12):
+                    my_tot = '-1.0'
+                else:
+                    my_tot = '%4e'%total
+                input_data['&mc_swap']['pmswmt'][mol] = my_tot
+                # add in swap directions
+                dirs = [i for i in val.keys() if i != 'total']
+                input_data['MC_SWAP'][mol]['nswapb'] = len(dirs)
+                input_data['MC_SWAP'][mol]['pmswapb'] = []
+                input_data['MC_SWAP'][mol]['box1 box2'] = []
+                my_sum = 0.
+                for drn in dirs:
+                    my_sum = my_sum + val[drn] # numpy object, can't add to itself
+                    input_data['MC_SWAP'][mol]['pmswapb'].append( my_sum )
+                    input_data['MC_SWAP'][mol]['box1 box2'].append( list(map(int,drn)) )
+            # take out extraneous swatches
+            unique_swatches = []
+            for iswatch, info in input_data['MC_SWATCH'].items():
+                in_line_1 = []; in_line_2 = []; splist = []
+                for i, line in enumerate(info.split('\n')):
+                    if not line.startswith('!'):
+                        if len(in_line_1) == 0:
+                            in_line_1 = list(line.split())
+                        elif len(in_line_2) == 0:
+                            in_line_2 = list(line.split())
+                        else:
+                            splist.append( list(map(int,line.split())) )
+                            if len(splist) == int(in_line_1[2]): break
+                swatch_label = ('! moltyp1<->moltyp2 nsampos 2xncut\n' + ' '.join(in_line_1) + '\n'
+                                + '! gswatc 2x(ifrom, iprev)\n' + ' '.join( in_line_2) + '\n' +
+                                '! splist\n')
+                for sameBead in splist:
+                    swatch_label += '%i %i\n'%(sameBead[0], sameBead[1])
+                if swatch_label not in unique_swatches:
+                    unique_swatches.append(swatch_label)
+            # add in swatches
+            input_data['MC_SWATCH'] = {}
+            input_data['&mc_swatch'] = {'pmsatc':{},'nswaty':'0','pmswat':'0'}
+            input_data['&mc_swatch']['pmswat'] = '%e'%pswatch_norm
+            nSwatch = 0
+            for key, value in newSwatches.items():
+                mol_names = key.split(' and ')
+                mol1_num, mol2_num = [i.split()[0] for i in mol_names]
+                for swatch in unique_swatches:
+                    mol1, mol2 = swatch.split('\n')[1].split()[:2]
+                    if mol1 == mol1_num and mol2 == mol2_num:
+                        nSwatch += 1
+                        s_num = 'swatch%i'%nSwatch
+                        info = swatch + '! nswtcb pmswtcb\n'
+                        # add in direstions
+                        dirs = [i for i in value.keys() if i != 'total']
+                        info += '%i'%len(dirs)
+                        my_sum = 0.
+                        for drn in sorted(dirs):
+                            my_sum += value[drn]
+                            info += ' %6.4fd0'%(my_sum)
+                        info += '\n! box numbers\n'
+                        for drn in sorted(dirs):
+                            info += drn[0] + ' ' + drn[1] + '\n'
+                        input_data['MC_SWATCH'][s_num] = info
+                        input_data['&mc_swatch']['pmsatc'][s_num] = '%6.4fd0'%value['total']
+            input_data['&mc_swatch']['nswaty'] = '%i'%nSwatch
+            # add in other stuff
+            input_data['&mc_shared']['nstep'] = '%i'%args['nstep']
+            input_data['&mc_shared']['iratio'] = '500'
+            input_data['&mc_shared']['rmin'] = '1.0'
+            iblock = int(args['nstep']/10)
+            if iblock > 1000: iblock = 1000
+            input_data['&analysis']['iblock'] = '%i'%iblock
+            input_data['&mc_volume']['pmvol'] = '%e'%pmvol
+            pmcb_old = float(input_data['&mc_cbmc']['pmcb'].rstrip('d0')) - pswap_old
+            pswap_new = pswap_norm
+            if pmcb_old <= 0.:
+                print('pmcb was zero previously, keeping it that way')
+                pmcb_old = 0.
+                pmtra_old = (1-pswap_old)/2.
+                pmcb = 0.
+                pmtra = (1-pswap_new)*pmtra_old/(1-pswap_old) + pmcb
+            else:
+                pmcb = (1-pswap_new)*pmcb_old/(1-pswap_old) + pswap_new
+                pmtra_old = (1-pswap_old - pmcb_old)/2
+                pmtra = (1-pswap_new)*pmtra_old/(1-pswap_old) +  pmcb
+            assert pmtra < 1., 'Pmtra %e too large!'%pmtra
+            input_data['&mc_cbmc']['pmcb'] = '%e'%pmcb
+            input_data['&mc_simple']['pmtra'] = '%e'%pmtra
+            # make new run
+            old_fort4 = [i for i in os.listdir(my_path) if 'fort.4.%s'%args['type'] in i]
+            for fort4 in old_fort4:
+                os.remove(my_path + fort4)
+            shutil.move(my_path + 'fort.4',my_path + 'old-fort4')
+            nextRun = 'fort.4.%s%i'%(args['type'],findNextRun(my_path,args['type']))
+            writer.write_fort4(input_data, my_path + nextRun)
+            input_data = None
         outputDB(args['path'], args['feeds'],args['type'], data )
         outputGenDB(args['path'], args['feeds'],args['type'], gen_data )
