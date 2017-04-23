@@ -677,7 +677,14 @@ def read_fort4(file):
         elif section == 'UNIFORM_BIASING_POTENTIALS':
             if '!' not in line:
                 itype += 1
-                input_data[section]['mol%i'%itype] = {'box%i'%(i+1):line.split()[i] for i in range(len(line.split()))}
+                mol = 'mol%i'%itype
+                if mol not in input_data[section].keys():
+                    input_data[section][mol] = {}
+                for i in range(len(line.split())):
+                    my_box = 'box%i'%(i+1)
+                    if my_box not in input_data[section][mol].keys():
+                        input_data[section][mol][my_box] = {}
+                    input_data[section][mol][my_box] = float(line.split()[i].rstrip('d0'))
         else:
             print( section, 'is missing formatting')
     return input_data

@@ -27,7 +27,12 @@ def makeRandomStruc(boxlengths, coordinates, previous_coords):
 
 def initialize(input, restart,  molID, box):
 
-    boxlx, boxly, boxlz = map(float,restart['box dimensions']['box%s'%box].split())
+    try:
+        boxlx, boxly, boxlz = map(float,restart['box dimensions']['box%s'%box].split())
+    except ValueError:
+        print(restart['box dimensions']['box%s'%box])
+        print('non-orthorhombic box not work')
+        quit()
 
     # find mol number
     for mol in input['MOLECULE_TYPE'].keys():
@@ -59,10 +64,12 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID):
     T = float(input_dat['SIMULATION_BOX']['box%s'%box]['temperature'])
     V = N/N_av*R['\AA**3*MPa/(mol*K)']*T/p
     boxlx = pow(V, 1/3)
-    restart_dat['box dimensions']['box%s'%box] = '{} {} {}\n'.format(boxlx, boxlx, boxlx)
-    input_dat['SIMULATION_BOX']['box%s'%box]['rcut'] = '%e'%(boxlx/2)
+    boxlx_old = next(map(float,restart_dat['box dimensions']['box%s'%box].split()))
+    if boxlx > boxlx_old:
+        restart_dat['box dimensions']['box%s'%box] = '{} {} {}\n'.format(boxlx, boxlx, boxlx)
+        input_dat['SIMULATION_BOX']['box%s'%box]['rcut'] = '%e'%(boxlx/2)
     input_dat['&mc_shared']['iratio'] = '500'
-    input_dat['&analysis']['imv'] = '50000'
+    input_dat['&analysis']['imv'] = '%i'%(int(input_dat['&mc_shared']['nstep']) + 10)
     input_dat['&mc_volume']['iratv'] = '500'
     if float(restart_dat['max displacement']['volume']['box%s'%box]) < 100000.0:
         restart_dat['max displacement']['volume']['box%s'%box] = '100000.0'
@@ -107,7 +114,10 @@ def removeMolecules(input_dat, restart_dat, nAdd, box, molID):
     def keepMol():
         for key in ['box types', 'mol types', 'coords']:
             new_restart_data[key].append(restart_dat[key][i])
-    (boxlengths, mol_num, old_coordinates, charges) = initialize(input_dat, restart_dat, molID, box)
+    # find mol number
+    for mol in input_dat['MOLECULE_TYPE'].keys():
+        if molID in input_dat['MOLECULE_TYPE'][mol]:
+            mol_num = mol.strip('mol')
     taken_out = 0
     new_restart_data = copy.deepcopy(restart_dat)
     # initialize new restart data

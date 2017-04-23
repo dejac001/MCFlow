@@ -135,9 +135,7 @@ def write_new_prob(PATH, pswapMolTy, pswatchMolTy, pmvol, pmswap, pswatch,
     def writePMT(probs):
         val = ''
         for pmt in probs:
-            if pmt < 1e-08:
-                val += '0.0d0  '
-            elif pmt < 1e-04:
+            if pmt < 1e-04:
                 val += '%6.4e ' % pmt
             else:
                 val += '%6.4fd0  ' %pmt
