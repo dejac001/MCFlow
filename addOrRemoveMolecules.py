@@ -85,6 +85,11 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID):
                 mol_coord_data[key].append(value)
     assert len(mol_coord_data['mol types']) > 0, 'No mols found for moltype in boxtype provided'
     for newMol in range(nAdd):
+        try:
+            if (newMol+1)%(nAdd//4) == 0:
+                print('%5.1f %% of molecules added'%(100*(newMol+1)/nAdd))
+        except ZeroDivisionError:
+            print('%5.1f %% of molecules added'%(100*(newMol+1)/nAdd))
         # find random molecule to copy configuration of
         random_mol = random.randint(0, len(mol_coord_data['mol types'])-1)
         new_config = getXYZCoords(mol_coord_data['coords'][random_mol])

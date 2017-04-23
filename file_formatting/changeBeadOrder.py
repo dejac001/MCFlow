@@ -47,7 +47,10 @@ def changeBeadOrder(mols, newOrders,  input_data, restart_data):
         for i in mol_units:
             new_input['MOLECULE_TYPE']['mol%s'%mol] += i
         if 'first_bead_to_swap' in new_input['&mc_cbmc'].keys():
-            new_input['&mc_cbmc']['first_bead_to_swap']['mol%s'%mol] = '1'
+            try:
+                new_input['&mc_cbmc']['first_bead_to_swap']['mol%s'%mol] = '1'
+            except TypeError:
+                new_input['&mc_cbmc']['first_bead_to_swap'] = {'mol1':'1'}
     for jmol, mol in enumerate(restart_data['mol types']):
         if mol in mols:
             molNum = mols.index(mol)
