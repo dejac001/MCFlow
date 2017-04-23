@@ -14,7 +14,7 @@ class Main:
                                              ' must be in ls ${path}',
                              nargs = '+', type=str)
         self.parser.add_argument('-i','--indep',
-                        help='RANGE of independent simulations',
+                        help='RANGE of independent simulations, if = 0 (for plotting only) plot all data',
                         nargs = '+',type=int, default = range(1,9))
 
     def other(self):
@@ -45,10 +45,10 @@ class Plot(Main):
                                  type=str,nargs='+',default=['box3','box2'])
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',
-                                 choices = ['C','Pig', 'Pbox','Pi','Q'])
+                                 choices = ['C','Pig', 'Pbox','Pi','Q','rho','x'])
         self.parser.add_argument('-y','--yaxis',help='x axis of plot',
                                  choices = ['Q','dG','S','R',
-                                            'X','dH'])
+                                            'X','dH','dU','dHig','Pigxy'])
     def isotherm(self):
         self.parser.add_argument('-u','--units',help='choices for units on plot',
                                  choices=['molec/uc','g/g','mol/kg',

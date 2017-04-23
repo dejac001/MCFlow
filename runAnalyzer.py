@@ -83,7 +83,7 @@ def checkRun(tag, listOfDBs, feed):
     data_run = ''
     for run in set(run_names):
         if tag in run: data_run += run
-    assert data_run, 'No run analyzed of run type prompted'
+    assert data_run, 'No run analyzed of run type prompted for feed %s'%feed
     assert data_run in listOfDBs[0][feed].keys(), 'More than one run found to analyze'
     return data_run
 
@@ -133,12 +133,12 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                                                                           tag=type)
                 # do calculations for other data that may be needed
                 number_dens_real = getRealRho(number_densities, biasPot, T)
+                deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
                 if liq:
                     concentrations = {}
                     c = calc_tools.g_mL(N[mol]['box2'], boxLengths['box2'],
                                             MW=molWeights[mol])
                     concentrations[mol] = {'box2':c}
-                    deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
                 # initialize vars
                 if (seed == indep[0]) and (feed == feeds[0]):
                     boxlx = properties.AnyProperty(boxLengths)
@@ -148,17 +148,16 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                     SWAP = properties.AnyProperty(swap_info)
                     U = properties.AnyProperty(E)
                     rho = properties.AnyProperty(number_dens_real)
+                    dG = properties.AnyProperty( deltaG )
                     data = {'CBMC':CBMC, 'P':Press, 'N':Nmlcl,
                             'SWAP':SWAP, 'U':U, 'rho':rho,
-                            'boxlx':boxlx}
+                            'boxlx':boxlx, 'dG':dG}
                     if liq:
                         if (verbosity > 1):
                             print('Doing analysis for C [ g/mL ] for mol {}'.format(mol))
                             print('Box 2 should be liquid phase')
                         C = properties.AnyProperty( concentrations )
-                        dG = properties.AnyProperty( deltaG )
                         data['Conc'] = C
-                        data['dG'] = dG
                 CBMC.addVals(cbmc_info)
                 Press.addVals(P)
                 Nmlcl.addVals(N)
@@ -166,9 +165,9 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 U.addVals(E)
                 rho.addVals(number_dens_real)
                 boxlx.addVals(boxLengths)
+                dG.addVals(deltaG)
                 if liq:
                     C.addVals(concentrations)
-                    dG.addVals(deltaG)
             except FileNotFoundError:
                 nNotFound += 1
                 print('File not found for dir {}'.format(my_dir))
@@ -176,22 +175,9 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 continue
         if nNotFound == len(indep): raise NoFilesAnalyzed
         for cls in data.values():
-            if len(indep) > 1:
-                cls.avgVals(feed)
-                general_data[feed]['numIndep'] = len(indep)
-                general_data[feed]['indepSims'] = indep
-            else:
-                CBMC.getRunAvg(cbmc_info,feed)
-                Press.getRunAvg(P,feed)
-                Nmlcl.getRunAvg(N,feed)
-                SWAP.getRunAvg(swap_info,feed)
-                U.getRunAvg(E,feed)
-                rho.getRunAvg(number_dens_real,feed)
-                boxlx.getRunAvg(boxLengths,feed)
-                if liq:
-                    C.getRunAvg(concentrations,feed)
-                    dG.getRunAvg(deltaG,feed)
-                general_data[feed]['numIndep'] = nfiles
+            cls.avgVals(feed)
+        general_data[feed]['numIndep'] = len(indep)
+        general_data[feed]['indepSims'] = indep
 
         # get general data
         general_data[feed]['compositions'] = totalComposition
@@ -203,5 +189,9 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
     return data, general_data
 
 import math, os, sys
-from MCFlow import properties, calc_tools, file_formatting
-from MCFlow.chem_constants import R, N_av
+try:
+    from MCFlow import properties, calc_tools, file_formatting
+    from MCFlow.chem_constants import R, N_av
+except ImportError:
+    print('import error')
+    print(sys.path)

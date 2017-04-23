@@ -8,26 +8,49 @@ def findHB(beadsFrom, molsTo, abc, criteria):
     rOH_max = 6.25 # 2.5*2.5
     rOO_max = 10.89 # 3.3*3.3
     nHB = 0
+    # # iterate through all Oxygens
+    # for O1 in beadsFrom['O']:
+    #     # iterate through all H on molecule that are bonded to O1
+    #     for H1 in [i for i in beadsFrom['H'] if calculate_distance2(O1,i,abc) < 1.0]:
+    #         # iterate through all molecules of those specified in box
+    #         for mol in molsTo:
+    #             # iterate through Oxygens of selected molecule if selected molecule is not the same as O1
+    #             for O2 in [j for j in mol['O'] if calculate_distance2(O1,j,abc) > 0.1]:
+    #                 # do not consider same molecule
+    #                 for H2 in [i for i in mol['H'] if calculate_distance2(O2,i,abc) < 1.0]:
+    # iterate through all Oxygens
     for O1 in beadsFrom['O']:
-        for H1 in [i for i in beadsFrom['H'] if calculate_distance2(O1,i,abc) < 1.0]:
-            for mol in molsTo:
-                for O2 in [j for j in mol['O'] if calculate_distance2(O1,j,abc) > 0.1]:
-                    # do not consider same molecule
+        # iterate through all molecules of those specified in box
+        for mol in molsTo:
+            # iterate through Oxygens of selected molecule if selected molecule is not the same as O1
+            for O2 in [j for j in mol['O'] if calculate_distance2(O1,j,abc) > 0.1]:
+                # iterate through all H on molecule 1 that are bonded to O1
+                our_HB = 0
+                for H1 in [i for i in beadsFrom['H'] if calculate_distance2(O1,i,abc) < 1.0]:
+                    # iterate through all H on molecule 2 that are bonded to O2
                     for H2 in [i for i in mol['H'] if calculate_distance2(O2,i,abc) < 1.0]:
                         if criteria == 'loose':
                             if ((calculate_distance2(O1, O2, abc) < rOO_max) and
                                 ((calculate_distance2(O1, H2, abc) < rOH_max) or
                                 (calculate_distance2(O2, H1, abc) < rOH_max))):
                                 nHB += 1
+                                our_HB += 1
+                                break # can only have 1 hydrogen bond between two molecules
                         elif criteria == 'strict':
                             if calculate_distance2(H1,O2,abc) < rOH_max:
                                 # 1 can be charge acceptor
                                 if calculate_angle(O1,H1,O2,abc) > aOHO_min:
+                                    our_HB += 1
                                     nHB +=1
+                                    break # can only have 1 hydrogen bond between two molecules
                             elif calculate_distance2(H2,O1,abc) < rOH_max:
                                 # 2 can be charge acceptor
                                 if calculate_angle(O2,H2,O1,abc) > aOHO_min:
                                     nHB += 1
+                                    our_HB += 1
+                                    break # can only have 1 hydrogen bond between two molecules
+                    if our_HB == 1:
+                        break # can only have 1 hydrogen bond between two molecules
     return nHB
 
 from MCFlow.file_formatting.reader import Movie
@@ -56,8 +79,8 @@ class HydrogenBond(Movie):
             # i.e., to_mols = mols you specified
             HB_to_mols = []
             for mlcl in mols:
-                HB_to_beads = {'H':[],'O':[]}
                 for each_molecule in FRAME_DATA[my_box]['mol%s'%mlcl]:
+                    HB_to_beads = {'H':[],'O':[]}
                     for bead in each_molecule.keys():
                         if bead in OTypes.keys():
                             for coord in each_molecule[bead]:
@@ -65,7 +88,7 @@ class HydrogenBond(Movie):
                         elif bead in HTypes.keys():
                             for coord in each_molecule[bead]:
                                 HB_to_beads['H'].append( list(map(float,coord)) )
-                HB_to_mols.append( HB_to_beads )
+                    HB_to_mols.append( HB_to_beads )
             # store H and O for all other mols
             for molType in FRAME_DATA[my_box].keys():
                 self.HB[iframe][my_box][molType] = []

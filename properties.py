@@ -39,26 +39,26 @@ class AnyProperty():
                     print(value)
         appendValues(newData, self.data)
 
-    def getRunAvg(self, newData, newKey):
-        '''
-        self.data is a nested dictionary ending in a list containing a value for each independent simulation.
-        The mean of this simulation is the data point for the simulation.
-        '''
-        def averageValues(dataToAverage, allAverages):
-            for key, value in dataToAverage.items():
-                if isinstance(value, dict):
-                    allAverages[key] = {}
-                    averageValues(dataToAverage[key], allAverages[key])
-                elif isinstance(value, list):
-                    mean = np.mean(value)
-                    stdev = np.std(value)
-                    allAverages[key] = {'mean':mean, 'stdev':stdev}
-                    dataToAverage[key].clear()
-        if not self.averaging: # if havent started averaging need to make new dict
-            self.averages = {}
-            self.averaging = True
-        self.averages[newKey] = {}
-        averageValues(newData, self.averages[newKey])
+#    def getRunAvg(self, newData, newKey):
+#        '''
+#        self.data is a nested dictionary ending in a list containing a value for each independent simulation.
+#        The mean of this simulation is the data point for the simulation.
+#        '''
+#        def averageValues(dataToAverage, allAverages):
+#            for key, value in dataToAverage.items():
+#                if isinstance(value, dict):
+#                    allAverages[key] = {}
+#                    averageValues(dataToAverage[key], allAverages[key])
+#                elif isinstance(value, list):
+#                    mean = np.mean(value)
+#                    stdev = np.std(value)
+#                    allAverages[key] = {'mean':mean, 'stdev':stdev}
+#                    dataToAverage[key].clear()
+#        if not self.averaging: # if havent started averaging need to make new dict
+#            self.averages = {}
+#            self.averaging = True
+#        self.averages[newKey] = {}
+#        averageValues(newData, self.averages[newKey])
 
     def avgVals(self, newKey):
         '''
@@ -74,7 +74,7 @@ class AnyProperty():
                 elif isinstance(value, list):
                     mean = np.mean(value)
                     stdev = np.std(value)
-                    allAverages[key] = {'mean':mean, 'stdev':stdev}
+                    allAverages[key] = {'mean':mean, 'stdev':stdev, 'raw':value[:]}
                     dataToAverage[key].clear()
         if not self.averaging: # if havent started averaging need to make new dict
             self.averages = {}
@@ -143,7 +143,7 @@ class MolProperty(Property, AnyProperty):
         self.averaging = False
 
     def avgOverRuns(self, weights):  # should probably make unbound method so function
-        assert sum(weights) == 1., 'Weights not calculated correctly'
+        assert abs(sum(weights)-1) <= 0.00001, 'Weights not calculated correctly, sum = {}'.format(sum(weights))
         self.avgOverRuns = {}
         for mlcl in list(self.data.keys()):
             self.avgOverRuns[mlcl] = {}
