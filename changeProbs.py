@@ -168,6 +168,7 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
         elif len(swapInfo[moveType].keys()) == 1:
             direction = list(swapInfo[moveType].keys())[0]
             if (swapInfo[moveType][direction]['attempted']['mean'] > 0) and (direction in pctAct[moveType].keys()):
+                newSwaps[moveType][direction] = 1.0
                 index += 1
                 addToMatrix(swapMatrix, index, pctAct[moveType][direction])
         else:
@@ -356,25 +357,37 @@ if __name__ == '__main__':
         pmvol, pswatch_norm, pswap_norm) = analyzeTransfers(data['SWAP'].averages[feed],
                                                             gen_data[feed]['ncycle'],
                                                             gen_data[feed]['compositions'])
+        print(newSwaps)
         # read and write
         for sim in args['indep']:
             my_path = '%s/%s/%i/'%(args['path'],feed,sim)
-            input_data = reader.read_fort4(my_path + 'fort.4')
+            try:
+                input_data = reader.read_fort4(my_path + 'fort.4')
+            except FileNotFoundError:
+                input_data = reader.read_fort4(my_path + 'old-fort4')
             # add in swaps
             pswap_old = float(input_data['&mc_swap']['pmswap'].rstrip('d0'))
             input_data['&mc_swap']['pmswap'] = '%e'%pswap_norm
-            assert len(newSwaps) == int(input_data['&mc_shared']['nmolty']), 'Incorrect swaps: too many'
-            for key, val in newSwaps.items():
+            nmolty = int(input_data['&mc_shared']['nmolty'])
+            assert len(newSwaps) == nmolty, 'Incorrect swaps: too many'
+            total_pswap = 0.
+            for molNum in range(1,nmolty+1):
+                for mol in newSwaps.keys():
+                    if mol.split()[0] == '%i'%molNum:
+                        key = mol
+                        val = newSwaps[key]
                 mol = 'mol%s'%(key.split()[0])
                 # total value for molecule type
                 total = val['total']
                 if (total < 1e-12):
                     my_tot = '-1.0'
                 else:
-                    my_tot = '%4e'%total
+                    total_pswap = total_pswap + total
+                    my_tot = '%4e'%total_pswap
                 input_data['&mc_swap']['pmswmt'][mol] = my_tot
                 # add in swap directions
                 dirs = [i for i in val.keys() if i != 'total']
+                print(dirs)
                 input_data['MC_SWAP'][mol]['nswapb'] = len(dirs)
                 input_data['MC_SWAP'][mol]['pmswapb'] = []
                 input_data['MC_SWAP'][mol]['box1 box2'] = []
@@ -457,7 +470,10 @@ if __name__ == '__main__':
             old_fort4 = [i for i in os.listdir(my_path) if 'fort.4.%s'%args['type'] in i]
             for fort4 in old_fort4:
                 os.remove(my_path + fort4)
-            shutil.move(my_path + 'fort.4',my_path + 'old-fort4')
+            try:
+                shutil.move(my_path + 'fort.4',my_path + 'old-fort4')
+            except FileNotFoundError:
+                pass
             nextRun = 'fort.4.%s%i'%(args['type'],findNextRun(my_path,args['type']))
             writer.write_fort4(input_data, my_path + nextRun)
             input_data = None
