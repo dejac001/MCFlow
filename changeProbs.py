@@ -387,7 +387,6 @@ if __name__ == '__main__':
                 input_data['&mc_swap']['pmswmt'][mol] = my_tot
                 # add in swap directions
                 dirs = [i for i in val.keys() if i != 'total']
-                print(dirs)
                 input_data['MC_SWAP'][mol]['nswapb'] = len(dirs)
                 input_data['MC_SWAP'][mol]['pmswapb'] = []
                 input_data['MC_SWAP'][mol]['box1 box2'] = []
@@ -444,6 +443,7 @@ if __name__ == '__main__':
                         input_data['&mc_swatch']['pmsatc'][s_num] = '%6.4fd0'%value['total']
             input_data['&mc_swatch']['nswaty'] = '%i'%nSwatch
             # add in other stuff
+            #   general info
             input_data['&mc_shared']['nstep'] = '%i'%args['nstep']
             input_data['&mc_shared']['iratio'] = '500'
             input_data['&mc_shared']['rmin'] = '1.0'
@@ -451,6 +451,7 @@ if __name__ == '__main__':
             if iblock > 1000: iblock = 1000
             input_data['&analysis']['iblock'] = '%i'%iblock
             input_data['&mc_volume']['pmvol'] = '%e'%pmvol
+            #   other probabilities
             pmcb_old = float(input_data['&mc_cbmc']['pmcb'].rstrip('d0')) - pswap_old
             pswap_new = pswap_norm
             if pmcb_old <= 0.:
@@ -466,6 +467,14 @@ if __name__ == '__main__':
             assert pmtra < 1., 'Pmtra %e too large!'%pmtra
             input_data['&mc_cbmc']['pmcb'] = '%e'%pmcb
             input_data['&mc_simple']['pmtra'] = '%e'%pmtra
+            #   box lengths
+            for box in range(1,int(input_data['&mc_shared']['nbox'])+1):
+                boxLengths = data['boxlx'].averages[feed]['box%i'%box]['mean']
+                input_data['SIMULATION_BOX']['box%i'%box]['dimensions'] = (
+                                    '%8f %8f %8f'%(boxLengths, boxLengths, boxLengths)
+                                                                        )
+                if (boxLengths > 100.) and (args['rcut'] < 1.):
+                    input_data['SIMULATION_BOX']['box%i'%box]['rcut'] = '%5e'%(boxLengths*args['rcut'])
             # make new run
             old_fort4 = [i for i in os.listdir(my_path) if 'fort.4.%s'%args['type'] in i]
             for fort4 in old_fort4:
