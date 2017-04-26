@@ -633,15 +633,14 @@ def read_fort4(file):
             if line.split():
                 input_data[section]['mol%i'%itype] += line
         elif section == 'MC_SWAP':
-            if 'nswapb' in line:
-                itype += 1
-                input_data[section]['mol%i'%itype] = {'nswapb':0,'pmswapb':[]}
             if line.split() and line[0].isdigit():
                 if len([i for i in line.split() if i.isdigit()]) == 2:
                     # line is box1, box2
                     swap_pair += 1
                     input_data[section]['mol%i'%itype]['box1 box2'][swap_pair] = list(map(int,line.split()))
                 else:
+                    itype += 1
+                    input_data[section]['mol%i'%itype] = {'nswapb':0,'pmswapb':[]}
                     nswapb = int(line.split()[0])
                     input_data[section]['mol%i'%itype]['nswapb'] = nswapb
                     input_data[section]['mol%i'%itype]['pmswapb'] = list(map(float, [i.rstrip('d0') for i in line.split()[1:]]))

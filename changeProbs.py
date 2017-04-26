@@ -200,6 +200,7 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
                     addToMatrix(swatchMatrix, index, effective_acceptance)
                 elif len(swatchInfo[moveType].keys()) == 1:
                     direction = list(swatchInfo[moveType].keys())[0]
+                    newSwatches[moveType][direction] = 1.0
                     addToMatrix(swatchMatrix, index, pctAct[moveType][direction])
                 else:
                     print('!!!probability script not ready for 3 different types of directions')
