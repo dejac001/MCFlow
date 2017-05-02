@@ -571,6 +571,8 @@ def read_fort4(file):
             if (variable == 'pmsatc'):
                 my_val = {'swatch%i'%i:values.split()[i-1]
                           for i in range(1, len(values.split())+1)}
+            elif variable == 'pmswmt':
+                my_val = {'mol%i'%i:values.split()[i-1] for i in range(1,nmolty+1)}
             elif (len(values.split()) == 1) and (variable != 'pmvlmt'):
                 my_val = values.rstrip('\n')
                 if variable == 'nmolty':
