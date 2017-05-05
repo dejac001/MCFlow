@@ -79,70 +79,70 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
             # ^ keep all moveTypes for swatch, but not for swap
     print('number of accepted transfer moves was {}'.format(nActCycle))
 
-#    # determine if there are extraneous moves which can be taken out
-#    # (1)
-#    # if the molecule is not an impurity, and you are using two different types of swatches to
-#    # transfer it in the same direction, decide which direction is best
-#    original_swatches = list(swatchInfo.keys())
-#    for swatch1 in original_swatches:
-#        mol1, mol2 = swatch1.split(' and ')
-#        if swatch1 not in swatchInfo.keys(): continue
-#        for swatch2 in [i for i in original_swatches if i != swatch1]:
-#            if swatch2 not in swatchInfo.keys(): continue
-#            if ((mol1 in swatch2) and (len(pctAct[mol1].keys()) > 0) or
-#                (mol2 in swatch2) and (len(pctAct[mol2].keys()) > 0)):
-#                dirns = [i for i in swatchInfo[swatch1].keys() if i in swatchInfo[swatch2].keys()]
-#                for dirn in dirns:
-#                    if pctAct[swatch1][dirn] >  pctAct[swatch2][dirn]:
-#                        # remove swatch2
-#                        swatchInfo[swatch2].pop( dirn , None)
-#                        pctAct[swatch2].pop( dirn , None)
-#                        print('     - remove swatches for {} between {} in fort.4'.format(swatch2,dirn))
-#                        if len(swatchInfo[swatch2].keys())  == 0:
-#                            swatchInfo.pop( swatch2 , None)
-#                            pctAct.pop( swatch2, None)
-#                            numberSwatchtype -= 1
-#                    else:
-#                        # remove swatch1
-#                        swatchInfo[swatch1].pop( dirn , None)
-#                        pctAct[swatch1].pop( dirn , None)
-#                        print('     - remove swatches for {} between {} in fort.4'.format(swatch1,dirn))
-#                        if len(swatchInfo[swatch1].keys())  == 0:
-#                            swatchInfo.pop( swatch1 , None)
-#                            pctAct.pop( swatch1, None)
-#                            numberSwatchtype -= 1
-#    # (2)
-#    # for a given swatch type, if doing swaps for both molecules in same direction, determine
-#    # whether you should keep the swatch move and replace the swap move(s) and vice versa
-#    original_swatches = list(swatchInfo.keys())
-#    for swatchType in original_swatches:
-#        mol1, mol2 = swatchType.split(' and ')
-#        for dirn in pctAct[mol1].keys(): # for directions in swaps for mol1
-#            if (dirn in swatchInfo[swatchType].keys()) and (dirn in pctAct[mol2].keys()):
-#                # doing swaps for both molecules in swatch move in same direction
-#                if ((pctAct[swatchType][dirn] < pctAct[mol1][dirn]) and
-#                        (pctAct[swatchType][dirn] < pctAct[mol2][dirn])):
-#                    # remove the swatch move
-#                    swatchInfo[swatchType].pop( dirn , None)
-#                    pctAct[swatchType].pop( dirn , None)
-#                    print('     - remove swatches for {} between {} in fort.4'.format(swatchType,dirn))
-#                    if len(swatchInfo[swatchType].keys())  == 0:
-#                        swatchInfo.pop( swatchType , None)
-#                        pctAct.pop( swatchType, None)
-#                        numberSwatchtype -= 1
-#                else:
-#                    if pctAct[swatchType][dirn] > pctAct[mol1][dirn]:
-#                        print('doing {} instead of {} between {}'.format(swatchType, mol1, dirn))
-#                        pctAct[mol1] = {}
-#                        if swapInfo[mol1][dirn]['accepted']['mean'] > 0.:
-#                            swapInfo[mol1][dirn]['accepted']['mean'] = 0
-#                            numberSwapType -= 1
-#                    if pctAct[swatchType][dirn] > pctAct[mol2][dirn]:
-#                        print('doing {} instead of {} between {}'.format(swatchType, mol2, dirn))
-#                        pctAct[mol2] = {}
-#                        if swapInfo[mol2][dirn]['accepted']['mean'] > 0.:
-#                            swapInfo[mol2][dirn]['accepted']['mean'] = 0
-#                            numberSwapType -= 1
+    # determine if there are extraneous moves which can be taken out
+    # (1)
+    # if the molecule is not an impurity, and you are using two different types of swatches to
+    # transfer it in the same direction, decide which direction is best
+    original_swatches = list(swatchInfo.keys())
+    for swatch1 in original_swatches:
+        mol1, mol2 = swatch1.split(' and ')
+        if swatch1 not in swatchInfo.keys(): continue
+        for swatch2 in [i for i in original_swatches if i != swatch1]:
+            if swatch2 not in swatchInfo.keys(): continue
+            if ((mol1 in swatch2) and (len(pctAct[mol1].keys()) > 0) or
+                (mol2 in swatch2) and (len(pctAct[mol2].keys()) > 0)):
+                dirns = [i for i in swatchInfo[swatch1].keys() if i in swatchInfo[swatch2].keys()]
+                for dirn in dirns:
+                    if pctAct[swatch1][dirn] >  pctAct[swatch2][dirn]:
+                        # remove swatch2
+                        swatchInfo[swatch2].pop( dirn , None)
+                        pctAct[swatch2].pop( dirn , None)
+                        print('     - remove swatches for {} between {} in fort.4'.format(swatch2,dirn))
+                        if len(swatchInfo[swatch2].keys())  == 0:
+                            swatchInfo.pop( swatch2 , None)
+                            pctAct.pop( swatch2, None)
+                            numberSwatchtype -= 1
+                    else:
+                        # remove swatch1
+                        swatchInfo[swatch1].pop( dirn , None)
+                        pctAct[swatch1].pop( dirn , None)
+                        print('     - remove swatches for {} between {} in fort.4'.format(swatch1,dirn))
+                        if len(swatchInfo[swatch1].keys())  == 0:
+                            swatchInfo.pop( swatch1 , None)
+                            pctAct.pop( swatch1, None)
+                            numberSwatchtype -= 1
+    # (2)
+    # for a given swatch type, if doing swaps for both molecules in same direction, determine
+    # whether you should keep the swatch move and replace the swap move(s) and vice versa
+    original_swatches = list(swatchInfo.keys())
+    for swatchType in original_swatches:
+        mol1, mol2 = swatchType.split(' and ')
+        for dirn in pctAct[mol1].keys(): # for directions in swaps for mol1
+            if (dirn in swatchInfo[swatchType].keys()) and (dirn in pctAct[mol2].keys()):
+                # doing swaps for both molecules in swatch move in same direction
+                if ((pctAct[swatchType][dirn] < pctAct[mol1][dirn]) and
+                        (pctAct[swatchType][dirn] < pctAct[mol2][dirn])):
+                    # remove the swatch move
+                    swatchInfo[swatchType].pop( dirn , None)
+                    pctAct[swatchType].pop( dirn , None)
+                    print('     - remove swatches for {} between {} in fort.4'.format(swatchType,dirn))
+                    if len(swatchInfo[swatchType].keys())  == 0:
+                        swatchInfo.pop( swatchType , None)
+                        pctAct.pop( swatchType, None)
+                        numberSwatchtype -= 1
+                else:
+                    if pctAct[swatchType][dirn] > pctAct[mol1][dirn]:
+                        print('doing {} instead of {} between {}'.format(swatchType, mol1, dirn))
+                        pctAct[mol1] = {}
+                        if swapInfo[mol1][dirn]['accepted']['mean'] > 0.:
+                            swapInfo[mol1][dirn]['accepted']['mean'] = 0
+                            numberSwapType -= 1
+                    if pctAct[swatchType][dirn] > pctAct[mol2][dirn]:
+                        print('doing {} instead of {} between {}'.format(swatchType, mol2, dirn))
+                        pctAct[mol2] = {}
+                        if swapInfo[mol2][dirn]['accepted']['mean'] > 0.:
+                            swapInfo[mol2][dirn]['accepted']['mean'] = 0
+                            numberSwapType -= 1
 
     # accept the same number for each swap type
     swapMatrix = np.zeros((numberSwapType, numberSwapType))
@@ -421,6 +421,7 @@ if __name__ == '__main__':
             input_data['&mc_swatch'] = {'pmsatc':{},'nswaty':'0','pmswat':'0'}
             input_data['&mc_swatch']['pmswat'] = '%e'%pswatch_norm
             nSwatch = 0
+            pmswatch_total = 0.
             for key, value in newSwatches.items():
                 mol_names = key.split(' and ')
                 mol1_num, mol2_num = [i.split()[0] for i in mol_names]
@@ -441,7 +442,8 @@ if __name__ == '__main__':
                         for drn in sorted(dirs):
                             info += drn[0] + ' ' + drn[1] + '\n'
                         input_data['MC_SWATCH'][s_num] = info
-                        input_data['&mc_swatch']['pmsatc'][s_num] = '%6.4fd0'%value['total']
+                        pmswatch_total += value['total']
+                        input_data['&mc_swatch']['pmsatc'][s_num] = '%6.4fd0'%pmswatch_total
             input_data['&mc_swatch']['nswaty'] = '%i'%nSwatch
             # add in other stuff
             #   general info
@@ -453,7 +455,9 @@ if __name__ == '__main__':
             input_data['&analysis']['iblock'] = '%i'%iblock
             input_data['&mc_volume']['pmvol'] = '%e'%pmvol
             #   other probabilities
-            pmcb_old = float(input_data['&mc_cbmc']['pmcb'].rstrip('d0')) - pswap_old
+            if input_data['&mc_cbmc']['pmcb'][-2:] == 'd0':
+                input_data['&mc_cbmc']['pmcb'] = input_data['&mc_cbmc']['pmcb'][:-2]
+            pmcb_old = float(input_data['&mc_cbmc']['pmcb']) - pswap_old
             pswap_new = pswap_norm
             if pmcb_old <= 0.:
                 print('pmcb was zero previously, keeping it that way')
