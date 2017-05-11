@@ -82,9 +82,11 @@ def checkRun(tag, listOfDBs, feed):
         run_names += list(db[feed].keys())
     data_run = ''
     for run in set(run_names):
-        if tag in run: data_run += run
+        if tag in run:
+            print(run)
+            data_run += run
     assert data_run, 'No run analyzed of run type prompted for feed %s'%feed
-    assert data_run in listOfDBs[0][feed].keys(), 'More than one run found to analyze'
+    assert data_run in listOfDBs[0][feed].keys(), 'More than one run found to analyze {}'.format(listOfDBs[0][feed].keys())
     return data_run
 
 def calcDGfromNumDens(rho, N_i, T):
@@ -106,6 +108,33 @@ def calcDGfromNumDens(rho, N_i, T):
                         print('math domain error for DG for mol {} from {} to {}'.format(mlcl_name, boxFrom, boxTo))
     return dG
 
+def getRelMols(N, box):
+    mols = []
+    for mol in N.keys():
+        means = {box:np.mean(value) for box,value in N[mol].items()}
+        if (means[box] > 0.) and (means[box] < sum(means.values())):
+            mols.append(mol)
+    return sorted(mols)
+
+def getK(N):
+    K = {}
+    for box in N['1'].keys():
+        K[box] = {}
+        mols = getRelMols(N,box)
+        mols.reverse()
+        if len(mols) <= 1:
+            K[box] = { i:[0.] for i in mols }
+            continue
+        for imol, mol1 in enumerate(mols):
+            for mol2 in mols[(imol+1):]:
+                # calculate K
+                K[box][mol1 +'/'+ mol2] = []
+                for (i,j) in zip(N[mol1][box], N[mol2][box]):
+                    if j > 0.:
+                        K[box][mol1 +'/'+ mol2].append( i/j )
+    return K
+
+
 def getFileData(feeds, indep, path, type, guessStart, interval,
                 verbosity, liq=False, mol='-1', **kargs):
     from file_formatting import reader
@@ -125,6 +154,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 (N, P, boxLengths,
                  ncycle_old, molWeights, E) = reader.read_fort12(my_dir, old_begin,
                                                                  nfiles, tag=type)
+                K = getK(N)
                 (number_densities, chemical_potential,
                  swap_info, biasPot, volumes,
                  totalComposition, cbmc_info,
@@ -141,6 +171,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                     concentrations[mol] = {'box2':c}
                 # initialize vars
                 if (seed == indep[0]) and (feed == feeds[0]):
+                    k_ratio = properties.AnyProperty(K)
                     boxlx = properties.AnyProperty(boxLengths)
                     CBMC = properties.AnyProperty(cbmc_info)
                     Press = properties.AnyProperty(P)
@@ -151,7 +182,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                     dG = properties.AnyProperty( deltaG )
                     data = {'CBMC':CBMC, 'P':Press, 'N':Nmlcl,
                             'SWAP':SWAP, 'U':U, 'rho':rho,
-                            'boxlx':boxlx, 'dG':dG}
+                            'boxlx':boxlx, 'dG':dG, 'K':k_ratio}
                     if liq:
                         if (verbosity > 1):
                             print('Doing analysis for C [ g/mL ] for mol {}'.format(mol))
@@ -166,6 +197,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 rho.addVals(number_dens_real)
                 boxlx.addVals(boxLengths)
                 dG.addVals(deltaG)
+                k_ratio.addVals(K)
                 if liq:
                     C.addVals(concentrations)
             except FileNotFoundError:
@@ -189,6 +221,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
     return data, general_data
 
 import math, os, sys
+import numpy as np
 try:
     from MCFlow import properties, calc_tools, file_formatting
     from MCFlow.chem_constants import R, N_av

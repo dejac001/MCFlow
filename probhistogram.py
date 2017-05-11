@@ -8,6 +8,8 @@ class Hist3D:
         self.xedges = [num * self.binSizes[0] for num in range(self.Nbins[0] + 1)]
         self.yedges = [num * self.binSizes[1] for num in range(self.Nbins[1] + 1)]
         self.zedges = [num * self.binSizes[2] for num in range(self.Nbins[2] + 1)]
+        self.name = 'hist'
+        self.valueToIgnore = None
         print('Total number of bins is %i'%(self.Nbins[0]*self.Nbins[1]*self.Nbins[2]))
 
     def makeHist(self, xyzLocations):
@@ -18,6 +20,21 @@ class Hist3D:
                                      bins=(self.xedges, self.yedges, self.zedges), normed=False)
         self.histogram = Hist / np.sum(Hist)
         self.edges = edges
+
+    def colorValues(self):
+        values = []
+        for x in range(len(self.histogram[:,0,0])):
+            for y in range(len(self.histogram[0,:,0])):
+                for z in range(len(self.histogram[0,0,:])):
+                    if self.histogram[x,y,z] != self.valToIgnore:
+                        values.append( self.histogram[x,y,z] )
+        self.color_values = values
+
+class dG3D(Hist3D):
+    def __init__(self, edges, binsize):
+        Hist3D.__init__(self,edges,binsize)
+        self.name = 'dG'
+        self.valueToIgnore = 5000
 
     def dGmap(self, nFrames, xyzLocations, densFrom, Temp):
         '''
@@ -36,11 +53,17 @@ class Hist3D:
                         self.histogram[x,y,z] = -8.314/1000*Temp*np.log( ((Hist[x,y,z]/nFrames)/self.Vbin)
                                                                             / densFrom )
 
+
+
 def getCoords(xyz_data, bead):
     data = []
     for atom, xyz in zip(xyz_data['atoms'], xyz_data['coords']):
         if atom == bead: data.append(xyz)
     return data
+
+def getFileName(file):
+    file = file[(file.find('/')+1):]
+    return file.rstrip('.xyz')
 
 import numpy as np
 import math
@@ -57,13 +80,12 @@ if __name__ == '__main__':
     coords = reader.xyz(args['file'])
     xyz_data = getCoords(coords, args['bead'])
 
-    hist = Hist3D(args['vectors'],args['bins'])
     if not args['reference']:
+        hist = Hist3D(args['vectors'],args['bins'])
         hist.makeHist(xyz_data)
     else:
+        hist = dG3D(args['vectors'],args['bins'])
         hist.dGmap(args['numFrames'],xyz_data, args['reference'], args['Temp'])
 
-    new_file = args['file'].rstrip('.xyz') + '_bead%s.vtk'%args['bead']
+    new_file = getFileName(args['file']) + '_bead%s_%s.vtk'%(args['bead'],hist.name)
     vtkRectilinearMesh(new_file, hist.edges, hist.histogram)
-
-import argparse, os

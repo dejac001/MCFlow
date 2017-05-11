@@ -72,10 +72,20 @@ def main(filter_function=None):
         for mol_num in D.averages[feed].keys():
             if args['vectors']: D.foldMovieToUC(args['vectors'])
             xyz_data = D.getCoords(mol_num, args['box'], args['bead'])
-            xyz('%s/%s/movie_coords_mol%s_box%s_sim%s.xyz'%(args['path'], feed,
-                                                        mol_num, args['box'], ''.join(map(str,args['indep']))), xyz_data)
+            flag=''
+            if filter_function:
+                flag = '_filtered'
+            xyz('%s/%s/movie_coords_mol%s_box%s%s_sim%s.xyz'%(args['path'], feed,
+                                                        mol_num, args['box'],flag, ''.join(map(str,args['indep']))), xyz_data)
         if args['name']:
             outputDB(args['path'],[feed],args['type'],{args['name']: D } )
+
+def SnSPP(coords):
+    x,y,z = coords
+    if ((z > 2.73) and (z < 32.12)):
+        return True
+    else:
+        return False
 
 from MCFlow.runAnalyzer import what2Analyze
 from MCFlow.file_formatting.reader import Movie

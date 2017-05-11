@@ -41,14 +41,14 @@ class Plot(Main):
                                   type=float)
         self.parser.add_argument('-b','--box',help='box number to analyze', type=str)
 
-        self.parser.add_argument('-B','--boxes',help='box numbers to use',
-                                 type=str,nargs='+',default=['box3','box2'])
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',
                                  choices = ['C','Pig', 'Pbox','Pi','Q','rho','x'])
         self.parser.add_argument('-y','--yaxis',help='x axis of plot',
                                  choices = ['Q','dG','S','R',
-                                            'X','dH','dU','dHig','Pigxy'])
+                                            'X','dH','dU','dHig','Pigxy','Txy'])
+        self.parser.add_argument('-B','--boxes',help='box numbers to use',
+                                 type=str,nargs='+',default=['box3','box2'])
     def isotherm(self):
         self.parser.add_argument('-u','--units',help='choices for units on plot',
                                  choices=['molec/uc','g/g','mol/kg',
@@ -66,8 +66,7 @@ class MultMols(Plot):
         Main.other(self)
         self.parser.description = 'Obtain results for multiple molecules'
         self.parser.add_argument('-m','--mol',help='MoleculeS to analyze', type=str, nargs='+')
-        self.parser.add_argument('-TK','--Temp',help='Temperature in Kelvin',
-                                  type=float)
+        self.parser.add_argument('-TK','--Temp',help='Temperature in K', type=float)
         self.parser.add_argument('-b','--box',help='box to analyze', type=str)
 
 class Results(Plot):
@@ -75,8 +74,11 @@ class Results(Plot):
         Plot.__init__(self)
         Main.other(self)
         self.parser.description = 'Obtain results for simulations'
+    def multi(self):
         self.parser.add_argument('-M','--molecules',help='Molecules to analyze for trajectory',
                                   type = str, nargs = '+')
+        self.parser.add_argument('-B','--boxes',help='box numbers to use',
+                                 type=str,nargs='+',default=['box2'])
         
 
 class Change(Results):
@@ -113,11 +115,11 @@ class Structure:
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument('-f', '--file',help='input file for analysis',type=str)
         self.parser.add_argument('-b','--bins',help='bin size for analysis',type=float)
-        self.parser.add_argument('-abc','--vectors',help='unit cell vectors',type=float,nargs='+',
-                                 default = [20.022,19.899,13.383])
-        self.parser.add_argument('-B','--bead',help='bead to analyze', type = str)
+        self.parser.add_argument('-abc','--vectors',help='unit cell vectors',type=float,nargs='+')
+        self.parser.add_argument('-B','--bead',help='bead to analyze', type = str, default=['COM'])
     def analysis(self):
-        self.parser.add_argument('-ref','--reference',help='reference density for dGmap (molec/nm**3)',type=float)
+        self.parser.add_argument('-ref','--reference',help='reference density [for dGmap (molec/nm**3)]'
+                                                           ' [for S, Kref]',type=float)
         self.parser.add_argument('-n','--numFrames',help='total number of frames',type=int)
         self.parser.add_argument('-T','--Temp',help='Temperature [ K ]',type=float)
     def parse_args(self):

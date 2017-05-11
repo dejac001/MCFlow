@@ -125,13 +125,25 @@ class Movie:
                         if type(FRAME_DATA[box][mol][0]) == type(1):
                             N[box][mol]['raw data'][seed_index].append( np.mean(FRAME_DATA[box][mol] ))
                             raw_data[box][mol]['raw data'][seed_index] += FRAME_DATA[box][mol]
-                        elif type(FRAME_DATA[box][mol][0]) == type([]):
-                            print('b:',FRAME_DATA[box][mol][0],' this hasn\'t been implemented yet!?')
+                        elif type(FRAME_DATA[box][mol]) == type([]):
                             N[box][mol]['raw data'][seed_index].append( len(FRAME_DATA[box][mol] ))
-                            raw_data[box][mol]['raw data'][seed_index] += len(FRAME_DATA[box][mol])
-                        if len(N[box][mol]['raw data'][seed_index]) == self.frame_seed.count(seed_index + 1):
-                            # change list of data to floating point average
-                            N[box][mol]['raw data'][seed_index] = np.mean(N[box][mol]['raw data'][seed_index])
+                            if not raw_data[box][mol]['raw data'][seed_index]:
+                                raw_data[box][mol]['raw data'][seed_index] = len(FRAME_DATA[box][mol])
+                            else:
+                                raw_data[box][mol]['raw data'][seed_index] += len(FRAME_DATA[box][mol])
+                        else:
+                            print(FRAME_DATA[box][mol])
+                            raise NotImplementedError
+#                       if len(N[box][mol]['raw data'][seed_index]) == self.frame_seed.count(seed_index + 1):
+#                           # change list of data to floating point average
+#                           N[box][mol]['raw data'][seed_index] = np.mean(N[box][mol]['raw data'][seed_index])
+#                           if (seed_index > 0) and (type(N[box][mol]['raw data'][seed_index-1]) == type([])):
+#                               print(len(N[box][mol]['raw data'][seed_index-1]))
+#                               print('somethign went wronng')
+        for box in N.keys():
+            for mol in N[box].keys():
+                for i in range(len(N[box][mol]['raw data'])):
+                    N[box][mol]['raw data'][i] = np.mean(N[box][mol]['raw data'][i])
         num_molec_data = {}
         for box in N.keys():
             for mol in N[box].keys():
@@ -156,7 +168,10 @@ class Movie:
                 try:
                     all_data = []
                     for seed_data in raw_data[box][mol]['raw data']:
-                        all_data += seed_data
+                        if type(seed_data) == type(1):
+                            all_data.append(seed_data)
+                        else:
+                            all_data += seed_data
                     histogram, edges = np.histogram(all_data, bins=list(range(max(all_data)+1)))
                     num_molec_data[mol_num][box]['histogram'] = histogram
                     num_molec_data[mol_num][box]['edges'] = edges
