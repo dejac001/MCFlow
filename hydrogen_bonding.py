@@ -59,51 +59,53 @@ class HydrogenBond(Movie):
     def __init__(self, file_name):
         Movie.__init__(self, file_name)
 
-    def calcHB(self, mols, box):
+
+    def getBeads(self, box):
         '''
-        In this case, hydrogen bonding will be found for anything hydrogen bonding with mol
-        Only keep molecules in movie files that are hydrogen bonding to mol
         '''
         my_box = 'box%s'%box
-        self.HB = []
+        self.HB_info = []
         OTypes = {'62':'alkanol','114':'water','178':'zeo','181':'silanol'}
         HTypes ={'61':'alkanol','115':'water','182':'silanol'}
         for iframe, FRAME_DATA in enumerate(self.frame_data):
+            # store H and O for all other mols
+            HB_mols = {}
+            for molType in FRAME_DATA[my_box].keys():
+                if molType not in HB_mols.keys():
+                    HB_mols[molType] = []
+                for imol, each_molecule in enumerate(FRAME_DATA[my_box][molType]):
+                    beads = {'H':[],'O':[]}
+                    for bead in each_molecule.keys():
+                        if bead in OTypes.keys():
+                            for coord in each_molecule[bead]:
+                                beads['O'].append( list(map(float,coord)) )
+                        elif bead in HTypes.keys():
+                            for coord in each_molecule[bead]:
+                                beads['H'].append( list(map(float,coord)) )
+                    HB_mols[molType].append( beads )
+            self.HB_info.append( HB_mols )
+
+    def calcHB(self, mols, box):
+        self.getBeads(self, box)
+        my_box = 'box%s'%box
+        self.HB = []
+        for iframe, HB_data in enumerate(self.HB_info):
             try:
                 if (iframe+1)%(self.nframes//4) == 0:
                     print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/self.nframes))
             except ZeroDivisionError:
                 print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/self.nframes))
             self.HB.append( {my_box:{}  } )
-            # store H and O for mols that you want to calculate hydrogen bonds with
-            # i.e., to_mols = mols you specified
             HB_to_mols = []
-            for mlcl in mols:
-                for each_molecule in FRAME_DATA[my_box]['mol%s'%mlcl]:
-                    HB_to_beads = {'H':[],'O':[]}
-                    for bead in each_molecule.keys():
-                        if bead in OTypes.keys():
-                            for coord in each_molecule[bead]:
-                                HB_to_beads['O'].append( list(map(float,coord)) )
-                        elif bead in HTypes.keys():
-                            for coord in each_molecule[bead]:
-                                HB_to_beads['H'].append( list(map(float,coord)) )
-                    HB_to_mols.append( HB_to_beads )
-            # store H and O for all other mols
-            for molType in FRAME_DATA[my_box].keys():
-                self.HB[iframe][my_box][molType] = []
-                for imol, each_molecule in enumerate(FRAME_DATA[my_box][molType]):
-                    HB_from_beads = {'H':[],'O':[]}
-                    for bead in each_molecule.keys():
-                        if bead in OTypes.keys():
-                            for coord in each_molecule[bead]:
-                                HB_from_beads['O'].append( list(map(float,coord)) )
-                        elif bead in HTypes.keys():
-                            for coord in each_molecule[bead]:
-                                HB_from_beads['H'].append( list(map(float,coord)) )
+            for mol1 in mols:
+                HB_to_mols.append( HB_data[mol1] )
+            for mol2 in HB_data.keys():
+                pair = mol1 + '-' + mol2
+                self.HB[iframe][my_box][pair] = []
+                for HB_from_beads in HB_data[mol2]:
                     # determine hydrogen bonds with molecules of interest
                     my_nHB = findHB(HB_from_beads, HB_to_mols, self.boxlengths[iframe][my_box], self.criteria)
-                    self.HB[iframe][my_box][molType].append( my_nHB )
+                    self.HB[iframe][my_box][pair].append( my_nHB )
                     
     def filterHB(self):
         for iframe, FRAME_DATA in enumerate(self.frame_data):
@@ -122,53 +124,67 @@ class HydrogenBond(Movie):
         new.countMols(nIndep, feed, data)
         return new
 
-def main():
-    my_parser = MultMols()
-    #TODO: make able to do multiple boxes at same time
-    my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
-                           type=str,default = '')
-    my_parser.parser.add_argument('-H','--htype',help='hydrogen bonding criteria type',
-                                  type=str, choices = ['loose','strict'],default='strict')
-    args = vars(my_parser.parse_args())
+class HB_format:
+    def __init__(self):
+        my_parser = MultMols()
+        #TODO: make able to do multiple boxes at same time
+        my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
+                               type=str,default = '')
+        my_parser.parser.add_argument('-H','--htype',help='hydrogen bonding criteria type',
+                                      type=str, choices = ['loose','strict'],default='strict')
+        my_args = vars(my_parser.parse_args())
+        self.args = my_args
+        self.checks()
 
-    assert args['name'], 'Output ID name needed to output local structure info'
+    def checks(self):
+        assert self.args['name'], 'Output ID name needed to output local structure info'
+        self.HB_class = HydrogenBond
 
-    for feed in args['feeds']:
-        if args['verbosity'] > 0: print('-'*12 + 'Dir is %s'%feed + '-'*12)
-        for seed in args['indep']:
-            my_dir = '%s/%s/%i'%(args['path'],feed,seed)
-            (old_begin, nfiles) = what2Analyze(my_dir, args['type'],
-                                                       args['guessStart'],
-                                               args['interval'])
-            if args['verbosity'] > 0:
+    def read_movies(self):
+        for seed in self.args['indep']:
+            my_dir = '%s/%s/%i'%(self.args['path'],self.feed,seed)
+            (old_begin, nfiles) = what2Analyze(my_dir, self.args['type'],
+                                                       self.args['guessStart'],
+                                               self.args['interval'])
+            if self.args['verbosity'] > 0:
                 print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
             for fileNum in range(old_begin, old_begin+nfiles):
-                movie_file = '%s/%s%i/movie.%s%i'%(my_dir, args['type'],fileNum,
-                                                   args['type'],fileNum)
-                if (fileNum == old_begin) and (seed == args['indep'][0]):
+                movie_file = '%s/%s%i/movie.%s%i'%(my_dir, self.args['type'],fileNum,
+                                                   self.args['type'],fileNum)
+                if (fileNum == old_begin) and (seed == self.args['indep'][0]):
                     # keep track of info only for each feed
-                    D = HydrogenBond(movie_file)
-                    D.read_header()
-                    D.read_movie_frames(seed)
+                    I = self.HB_class(movie_file)
+                    I.read_header()
+                    I.read_movie_frames(seed)
                 else:
-                    F = HydrogenBond(movie_file)
+                    F = self.HB_class(movie_file)
                     F.read_header()
                     F.read_movie_frames(seed)
-                    D = D + F
-        D.criteria = args['htype']
-        D.calcHB(args['mol'], args['box'])
-        HB = D.countHB(args['indep'],feed, D.HB)
+                    I = I + F
+        return I
+
+    def myCalcs(self, D ):
+        D.criteria = self.args['htype']
+        D.calcHB(self.args['mol'], self.args['box'])
+        HB = D.countHB(self.args['indep'],feed, D.HB)
         D.filterHB()
-        D.countMols(args['indep'],feed, D.frame_data)
+        D.countMols(self.args['indep'],feed, D.frame_data)
         for mol_num in D.averages[feed].keys():
-            xyz_data = D.getCoords(mol_num, args['box'], ['COM'])
-            xyz('%s/%s/movie_HB_coords_mol%s_box%s.xyz'%(args['path'], feed,
-                                                        mol_num, args['box']), xyz_data)
-        #TODO: make so updates recent file--does not overwrite it
-        outputDB(args['path'],[feed],args['type'],{args['name']+'-' + args['htype'] + '-box'+args['box']:HB})
-#                args['name']: D })
-                #{args['name']: D
-#                       'HB':HB } )
+            xyz_data = D.getCoords(mol_num, self.args['box'], ['COM'])
+            xyz('%s/%s/movie_HB_coords_mol%s_box%s.xyz'%(self.args['path'], feed,
+                                                            mol_num, self.args['box']), xyz_data)
+            #TODO: make so updates recent file--does not overwrite it
+        outputDB(self.args['path'],[feed],self.args['type'],{self.args['name']+'-' + self.args['htype'] + '-box'+self.args['box']:HB})
+    #                self.args['name']: D })
+                    #{self.args['name']: D
+    #                       'HB':HB } )
+
+    def main(self):
+        for feed in self.args['feeds']:
+            self.feed = feed
+            if self.args['verbosity'] > 0: print('-'*12 + 'Dir is %s'%self.feed + '-'*12)
+            HB_class = self.read_movies()
+            self.myCalcs(HB_class)
     
 
 from MCFlow.runAnalyzer import what2Analyze
@@ -178,4 +194,5 @@ from MCFlow.parser import MultMols
 from MCFlow.getData import outputDB
 
 if __name__ == '__main__':
-    main()
+    M = HB_format()
+    M.main()
