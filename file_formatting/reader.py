@@ -7,8 +7,9 @@ def convertMovieCoordsXYZ(each_molecule):
     return data
 
 class Movie:
-    def __init__(self, file_name):
+    def __init__(self, file_name, *args):
         self.file_name = file_name
+        self.anal_args = args
 
     def read_header(self):
         self.file = open(self.file_name)
@@ -67,7 +68,7 @@ class Movie:
         add frame datafrom two movie files
         :param other: other movie file
         '''
-        new = self.__class__('masterData')
+        new = self.__class__('masterData', *self.anal_args)
         new.frame_data = self.frame_data + other.frame_data
         new.frame_seed = self.frame_seed + other.frame_seed
         new.nframes = self.nframes + other.nframes

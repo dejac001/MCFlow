@@ -56,8 +56,8 @@ def findHB(beadsFrom, molsTo, abc, criteria):
 from MCFlow.file_formatting.reader import Movie
 
 class HydrogenBond(Movie):
-    def __init__(self, file_name):
-        Movie.__init__(self, file_name)
+    def __init__(self, file_name, *args):
+        Movie.__init__(self, file_name, *args)
 
 
     def getBeads(self, box):
@@ -124,7 +124,7 @@ class HydrogenBond(Movie):
         new.countMols(nIndep, feed, data)
         return new
 
-class HB_format:
+class HB(Struc):
     def __init__(self):
         my_parser = MultMols()
         #TODO: make able to do multiple boxes at same time
@@ -138,30 +138,7 @@ class HB_format:
 
     def checks(self):
         assert self.args['name'], 'Output ID name needed to output local structure info'
-        self.HB_class = HydrogenBond
-
-    def read_movies(self):
-        for seed in self.args['indep']:
-            my_dir = '%s/%s/%i'%(self.args['path'],self.feed,seed)
-            (old_begin, nfiles) = what2Analyze(my_dir, self.args['type'],
-                                                       self.args['guessStart'],
-                                               self.args['interval'])
-            if self.args['verbosity'] > 0:
-                print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
-            for fileNum in range(old_begin, old_begin+nfiles):
-                movie_file = '%s/%s%i/movie.%s%i'%(my_dir, self.args['type'],fileNum,
-                                                   self.args['type'],fileNum)
-                if (fileNum == old_begin) and (seed == self.args['indep'][0]):
-                    # keep track of info only for each feed
-                    I = self.HB_class(movie_file)
-                    I.read_header()
-                    I.read_movie_frames(seed)
-                else:
-                    F = self.HB_class(movie_file)
-                    F.read_header()
-                    F.read_movie_frames(seed)
-                    I = I + F
-        return I
+        self.analysis_class = HydrogenBond
 
     def myCalcs(self, D ):
         D.criteria = self.args['htype']
@@ -179,20 +156,14 @@ class HB_format:
                     #{self.args['name']: D
     #                       'HB':HB } )
 
-    def main(self):
-        for feed in self.args['feeds']:
-            self.feed = feed
-            if self.args['verbosity'] > 0: print('-'*12 + 'Dir is %s'%self.feed + '-'*12)
-            HB_class = self.read_movies()
-            self.myCalcs(HB_class)
-    
 
 from MCFlow.runAnalyzer import what2Analyze
 from MCFlow.file_formatting.writer import xyz
 from MCFlow.calc_tools import calculate_distance2, calculate_angle
 from MCFlow.parser import MultMols
 from MCFlow.getData import outputDB
+from MCFlow.structure_analysis import Struc
 
 if __name__ == '__main__':
-    M = HB_format()
+    M = HB()
     M.main()

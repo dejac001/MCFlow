@@ -27,58 +27,72 @@ class Region:
         else:
             return False
 
+class Struc:
+    def __init__(self, filterFunc=None):
+        my_parser = Results()
+        my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
+                               type=str)
+        my_parser.parser.add_argument('-B','--bead',help='bead for structure analysis',default=['COM'],
+                                     type = str, nargs = '+')
+        my_parser.parser.add_argument('-abc','--vectors', help='unit cell vectors. For folding coordinates into a unit cell',
+                                      type = float, nargs = '+', default = [20.022,19.899,13.383])
+        args = vars(my_parser.parse_args())
+        self.args = my_args
+        self.checks()
+        self.filter_function = filterfunc
 
-def main(filter_function=None):
-    my_parser = Results()
-    my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
-                           type=str)
-    my_parser.parser.add_argument('-B','--bead',help='bead for structure analysis',default=['COM'],
-                                 type = str, nargs = '+')
-    my_parser.parser.add_argument('-abc','--vectors', help='unit cell vectors. For folding coordinates into a unit cell',
-                                  type = float, nargs = '+', default = [20.022,19.899,13.383])
-    args = vars(my_parser.parse_args())
+    def checks(self):
+        if args['vectors']:
+            assert args['box'] == '1', 'It doesnt make sense to fold into a non replicated cell'
+        if filter_function:
+            assert args['name'], 'Output ID name needed to output local structure info'
+        assert args['box'], 'Need to specify box for structure analysis'
+        self.analysis_class = Movie
 
-    if args['vectors']:
-        assert args['box'] == '1', 'It doesnt make sense to fold into a non replicated cell'
-    if filter_function:
-        assert args['name'], 'Output ID name needed to output local structure info'
-    assert args['box'], 'Need to specify box for structure analysis'
-
-    for feed in args['feeds']:
-        if args['verbosity'] > 0: print('-'*12 + 'Dir is %s'%feed + '-'*12)
-        for seed in args['indep']:
-            my_dir = '%s/%s/%i'%(args['path'],feed,seed)
-            (old_begin, nfiles) = what2Analyze(my_dir, args['type'],
-                                                       args['guessStart'],
-                                               args['interval'])
-            if args['verbosity'] > 0:
+    def read_movies(self, *args):
+        for seed in self.args['indep']:
+            my_dir = '%s/%s/%i'%(self.args['path'],self.feed,seed)
+            (old_begin, nfiles) = what2Analyze(my_dir, self.args['type'],
+                                                       self.args['guessStart'],
+                                               self.args['interval'])
+            if self.args['verbosity'] > 0:
                 print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
             for fileNum in range(old_begin, old_begin+nfiles):
-                movie_file = '%s/%s%i/movie.%s%i'%(my_dir, args['type'],fileNum,
-                                                   args['type'],fileNum)
-                if (fileNum == old_begin) and (seed == args['indep'][0]):
+                movie_file = '%s/%s%i/movie.%s%i'%(my_dir, self.args['type'],fileNum,
+                                                   self.args['type'],fileNum)
+                if (fileNum == old_begin) and (seed == self.args['indep'][0]):
                     # keep track of info only for each feed
-                    D = Movie(movie_file)
-                    D.read_header()
-                    D.read_movie_frames(seed)
+                    I = self.analysis_class(movie_file, *args)
+                    I.read_header()
+                    I.read_movie_frames(seed)
                 else:
-                    F = Movie(movie_file)
+                    F = self.analysis_class(movie_file, *args)
                     F.read_header()
                     F.read_movie_frames(seed)
-                    D = D + F
-        if filter_function:
-            D.filterCoords(filter_function, args['box'])
-        D.countMols(args['indep'],feed, D.frame_data)
+                    I = I + F
+        return I
+
+    def myCalcs(self, D ):
+        if self.filter_function:
+            D.filterCoords(self.filter_function, self.args['box'])
+        D.countMols(self.args['indep'],feed, D.frame_data)
         for mol_num in D.averages[feed].keys():
-            if args['vectors']: D.foldMovieToUC(args['vectors'])
-            xyz_data = D.getCoords(mol_num, args['box'], args['bead'])
+            if self.args['vectors']: D.foldMovieToUC(args['vectors'])
+            xyz_data = D.getCoords(mol_num, self.args['box'], self.args['bead'])
             flag=''
-            if filter_function:
+            if self.filter_function:
                 flag = '_filtered'
-            xyz('%s/%s/movie_coords_mol%s_box%s%s_sim%s.xyz'%(args['path'], feed,
-                                                        mol_num, args['box'],flag, ''.join(map(str,args['indep']))), xyz_data)
-        if args['name']:
-            outputDB(args['path'],[feed],args['type'],{args['name']: D } )
+            xyz('%s/%s/movie_coords_mol%s_box%s%s_sim%s.xyz'%(self.args['path'], self.feed,
+                                                        mol_num, self.args['box'],flag, ''.join(map(str,self.args['indep']))), xyz_data)
+        if self.args['name']:
+            outputDB(self.args['path'],[self.feed],self.args['type'],{self.args['name']: D } )
+
+    def main(self):
+        for feed in self.args['feeds']:
+            self.feed = feed
+            if self.args['verbosity'] > 0: print('-'*12 + 'Dir is %s'%self.feed + '-'*12)
+            analysis = self.read_movies()
+            self.myCalcs(analysis)
 
 def SnSPP(coords):
     x,y,z = coords
@@ -94,4 +108,5 @@ from MCFlow.parser import Results
 from MCFlow.getData import outputDB
 
 if __name__ == '__main__':
-    main()
+    M = Struc()
+    M.main()

@@ -1,8 +1,8 @@
 from MCFlow.hydrogen_bonding import HydrogenBond, HB_format
 
 class HB_map(HydrogenBond):
-    def __init__(self, file_name):
-        HydrogenBond.__init__(self, file_name)
+    def __init__(self, file_name, *args):
+        HydrogenBond.__init__(self, file_name, *args)
 
 #    def getBeads(self, box):
 #        '''
@@ -113,7 +113,7 @@ class HB_format_map(HB_format):
         HB_format.__init__(self)
 
     def checks(self):
-        self.HB_class = HB_map
+        self.analysis_class = HB_map
         assert self.args['box'], 'Box needed for hydrogen bonding'
 
     def myCalcs(self, H):
