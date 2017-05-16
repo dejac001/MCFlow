@@ -37,7 +37,8 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
     new_input_data['&mc_cbmc']['iupdatefix'] = ' %i'%(nstep+100)
     new_input_data['&mc_shared']['nstep'] = ' %i'%nstep
     new_input_data['&analysis']['imv'] = ' %i'%imv
-    new_input_data['&mc_shared'].pop('time_limit')
+    if 'time_limit' in new_input_data['&mc_shared'].keys():
+        new_input_data['&mc_shared'].pop('time_limit')
     iprint, iblock = iaverage(nstep)
     new_input_data['&analysis']['iprint'] = ' %i'%iprint
     new_input_data['&analysis']['iblock'] = ' %i'%iblock

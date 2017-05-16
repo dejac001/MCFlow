@@ -447,6 +447,7 @@ if __name__ == '__main__':
             input_data['&mc_swatch']['nswaty'] = '%i'%nSwatch
             # add in other stuff
             #   general info
+            input_data['&mc_shared']['time_limit'] = '%i'%args['time']
             input_data['&mc_shared']['nstep'] = '%i'%args['nstep']
             input_data['&mc_shared']['iratio'] = '500'
             input_data['&mc_shared']['rmin'] = '1.0'
