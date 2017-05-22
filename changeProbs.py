@@ -367,7 +367,9 @@ if __name__ == '__main__':
             except FileNotFoundError:
                 input_data = reader.read_fort4(my_path + 'old-fort4')
             # add in swaps
-            pswap_old = float(input_data['&mc_swap']['pmswap'].rstrip('d0'))
+            if input_data['&mc_swap']['pmswap'][-2:] == 'd0':
+                input_data['&mc_swap']['pmswap'] = input_data['&mc_swap']['pmswap'][:-2]
+            pswap_old = float(input_data['&mc_swap']['pmswap'])
             input_data['&mc_swap']['pmswap'] = '%e'%pswap_norm
             nmolty = int(input_data['&mc_shared']['nmolty'])
             assert len(newSwaps) == nmolty, 'Incorrect swaps: too many'

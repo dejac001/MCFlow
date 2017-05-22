@@ -1,4 +1,5 @@
-def newBias(number_densities, boxLengths, N, biasOld, T, pressure, vaporBox='box3'):
+def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
+            numVapor, maxSorbate, vaporBox='box3'):
     '''
     changing the biasing potential here is based on the following:
     G(desired) = G(real) + R*E(bias)
@@ -83,7 +84,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure, vaporBox='box
     solvent = -1
     for mol in N.keys():
         total_number_mol = sum([N[mol][i]['mean'] for i in N[mol].keys()])
-        if total_number_mol > 400.:
+        if total_number_mol > maxSorbate:
             if solvent == -1:
                 # molecule is solvent
                 nchain_solvent = total_number_mol
@@ -127,12 +128,16 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure, vaporBox='box
                       '10 in vapor phase--keeping old value')
                 nSorbate_vapor.append( N[mol]['box3']['mean'] )
             else:
-                nSorbate_vapor.append( 2 )
+                nSorbate_vapor.append( numVapor )
 
     print('nSorbate_vapor is   ', nSorbate_vapor)
     boxlength_vapor_AA3, volume_vapor_AA3, least_volatile = getVaporVolume(sorbates, rho,
                                                                            vaporBox=vaporBox, nVapor=nSorbate_vapor)
     assert boxlength_vapor_AA3 < 10000., 'predicted boxlength not realistic'
+    if (boxlength_vapor_AA3 > 10000.):
+        boxlength_vapor_AA3 =  10000.
+        volume_vapor_AA3 = pow(boxlength_vapor_AA3,3)
+        least_volatile = -1
     nGhost = themGhosts(volume_vapor_AA3,T,pressure)
     liquid_volume_AA3 = math.pow( boxLengths['box2']['mean'], 3)
     for mol in impurities:
@@ -162,7 +167,8 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure, vaporBox='box
             print('Bias for mol {} (sorbate) changed from {} to {}'.format(mol,
                                                                            biasOld[mol][vaporBox],
                                                                            bias_new[mol][vaporBox] ))
-    bias_new[solvent][vaporBox] = getBiasMol(solvent, 30, volume_vapor_AA3, rho, vaporBox=vaporBox)
+    if solvent != -1:
+        bias_new[solvent][vaporBox] = getBiasMol(solvent, 30, volume_vapor_AA3, rho, vaporBox=vaporBox)
     print(' using {} ghost molecules'.format(nGhost))
     return boxlength_vapor_AA3, bias_new, nGhost
 
@@ -176,7 +182,10 @@ if __name__ == '__main__':
     from getData import outputGenDB, outputDB
     from setup_production import iaverage
 
-    args = vars(Change().parse_args())
+    my_parser = Change()
+    my_parser.parser.add_argument('-nv','--numVapor',help='for 3 box sim, desired number of sorbates in vapor',type=int,default=2)
+    my_parser.parser.add_argument('-ms','--maxSorbate',help='max number of molecules considered sorbates',type=int,default=200)
+    args = vars(my_parser.parser.parse_args())
     feeds = args.pop('feeds')
 
     vapor_box = 'box3' # default vapor box to box3
@@ -191,11 +200,12 @@ if __name__ == '__main__':
                                                             data['N'].averages[feed],
                                                   input_data['UNIFORM_BIASING_POTENTIALS'],
                                                   gen_data[feed]['temperature'],
-                                                  data['P'].averages[feed], vaporBox=vapor_box)
+                                                  data['P'].averages[feed],
+                                                    args['numVapor'],args['maxSorbate'],
+                                            vaporBox=vapor_box)
         # change data
-        input_data['SIMULATION_BOX'][vapor_box]['dimensions'] = '%8.2f %8.2f %8.2f'%(vapor_boxlx_AA3,
-                                                                            vapor_boxlx_AA3,
-                                                                                     vapor_boxlx_AA3)
+        vapor_box_dimens = '%8.2f %8.2f %8.2f'%(vapor_boxlx_AA3,vapor_boxlx_AA3, vapor_boxlx_AA3)
+        input_data['SIMULATION_BOX'][vapor_box]['dimensions'] = vapor_box_dimens
         input_data['UNIFORM_BIASING_POTENTIALS'] = bias
         input_data['SIMULATION_BOX'][vapor_box]['rcut'] = '14.0d0'
         input_data['SIMULATION_BOX'][vapor_box]['nghost'] = '%i'%nGhost
@@ -210,9 +220,14 @@ if __name__ == '__main__':
         # write new files
         for sim in gen_data[feed]['indepSims']:
             input_data['&mc_shared']['seed'] = '%i'%sim
+            restart_data = reader.read_restart(args['path'] + '/' + feed +'/%i/fort.77'%sim,
+                                            int(input_data['&mc_shared']['nmolty']),
+                                            int(input_data['&mc_shared']['nbox']))
+            restart_data['box dimensions']['box3'] = vapor_box_dimens + '\n'
             my_path = '%s/%s/%i'%(args['path'],feed,sim)
             nextRun = findNextRun(my_path, args['type'])
             new_file = '%s/fort.4.%s%i'%(my_path, args['type'], nextRun)
             writer.write_fort4(input_data, new_file)
+            writer.write_restart(restart_data, args['path'] + '/' + feed + '/%i/fort.77'%sim)
         outputDB(args['path'], args['feeds'],args['type'], data )
         outputGenDB(args['path'], args['feeds'],args['type'], gen_data )
