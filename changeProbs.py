@@ -483,6 +483,9 @@ if __name__ == '__main__':
                                                                         )
                 if (boxLengths > 100.) and (args['rcut'] < 1.):
                     input_data['SIMULATION_BOX']['box%i'%box]['rcut'] = '%5e'%(boxLengths*args['rcut'])
+                if (input_data['SIMULATION_BOX']['box%i'%box]['defaults'].split()[-2] == 'T'):
+                    # if ideal gas
+                    input_data['SIMULATION_BOX']['box%i'%box]['rcut'] = '14.0'
             # make new run
             old_fort4 = [i for i in os.listdir(my_path) if 'fort.4.%s'%args['type'] in i]
             for fort4 in old_fort4:
