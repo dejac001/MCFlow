@@ -1,3 +1,6 @@
+
+from MCFlow.structure_analysis import Struc
+
 def findHydroxylHydrogen(Oxyz, Hcoords, abc):
     for Hxyz in Hcoords:
         if calculate_distance2(Oxyz, Hxyz, abc) < 1.0:
@@ -162,7 +165,6 @@ from MCFlow.file_formatting.writer import xyz
 from MCFlow.calc_tools import calculate_distance2, calculate_angle
 from MCFlow.parser import MultMols
 from MCFlow.getData import outputDB
-from MCFlow.structure_analysis import Struc
 
 if __name__ == '__main__':
     M = HB()

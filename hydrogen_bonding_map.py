@@ -1,4 +1,4 @@
-from MCFlow.hydrogen_bonding import HydrogenBond, HB_format
+from MCFlow.hydrogen_bonding import HydrogenBond, HB
 
 class HB_map(HydrogenBond):
     def __init__(self, file_name, *args):
@@ -60,57 +60,71 @@ class HB_map(HydrogenBond):
                                             self.histogram[pair]['distance'].append( rOH )
                                             self.histogram[pair]['angle'].append( aOHO )
 
+    def formatAx(my_ax):
+        xlabel, ylabel= ['$r_{\mathrm{HO}}$', '$\\angle~\mathrm{OHO}$']
+        my_ax.set_xlabel(xlabel,fontdict=font)
+        my_ax.set_ylabel(ylabel,fontdict=font)
+        # set y ticks
+        y_ticks = [0., 20., 40., 60., 80., 100., 120., 140., 160., 180.]
+        my_ax.set_yticks(y_ticks)
+        y_minor = [(y_ticks[i] + y_ticks[i+1])/2. for i in range(len(y_ticks)-1)]
+        my_ax.set_yticks(y_minor,minor=True)
+        my_ax.tick_params(axis='y',direction='out',which='both',labelsize=14,left=True,right=True)
+        # set x ticks
+        x_ticks = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+        my_ax.set_xticks(x_ticks)
+        my_ax.tick_params(axis='x',direction='out',which='both',labelsize=14,bottom=True,top=True)
+        x_minor = [(x_ticks[i] + x_ticks[i+1])/2. for i in range(len(x_ticks)-1)]
+        my_ax.set_xticks(x_minor, minor=True)
+
     def plotHist(self, box, path):
+        xmin_plot = 1.0
+        xmax_plot = r_max
+        ymin_plot = 0.
+        ymax_plot = 180.
+        xedges = np.linspace(xmin_plot, xmax_plot,100)
+        yedges = np.linspace(ymin_plot, ymax_plot,100)
+        all_x = []; all_y = []
         for pair in self.histogram.keys():
             x, y = (self.histogram[pair]['distance'], self.histogram[pair]['angle'])
+            all_x += x
+            all_y += y
             assert len(x) == len(y), 'x and y lengths not equal'
             if len(x) > 0:
-                xlabel, ylabel= ['$r_{\mathrm{HO}}$', '$\\angle~\mathrm{OHO}$']
-                font = {'size':18}
-#               hist, edges = np.histogramdd([x,y], normed=False)
-#               heatmap(edges[0][:-1], edges[1][:-1], hist, labels)
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
-                xmin_plot = 1.0
-                xmax_plot = r_max
-                ymin_plot = 0.
-                ymax_plot = 180.
-                xedges = np.linspace(xmin_plot, xmax_plot,100)
-                yedges = np.linspace(ymin_plot, ymax_plot,100)
                 H, xedges, yedges = np.histogram2d(x,y,bins=(xedges,yedges),normed=False)
                 H = H/np.max(H)
-                X, Y = np.meshgrid(xedges,yedges)
                 image =  ax.contour(H.T, extent=[xedges[0], xedges[-1],yedges[0],yedges[-1]],
                                     linewidths=3, levels=[0.2, 0.4, 0.8, 0.9, 1.0])
 #               hist, xedges, yedges, image = ax.hist2d(x, y, normed=False,bins=(xbins,ybins))
                 # format Axis
-                ax.set_xlabel(xlabel,fontdict=font)
-                ax.set_ylabel(ylabel,fontdict=font)
-                # set y ticks
-                y_ticks = [0., 20., 40., 60., 80., 100., 120., 140., 160., 180.]
-                ax.set_yticks(y_ticks)
-                y_minor = [(y_ticks[i] + y_ticks[i+1])/2. for i in range(len(y_ticks)-1)]
-                ax.set_yticks(y_minor,minor=True)
-                ax.tick_params(axis='y',direction='out',which='both',labelsize=14,left=True,right=True)
-                # set x ticks
-                x_ticks = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-                ax.set_xticks(x_ticks)
-                ax.tick_params(axis='x',direction='out',which='both',labelsize=14,bottom=True,top=True)
-                x_minor = [(x_ticks[i] + x_ticks[i+1])/2. for i in range(len(x_ticks)-1)]
-                ax.set_xticks(x_minor, minor=True)
                 plt.subplots_adjust(left=0.15,right=0.96,top = 0.98, bottom=0.02)
                 cbar =fig.colorbar(image, orientation='horizontal',pad=0.13)#,fraction = 0.046)
                 cbar.set_label('$h(r,\\angle)$',fontdict=font)
                 cbar.ax.tick_params(labelsize=14)
                 fig.set_size_inches(5.0, 5.0)
                 fig.savefig('%s/HB-map-box%s_%s.png'%(path,box,pair), dpi=600)
+        pair = 'all'
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        H, xedges, yedges = np.histogram2d(all_x,all_y,bins=(xedges,yedges),normed=False)
+        H = H/np.max(H)
+        image =  ax.contour(H.T, extent=[xedges[0], xedges[-1],yedges[0],yedges[-1]],
+                                    linewidths=3, levels=[0.2, 0.4, 0.8, 0.9, 1.0])
+        plt.subplots_adjust(left=0.15,right=0.96,top = 0.98, bottom=0.02)
+        cbar =fig.colorbar(image, orientation='horizontal',pad=0.13)#,fraction = 0.046)
+        cbar.set_label('$h(r,\\angle)$',fontdict=font)
+        cbar.ax.tick_params(labelsize=14)
+        fig.set_size_inches(5.0, 5.0)
+        fig.savefig('%s/HB-map-box%s_%s.png'%(path,box,pair), dpi=600)
 #       plt.show()
                 
 
-class HB_format_map(HB_format):
+class HB_format_map(HB):
 
     def __init__(self):
-        HB_format.__init__(self)
+        HB.__init__(self)
 
     def checks(self):
         self.analysis_class = HB_map
@@ -126,7 +140,8 @@ from MCFlow.plotter import formatAxis
 import numpy as np
 import matplotlib.pyplot as plt
 
-r_max = 6.0
+font = {'size':18}
+r_max = 4.0
 from matplotlib import rc
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ## for Palatino and other serif fonts use:

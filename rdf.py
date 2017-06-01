@@ -54,7 +54,6 @@ class RDF(Movie):
                 dist - np.round( np.divide(dist,boxl) )*boxl
             )
         n_coords1, n_coords2 = len(coords1[:,0]) , len(coords2[:,0])
-        assert n_coords1 > 3, 'Wrong dimension {}'.format(n_coords1)
         num_particles = n_coords1 + n_coords2
         constant = n_coords1/(boxLengths[0]*boxLengths[1]*boxLengths[2])
 
@@ -67,7 +66,7 @@ class RDF(Movie):
             dy = minImage(dy, boxLengths[1])
             dz = minImage(dz, boxLengths[2])
             dist = np.sqrt(np.square(dx) + np.square(dy) + np.square(dz))
-            if dist[index] < 0.01: dist[index] = 1000.
+            if (index < len(dist)) and (dist[index] < 0.01): dist[index] = 1000.
             (result, bins) = np.histogram(dist, bins=self.edges, normed=False)
             self.numInt.append( [ sum(result[:i]) for i in range(len(result))] ) #self.N[self.box]['mol%s'%self.m1] for i in range(len(result)) ] )
             self.g_bead.append( result / constant )
@@ -108,12 +107,12 @@ class G(Struc):
     def __init__(self):
         my_parser = Results()
         my_parser.multi()
-        my_parser.parser.add_argument('-B1','--bead1',help='bead from for rdf',type = str)
-        my_parser.parser.add_argument('-M1','--mol1',help='mol from for rdf',type = str)
-        my_parser.parser.add_argument('-B2','--bead2',help='bead to for rdf',type = str)
-        my_parser.parser.add_argument('-M2','--mol2',help='mol to for rdf',type = str)
-        my_parser.parser.add_argument('-bins','--bins',help='radial bin size for rdf',type = float)
-        my_parser.parser.add_argument('-r','--rmax',help='max radius for rdf',type = float)
+        my_parser.parser.add_argument('-B1','--bead1',help='bead from for rdf',type = str,nargs='+')
+        my_parser.parser.add_argument('-M1','--mol1',help='mol from for rdf',type = str,nargs='+')
+        my_parser.parser.add_argument('-B2','--bead2',help='bead to for rdf',type = str,nargs='+')
+        my_parser.parser.add_argument('-M2','--mol2',help='mol to for rdf',type = str,nargs='+')
+        my_parser.parser.add_argument('-bins','--bins',help='radial bin size for rdf',type = float,default=0.2)
+        my_parser.parser.add_argument('-r','--rmax',help='max radius for rdf',type = float, default=14.0)
         args = vars(my_parser.parse_args())
         self.args = args
         self.checks()
@@ -125,14 +124,13 @@ class G(Struc):
         assert self.args['box'] == None, 'Use multiple boxes argument'
         self.analysis_class = RDF
 
-    def myCalcs(self, D ):
+    def myCalcs(self, D, m1, b1, m2, b2):
         for box in self.args['boxes']:
-            D.calculateRDF(self.args['mol1'],self.args['bead1'],
-                            self.args['mol2'],self.args['bead2'],box)
+            D.calculateRDF(m1, b1, m2, b2, box)
             writeXY(D.radii, D.g_average, '%s/%s/rdf-box%s_mol%s-%s_mol%s-%s.dat'%(self.args['path'],self.feed,box,
-                                            self.args['mol1'], self.args['bead1'], self.args['mol2'], self.args['bead2']))
+                                            m1, b1, m2, b2))
             writeXY(D.radii, D.n_average, '%s/%s/nint-box%s_mol%s-%s_mol%s-%s.dat'%(self.args['path'],self.feed,box,
-                                            self.args['mol1'], self.args['bead1'], self.args['mol2'], self.args['bead2']))
+                                            m1, b1, m2, b2))
 
 
     def main(self):
@@ -140,7 +138,9 @@ class G(Struc):
             self.feed = feed
             if self.args['verbosity'] > 0: print('-'*12 + 'Dir is %s'%self.feed + '-'*12)
             analysis = self.read_movies(self.args['rmax'], self.args['bins'])
-            self.myCalcs(analysis)
+            for m1, b1, m2, b2 in zip(self.args['mol1'], self.args['bead1'],
+                                        self.args['mol2'],self.args['bead2']):
+                self.myCalcs(analysis, m1, b1, m2, b2)
 
 import numpy as np
 from MCFlow.parser import Results

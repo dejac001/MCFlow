@@ -126,11 +126,11 @@ class IdealGasAds:
         X = self.getX()
         boxFrom, boxTo = self.boxes
         assert 'box' in boxFrom, 'Wrong notation for box'
-        solutes = sorted([i for i in N.keys()
-                                    if ((N[i][boxTo]['mean'] > 1e-06)
-                          and (N[i][boxTo]['mean'] < 300))      ])
-        for mol in solutes:
-            file_name = 'dG-mol%s_vs_%s.dat'%(mol, self.xlabel[0])
+        molecules = sorted([i for i in N.keys()
+                                    if ((N[i][boxTo]['mean'] > 0.)
+                          and (N[i][boxFrom]['mean'] > 0.))      ])
+        for mol in molecules:
+            file_name = 'dG-mol%s_vs_%s_%s-->%s.dat'%(mol, self.xlabel[0], boxFrom, boxTo)
             dG_mean, dG_stdev = (dG[mol]['--'.join([boxFrom, boxTo])]['mean'],
                                 dG[mol]['--'.join([boxFrom, boxTo])]['stdev'])
             writeAGR([X['mean']],[dG_mean],
@@ -339,7 +339,10 @@ class LoadAds(IdealGasAds):
             raise AttributeError
         elif self.units == 'mol/kg':
             qfactor = gen_data['zeolite'][' mol/kg / 1 mlcl adsorbed']
-        Q_mean, Q_stdev = (sum(N[i]['box1']['mean'] for i in N.keys())*qfactor,
+        if self.mol:
+            Q_mean, Q_stdev = (N[self.mol]['box1']['mean']*qfactor, N[self.mol]['box1']['stdev']*qfactor)
+        else:
+            Q_mean, Q_stdev = (sum(N[i]['box1']['mean'] for i in N.keys())*qfactor,
                            math.pow( sum(N[i]['box1']['stdev']**2 for i in N.keys()), 0.5)*qfactor)
         return {'mean':Q_mean, 'stdev':Q_stdev}
 
@@ -531,7 +534,7 @@ class MoleFrac(LiqAds):
             vapor_box = self.findVapBox( rho, self.mol)
         except KeyError:
             vapor_box = 'box2'
-        num_box = len(rho.keys())
+        num_box = len(rho['1'].keys())
         if num_box == 3:
             liquid_box = 'box2'
         else:

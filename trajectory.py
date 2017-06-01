@@ -1,3 +1,35 @@
+def plotTrajectory(figNumStart, ydata, steps):
+    '''
+    ydata is in format ['%i-%i'%(conc, inp.ntot-conc)]['box2'][sim]
+    Iterate over first keys for columns of trajectory subplot, and over first two
+       indexes of 2nd keys for rows in subplot
+    '''
+    colors = ['aqua', 'black', 'blue', 'brown',
+              'burlywood', 'cadetblue', 'chartreuse', 'darkcyan',
+              'darkgoldenrod', 'darkgreen', 'darkorange', 'deeppink',
+              'firebrick', 'yellow', 'steelblue', 'chocolate']
+    figNum = figNumStart-1
+    for conc in sorted(ydata.keys()):
+        pltIndex = 0
+        figNum += 1
+        plt.figure(figNum)
+        boxes = sorted(ydata[conc].keys())
+        plt.suptitle('%s-mols#%s'%(conc,','.join(ydata[conc][boxes[0]].keys())), fontsize=24)
+        if conc == sorted(ydata.keys())[0]:
+            nRows = len(boxes) # rows are number of boxes
+            nColumns = len(ydata[conc][boxes[0]]) # columns are different molecules
+        for box in boxes:
+            for mol in sorted(ydata[conc][box].keys()):
+                pltIndex += 1
+                plt.subplot(nRows, nColumns, pltIndex)
+                pltSim = 0
+                if pltIndex <= nColumns: plt.title(mol)
+                if mol == sorted(ydata[conc][box].keys())[0]: plt.ylabel(box)
+                for sim in sorted(ydata[conc][box][mol].keys()):
+                    pltSim += 1
+                    plt.plot(steps[conc][sim], ydata[conc][box][mol][sim], colors[sim-1])
+                    plt.locator_params(tight=True, nbins=6)
+
 class Trajectory():
     def __init__(self, boxList, molList, feeds, indepRange):
         self.N_traj = { '%s'%f: {B: { M :{ k: []
@@ -25,7 +57,6 @@ class Trajectory():
                 begin_index = index
 
 import numpy as np
-from plotter import plotTrajectory
 if __name__ == '__main__':
     from file_formatting import reader
     import runAnalyzer
@@ -33,6 +64,7 @@ if __name__ == '__main__':
     from parser import Results
 
     my_parser = Results()
+    my_parser.multi()
     my_parser.parser.description = 'Plot trajectory from inputting molecules and boxes'
     my_parser.parser.add_argument('-sk','--numSkip',help ='number of MCCs to skip', type = int, default = 100)
 
