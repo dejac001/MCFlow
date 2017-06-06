@@ -1,5 +1,5 @@
 def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
-            numVapor, maxSorbate, vaporBox='box3'):
+            numVapor, maxSorbate, changeVol, vaporBox='box3'):
     '''
     changing the biasing potential here is based on the following:
     G(desired) = G(real) + R*E(bias)
@@ -133,11 +133,15 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
     print('nSorbate_vapor is   ', nSorbate_vapor)
     boxlength_vapor_AA3, volume_vapor_AA3, least_volatile = getVaporVolume(sorbates, rho,
                                                                            vaporBox=vaporBox, nVapor=nSorbate_vapor)
-    assert boxlength_vapor_AA3 < 10000., 'predicted boxlength not realistic'
-    if (boxlength_vapor_AA3 > 10000.):
-        boxlength_vapor_AA3 =  10000.
-        volume_vapor_AA3 = pow(boxlength_vapor_AA3,3)
-        least_volatile = -1
+    if changeVol:
+        boxlength_vapor_AA3 =  boxLengths['box3']['mean']
+        volume_vapor_AA3 = math.pow( boxlength_vapor_AA3, 3)
+    else:
+        assert boxlength_vapor_AA3 < 10000., 'predicted boxlength not realistic'
+        if (boxlength_vapor_AA3 > 10000.):
+            boxlength_vapor_AA3 =  10000.
+            volume_vapor_AA3 = pow(boxlength_vapor_AA3,3)
+            least_volatile = -1
     nGhost = themGhosts(volume_vapor_AA3,T,pressure)
     liquid_volume_AA3 = math.pow( boxLengths['box2']['mean'], 3)
     for mol in impurities:
@@ -185,6 +189,7 @@ if __name__ == '__main__':
     my_parser = Change()
     my_parser.parser.add_argument('-nv','--numVapor',help='for 3 box sim, desired number of sorbates in vapor',type=int,default=2)
     my_parser.parser.add_argument('-ms','--maxSorbate',help='max number of molecules considered sorbates',type=int,default=200)
+    my_parser.parser.add_argument('-cv','--changeVol',help='whether or not to change volume and bias on sorbate',type=bool,default=False)
     args = vars(my_parser.parser.parse_args())
     feeds = args.pop('feeds')
 
@@ -194,14 +199,17 @@ if __name__ == '__main__':
         args['feeds'] = [feed]
         data, gen_data = getFileData(**args)
         nbox = len(data['rho'].averages[feed].keys())
-        input_data = reader.read_fort4(args['path']+'/' + feed + '/1/fort.4')
+        try:
+            input_data = reader.read_fort4(args['path']+'/' + feed + '/1/fort.4')
+        except FileNotFoundError:
+            input_data = reader.read_fort4(args['path']+'/' + feed + '/1/old-fort4')
         (vapor_boxlx_AA3, bias, nGhost) = newBias(data['rho'].averages[feed],
                                                             data['boxlx'].averages[feed],
                                                             data['N'].averages[feed],
                                                   input_data['UNIFORM_BIASING_POTENTIALS'],
                                                   gen_data[feed]['temperature'],
                                                   data['P'].averages[feed],
-                                                    args['numVapor'],args['maxSorbate'],
+                                                    args['numVapor'],args['maxSorbate'],args['changeVol'],
                                             vaporBox=vapor_box)
         # change data
         vapor_box_dimens = '%8.2f %8.2f %8.2f'%(vapor_boxlx_AA3,vapor_boxlx_AA3, vapor_boxlx_AA3)

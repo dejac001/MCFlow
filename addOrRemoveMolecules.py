@@ -4,6 +4,14 @@ You will need to use this, for example, if
 too many of a given sorbate adsorb and not
 enough molecules are left in vapor phase.
 '''
+def findMolNum(mol_type_data, molName):
+    for mol in sorted(mol_type_data.keys()):
+        my_name = mol_type_data[mol].split('\n')[1].split()[0]
+        if molName == my_name:
+            return mol.strip('mol')
+    assert molName == my_name, 'Molecule type %s not found'%molName
+
+
 def makeRandomStruc(boxlengths, coordinates, previous_coords):
     boxlx, boxly, boxlz = boxlengths
     rand_x = random.random()*boxlx
@@ -35,9 +43,7 @@ def initialize(input, restart,  molID, box):
         quit()
 
     # find mol number
-    for mol in input['MOLECULE_TYPE'].keys():
-        if molID in input['MOLECULE_TYPE'][mol]:
-            mol_number = mol.strip('mol')
+    mol_number = findMolNum(input['MOLECULE_TYPE'], molID)
 
     # get list of coordinates previously in box
     old_coords = []
@@ -120,9 +126,7 @@ def removeMolecules(input_dat, restart_dat, nAdd, box, molID):
         for key in ['box types', 'mol types', 'coords']:
             new_restart_data[key].append(restart_dat[key][i])
     # find mol number
-    for mol in input_dat['MOLECULE_TYPE'].keys():
-        if molID in input_dat['MOLECULE_TYPE'][mol]:
-            mol_num = mol.strip('mol')
+    mol_num = findMolNum(input_dat['MOLECULE_TYPE'], molID)
     taken_out = 0
     new_restart_data = copy.deepcopy(restart_dat)
     # initialize new restart data
