@@ -250,7 +250,8 @@ class IdealGasAds:
         if (0 in self.indep) and (len(self.indep) == 1): raise NotImplemented
         rho = self.rho[self.feed][self.run]
         K = self.K[self.feed][self.run]
-        P = self.P[self.feed][self.run]
+        if 'P-box' in self.xlabel[0]:
+            P = self.P[self.feed][self.run]
         X = self.getX()
         file_description = '%s    S(%s)    %s     dS'%(self.xlabel[0], self.units, self.xlabel[1])
         nIndep = self.gen_data[self.feed][self.run]['numIndep']
@@ -464,9 +465,9 @@ class GasMolAds(IdealGasAds):
 
 class LiqAds(IdealGasAds):
     def __init__(self, **kwargs):
-        self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}
-        self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db']
-        self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data]
+        self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}; self.K = {}
+        self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db','K-data.db']
+        self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data,self.K]
         if kwargs:
             self.xlabel = ['C(g/mL)','dC']
             self.mol = kwargs['mol']
