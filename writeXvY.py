@@ -288,16 +288,16 @@ class IdealGasAds:
             K_to = K['box1'][mol_pair]
             mol1, mol2 = map(int,mol_pair.split('/'))
             file_name = 'S_%s-vs-%s.dat' % (mol_pair, self.xlabel[0])
-            if 'P' or 'C' in self.xlabel[0]:
+            if (('P' in self.xlabel[0]) or ('C' in self.xlabel[0])):
                 if 'P-box' in self.xlabel[0]:
-                vapor_box_a = self.findVapBox(rho, '%i'%mol1)
-                vapor_box_b = self.findVapBox(rho, '%i'%mol2)
-                pa, pa_stdev = P[vapor_box_a]['mean'], P[vapor_box_a]['stdev']
-                pb, pb_stdev = P[vapor_box_b]['mean'], P[vapor_box_b]['stdev']
-                K_from = {
-                    'mean':pa/pb,
-                          'stdev': errorPropDiv(pa, pb, pa_stdev, pb_stdev)
-                }
+                    vapor_box_a = self.findVapBox(rho, '%i'%mol1)
+                    vapor_box_b = self.findVapBox(rho, '%i'%mol2)
+                    pa, pa_stdev = P[vapor_box_a]['mean'], P[vapor_box_a]['stdev']
+                    pb, pb_stdev = P[vapor_box_b]['mean'], P[vapor_box_b]['stdev']
+                    K_from = {
+                        'mean':pa/pb,
+                              'stdev': errorPropDiv(pa, pb, pa_stdev, pb_stdev)
+                    }
                 elif 'P' in self.xlabel[0]:
                     vapor_box = self.findVapBox(rho, '%i'%mol1)
                     K_from = K[vapor_box][mol_pair]
@@ -306,7 +306,9 @@ class IdealGasAds:
                 S_mean = K_to['mean'] / K_from['mean']
                 S_stdev = errorPropDiv(K_to['mean'], K_from['mean'],
                                        K_to['stdev'], K_from['stdev'])
-
+                writeAGR([X['mean']], [S_mean],
+                         [calc95conf(X['stdev'],nIndep)], [calc95conf(S_stdev,nIndep)],
+                         [self.feed], file_name, file_description)
             elif 'kH' in self.xlabel[0]:
                 if mol_pair == '%s/1'%self.mol:
                     K_to['95conf'] = calc95conf(K_to['stdev'],nIndep)
@@ -326,6 +328,8 @@ class IdealGasAds:
                     writeAGR([X['mean']], [S_mean],
                              [X['95conf']], [S_95conf],
                              [self.feed], file_name, file_description)
+            else:
+                print(self.xlabel, 'not considered')
 
 class RhoBoxAds(IdealGasAds):
     def __init__(self, **kwargs):

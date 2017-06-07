@@ -1,9 +1,9 @@
 from writeXvY import IdealGasAds
 class kH(IdealGasAds):
     def __init__(self, **kwargs):
-        self.N={};self.P={};self.rho={};self.gen_data={}
-        self.files = ['N-data.db','P-data.db', 'rho-data.db','general-data.db']
-        self.variables = [self.N, self.P, self.rho, self.gen_data]
+        self.N={};self.P={};self.rho={};self.gen_data={};self.K={}
+        self.files = ['N-data.db','P-data.db', 'rho-data.db','general-data.db','K-data.db']
+        self.variables = [self.N, self.P, self.rho, self.gen_data,self.K]
         self.xlabel = ['kH', 'dkH']
         if kwargs:
             self.units = kwargs['units']
@@ -19,7 +19,7 @@ class kH(IdealGasAds):
             self.kH_mean, self.kH_95conf = kwargs['henry']
             assert kwargs['mol'], 'Mol needed for x-axis'
             self.mol = kwargs['mol']
-            # self.indep = kwargs['indep']
+            self.indep = kwargs['indep']
             self.feeds = kwargs['feeds']
             self.path = kwargs['path']
             assert kwargs['density'], 'Infinite-dilution liquid density needed for kH iso'
