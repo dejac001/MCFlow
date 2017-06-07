@@ -62,6 +62,12 @@ class Plot(Main):
                                   type=float, nargs= '+')
         self.parser.add_argument('-y', '--yaxis', help='y axis of plot',
                                  choices=['Q','S'])
+        self.parser.add_argument('-d','--density',help='infinite dilution density',type=float,
+                                 nargs='+',default=[0.981,0.006]
+                                 # Jorgensen and Jenson, J. Comput. Chem.
+                                 )
+        self.parser.add_argument('-MW','--molecWeight',help='molecular weight of solvent',
+                                 type=float, default=18.02)
 
 class MultMols(Plot):
     def __init__(self):

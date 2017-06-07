@@ -6,7 +6,6 @@ class kH(IdealGasAds):
         self.variables = [self.N, self.P, self.rho, self.gen_data]
         self.xlabel = ['kH', 'dkH']
         if kwargs:
-            assert kwargs['units'], 'Units must be defined for isotherm'
             self.units = kwargs['units']
             assert kwargs['box'], 'Box needed for number density in kH isotherm'
             if 'box' in kwargs['box']:
@@ -20,9 +19,12 @@ class kH(IdealGasAds):
             self.kH_mean, self.kH_95conf = kwargs['henry']
             assert kwargs['mol'], 'Mol needed for x-axis'
             self.mol = kwargs['mol']
-            self.indep = kwargs['indep']
+            # self.indep = kwargs['indep']
             self.feeds = kwargs['feeds']
             self.path = kwargs['path']
+            assert kwargs['density'], 'Infinite-dilution liquid density needed for kH iso'
+            self.density = kwargs['density']
+            self.solventMW = kwargs['molecWeight']
 
     def getX(self):
         # pressure info ----------------------
@@ -44,12 +46,10 @@ class kH(IdealGasAds):
             math.pow(p_95conf / p_mean, 2), 0.5)
         return {'mean':p_mean*self.kH_mean,'95conf':C_95conf}
 
-
 '''
 Write isotherm from previously generated databank files
 '''
 from runAnalyzer import checkRun, calc95conf
-from writeXvY import writeAGR
 from chem_constants import R, N_av
 import math
 

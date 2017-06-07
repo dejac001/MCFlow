@@ -166,6 +166,7 @@ class IdealGasAds:
         '''
         :var X: either solution concentration (g/mL) or pressure (kPa)
         '''
+        assert self.units, 'Units must be defined for isotherm'
         N = self.N[self.feed][self.run]
         gen_data = self.gen_data[self.feed][self.run]
         file_description = '%s    Q(%s)    %s     dQ'%(self.xlabel[0], self.units,
@@ -281,11 +282,14 @@ class IdealGasAds:
             P = self.P[self.feed][self.run]
         X = self.getX()
         file_description = '%s    S(%s)    %s     dS'%(self.xlabel[0], self.units, self.xlabel[1])
-        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        gen_data = self.gen_data[self.feed][self.run]
+        nIndep = gen_data['numIndep']
         for mol_pair in K['box1']:
             K_to = K['box1'][mol_pair]
             mol1, mol2 = map(int,mol_pair.split('/'))
-            if 'P-box' in self.xlabel[0]:
+            file_name = 'S_%s-vs-%s.dat' % (mol_pair, self.xlabel[0])
+            if 'P' or 'C' in self.xlabel[0]:
+                if 'P-box' in self.xlabel[0]:
                 vapor_box_a = self.findVapBox(rho, '%i'%mol1)
                 vapor_box_b = self.findVapBox(rho, '%i'%mol2)
                 pa, pa_stdev = P[vapor_box_a]['mean'], P[vapor_box_a]['stdev']
@@ -294,18 +298,34 @@ class IdealGasAds:
                     'mean':pa/pb,
                           'stdev': errorPropDiv(pa, pb, pa_stdev, pb_stdev)
                 }
-            elif 'P' in self.xlabel[0]:
-                vapor_box = self.findVapBox(rho, '%i'%mol1)
-                K_from = K[vapor_box][mol_pair]
-            elif 'C' in self.xlabel[0]:
-                K_from = K['box2'][mol_pair]
-            S_mean = K_to['mean']/K_from['mean']
-            S_stdev = errorPropDiv(K_to['mean'],K_from['mean'],
-                                   K_to['stdev'], K_from['stdev'])
-            file_name = 'S_%s-vs-%s.dat'%(mol_pair, self.xlabel[0])
-            writeAGR([X['mean']],[S_mean],
-                     [calc95conf(X['stdev'], nIndep)], [calc95conf(S_stdev, nIndep)],
-                     [self.feed], file_name, file_description)
+                elif 'P' in self.xlabel[0]:
+                    vapor_box = self.findVapBox(rho, '%i'%mol1)
+                    K_from = K[vapor_box][mol_pair]
+                elif 'C' in self.xlabel[0]:
+                    K_from = K['box2'][mol_pair]
+                S_mean = K_to['mean'] / K_from['mean']
+                S_stdev = errorPropDiv(K_to['mean'], K_from['mean'],
+                                       K_to['stdev'], K_from['stdev'])
+
+            elif 'kH' in self.xlabel[0]:
+                if mol_pair == '%s/1'%self.mol:
+                    K_to['95conf'] = calc95conf(K_to['stdev'],nIndep)
+                    MW_W = self.solventMW
+                    MW_D = gen_data['molecular weight'][self.mol]
+                    S_mean = (
+        K_to['mean']*(self.density[0]/X['mean'] - 1)*MW_W/MW_D
+                    )
+                    dS_dKto = (self.density[0]/X['mean'] - 1)*MW_W/MW_D
+                    dS_drho = K_to['mean']/X['mean']*MW_W/MW_D
+                    dS_dC = -K_to['mean']*self.density[0]/math.pow(X['mean'],2)*MW_W/MW_D
+                    S_95conf = math.sqrt(
+                        math.pow(dS_dKto*K_to['95conf'],2) +
+                        math.pow(dS_drho*self.density[1],2) +
+                        math.pow(dS_dC*X['95conf'],2)
+                    )
+                    writeAGR([X['mean']], [S_mean],
+                             [X['95conf']], [S_95conf],
+                             [self.feed], file_name, file_description)
 
 class RhoBoxAds(IdealGasAds):
     def __init__(self, **kwargs):
