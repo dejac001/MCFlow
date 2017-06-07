@@ -44,7 +44,7 @@ class Plot(Main):
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',
                                  choices = ['C','Pig', 'Pbox','Pi','Q','rho','x'])
-        self.parser.add_argument('-y','--yaxis',help='x axis of plot',
+        self.parser.add_argument('-y','--yaxis',help='y axis of plot',
                                  choices = ['Q','dG','S','R',
                                             'X','dH','dU','dHig','Pigxy','Txy'])
         self.parser.add_argument('-B','--boxes',help='box numbers to use',
@@ -59,6 +59,8 @@ class Plot(Main):
         self.parser.add_argument('-kH','--henry',help='Henry constant (g/mL/kPa) '
                                                        'fmt: (mean, 95%%conf.) ',
                                   type=float, nargs= '+')
+        self.parser.add_argument('-y', '--yaxis', help='y axis of plot',
+                                 choices=['Q','S'])
 
 class MultMols(Plot):
     def __init__(self):

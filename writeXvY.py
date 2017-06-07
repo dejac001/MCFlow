@@ -190,8 +190,12 @@ class IdealGasAds:
                             range(1, nIndep+1)], file_name, file_description)
             else:
                 Q_mean, Q_stdev = (N[mol]['box1']['mean']*qfactor, N[mol]['box1']['stdev']*qfactor)
+                if '95conf' in X.keys():
+                    dX = X['95conf']
+                else:
+                    dX = X['stdev']
                 writeAGR([X['mean']],[Q_mean],
-                         [calc95conf(X['stdev'], nIndep)], [calc95conf(Q_stdev, nIndep)],
+                         [dX], [calc95conf(Q_stdev, nIndep)],
                          [feed], file_name, file_description)
 
     def RvX(self):

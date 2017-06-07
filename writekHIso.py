@@ -1,56 +1,30 @@
-'''
-Write isotherm from previously generated databank files
-'''
-from runAnalyzer import checkRun, calc95conf
-from writeXvY import writeAGR
-from chem_constants import R, N_av
-import math, copy
+from writeXvY import IdealGasAds
+class kH(IdealGasAds):
+    def __init__(self, **kwargs):
+        self.N={};self.P={};self.rho={};self.gen_data={}
+        self.files = ['N-data.db','rho-data.db', 'P-data.db','general-data.db']
+        self.variables = [self.N, self.P, self.rho, self.gen_data]
+        if kwargs:
+            assert kwargs['units'], 'Units must be defined for isotherm'
+            assert kwargs['box'], 'Box needed for number density in kH isotherm'
+            assert kwargs['Temp'], 'Temperature needed for ideal gas law'
+            assert (kwargs['henry'] and
+            len(kwargs['henry']) == 2), 'kH(mean) and kH(95% conf) needed'
+            assert kwargs['mol'], 'Mol needed for x-axis'
+            self.kH_mean, self.kH_95conf = kwargs['henry']
+            self.mol = kwargs['mol']
+            if 'box' in kwargs['box']:
+                self.box = kwargs['box']
+            else:
+                self.box = 'box%s'%kwargs['box']
+        self.xlabel = ['kH(mol%s)' % self.mol, 'dkH']
 
-if __name__ == '__main__':
-    from parser import Plot
-    import shelve
-
-    my_parser = Plot()
-    my_parser.isotherm()
-    my_parser.kH()
-
-    args = vars(my_parser.parse_args())
-    assert args['units'], 'Units must be defined for isotherm'
-    assert args['box'], 'Box needed for number density in kH isotherm'
-    assert args['Temp'], 'Temperature needed for ideal gas law'
-    assert (args['henry'] and
-            len(args['henry']) == 2), 'kH(mean) and kH(95% conf) needed'
-    assert args['mol'], 'Mol needed for x axis'
-
-    original_feeds = copy.deepcopy(args['feeds'])
-    N = {}; P={}; rho = {}; gen_data = {}
-    for file, var in zip(['N-data.db','rho-data.db', 'P-data.db','general-data.db'],
-                         [N, rho, P, gen_data]):
-        with shelve.open('%s/%s'%(args['path'], file)) as db:
-            for feed in original_feeds:
-                try:
-                    var[feed] = db[feed]
-                except KeyError:
-                    if feed in args['feeds']:
-                        args['feeds'].remove(feed)
-                        print('No feed of %s found in database--removing from feeds'%feed)
-            
-    kH_mean, kH_95conf = args['henry']
-    for feed in args['feeds']:
-        if args['verbosity'] > 0:
-            print('starting feed {}'.format(feed))
-        # determine if run has been completed
-        run = checkRun(args['type'], [rho, N], feed)
-        # gen data
-        numIndep = gen_data[feed][run]['numIndep']
-        # initialize variables if needed
-        mol_data = {}
-        mols_adsorbed = sorted([i for i in N[feed][run].keys()
-                                    if N[feed][run][i]['box1']['mean'] > 1e-06])
+    def getX(self):
         # pressure info ----------------------
+        numIndep = self.gen_data[self.feed][self.run]['numIndep']
         try:
-            rho_mean, rho_stdev = (rho[feed][run][args['mol']]['box%s'%args['box']]['mean'],
-                                    rho[feed][run][args['mol']]['box%s'%args['box']]['stdev'])
+            rho_mean, rho_stdev = (self.rho[self.feed][self.run][self.mol][self.box]['mean'],
+                                    self.rho[self.feed][self.run][self.mol][self.box]['stdev'])
             # convert number density to pressure [kPa]
             # (molec/nm**3)*(mol/molec)*(nm**3*kPa/(mol*K))*K = kPa
             p_mean = rho_mean/N_av*R['nm**3*kPa/(mol*K)']*args['Temp']
@@ -58,44 +32,49 @@ if __name__ == '__main__':
         except KeyError:
             print('No num dens. data for feed {}, using box pressure'.format(feed))
             print(' - This assumes box is unary')
-            pressure = P[feed][run]['box%s'%args['box']]
+            pressure = P[self.feed][self.run]['box%s'%args['box']]
             p_mean, p_stdev = pressure['mean'], pressure['stdev']
-        p_95conf = calc95conf(p_stdev, numIndep)
-        for mol in mols_adsorbed:
-            if mol not in mol_data.keys():
-                mol_data[mol] = {}
-                for key in ['loading', 'concentrations']:
-                    mol_data[mol][key] = {'mean':[],'95conf':[],'feed':[]}
-            loadings = mol_data[mol]['loading']
-            concentrations = mol_data[mol]['concentrations']
-            # loading info ----------------------
-            if args['units'] == 'molec/uc':
-                qfactor = 1/gen_data[feed][run]['zeolite']['unit cells']
-            elif args['units'] == 'g/g':
-                qfactor = (gen_data[feed][run]['molecular weight'][args['mol']]/
-                                N_av)/gen_data[feed]['zeolite']['mass (g)']
-            elif args['units'] == 'mol/kg':
-                qfactor = gen_data[feed][run]['zeolite'][' mol/kg / 1 mlcl adsorbed']
-            loadings['mean'].append( N[feed][run][mol]['box1']['mean']*qfactor )
-            loadings['95conf'].append( calc95conf(
-                N[feed][run][mol]['box1']['stdev']*qfactor, numIndep ) )
-            loadings['feed'].append( feed )
-            # pressure info ----------------------
-            C_95conf = p_mean*kH_mean*math.pow(
-                        math.pow(kH_95conf/kH_mean, 2) +
-                        math.pow(p_95conf/p_mean, 2), 0.5 )
-            concentrations['mean'].append( p_mean*kH_mean )
-            concentrations['95conf'].append( C_95conf  )
-            concentrations['feed'].append( feed )
-        # write after each feed!
-        for mol in mol_data.keys():
-            iso_name = 'isotherm-mols-%s-mol%s-%s'%('_'.join(mols_adsorbed),mol, args['units'])
-            iso_name = iso_name.replace('/','_')
-            help = ''
-            x_data = mol_data[mol]['concentrations']
-            y_data = mol_data[mol]['loading']
-            if feed == args['feeds'][0]: help = 'C(g/mL)    Q(%s)    dC     dQ'%args['units']
-            writeAGR(x_data['mean'], y_data['mean'],
-                     x_data['95conf'], y_data['95conf'],
-                     x_data['feed'], iso_name, description=help)
+        p_95conf = calc95conf(p_stdev,numIndep)
+        C_95conf = p_mean * self.kH_mean * math.pow(
+            math.pow(self.kH_95conf / self.kH_mean, 2) +
+            math.pow(p_95conf / p_mean, 2), 0.5)
+        return {'mean':p_mean*self.kH_mean,'95conf':C_95conf}
+
+
+'''
+Write isotherm from previously generated databank files
+'''
+from runAnalyzer import checkRun, calc95conf
+from writeXvY import writeAGR
+from chem_constants import R, N_av
+import math
+
+if __name__ == '__main__':
+    from parser import Plot
+
+    my_parser = Plot()
+    my_parser.isotherm()
+    my_parser.kH()
+
+    args = vars(my_parser.parse_args())
+
+    my_parser = Plot()
+    my_parser.axes()
+    my_parser.isotherm()
+
+    args = vars(my_parser.parse_args())
+    assert args['yaxis'], 'No y axis chosen for plot'
+
+    my_plotter = kH(**args)
+    my_plotter.readDBs()
+
+    for feed in args['feeds']:
+        # determine if run has been completed
+        my_plotter.run = checkRun(args['type'], my_plotter.variables, feed)
+        my_plotter.feed = feed
+        if args['yaxis'] == 'Q':
+            my_plotter.QvX()
+        elif args['yaxis'] == 'S':
+            my_plotter.SvX()
+
 
