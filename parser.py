@@ -46,7 +46,8 @@ class Plot(Main):
                                  choices = ['C','Pig', 'Pbox','Pi','Q','rho','x'])
         self.parser.add_argument('-y','--yaxis',help='y axis of plot',
                                  choices = ['Q','dG','S','R',
-                                            'X','dH','dU','dHig','Pigxy','Txy'])
+                                            'X','dH','dU','dHig',
+                                            'Pigxy','Txy','dens'])
         self.parser.add_argument('-B','--boxes',help='box numbers to use',
                                  type=str,nargs='+',default=['box3','box2'])
     def isotherm(self):

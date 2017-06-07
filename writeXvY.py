@@ -161,6 +161,7 @@ class IdealGasAds:
         print('For mol%s, vapor box determined to be %s'%(mol, my_box))
         return my_box
 
+
     def QvX(self):
         '''
         :var X: either solution concentration (g/mL) or pressure (kPa)
@@ -186,7 +187,7 @@ class IdealGasAds:
                 Q_vals = [i*qfactor for i in N[mol]['box1']['raw']]
                 Q_stdev = [N[mol]['box1']['stdev']*qfactor for i in Q_vals]
                 writeAGR( X['raw'], Q_vals, None,
-                            None, ['%s/%i'%(feed,j) for j in
+                            None, ['%s/%i'%(self.feed,j) for j in
                             range(1, nIndep+1)], file_name, file_description)
             else:
                 Q_mean, Q_stdev = (N[mol]['box1']['mean']*qfactor, N[mol]['box1']['stdev']*qfactor)
@@ -196,7 +197,29 @@ class IdealGasAds:
                     dX = X['stdev']
                 writeAGR([X['mean']],[Q_mean],
                          [dX], [calc95conf(Q_stdev, nIndep)],
-                         [feed], file_name, file_description)
+                         [self.feed], file_name, file_description)
+
+    def DensvX(self):
+        assert 'box' in self.box, 'Box needed for density'
+        if (0 in self.indep) and (len(self.indep) == 1): raise NotImplemented
+        X = self.getX()
+        rho = self.rho[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run]
+        nIndep = gen_data['numIndep']
+        file_description = '%s    density(g/mL)    %s     dd'%(self.xlabel[0], self.xlabel[1])
+        file_name = 'Dens_v_%s_%s.dat'%(self.xlabel[0], self.box)
+        density = {'mean':0.,'stdev':0.}
+        for mol in rho.keys():
+            factor = gen_data['molecular weight'][mol]/N_av*math.pow(10,21)
+            if self.box in rho[mol]:
+                dens_molec_nm3 = {'mean':rho[mol][self.box]['mean'],
+                                    'stdev':rho[mol][self.box]['stdev']}
+                density['mean'] += dens_molec_nm3['mean']*factor
+                density['stdev'] += math.pow(dens_molec_nm3['stdev']*factor,2)
+        density['stdev'] = math.sqrt( density['stdev'] )
+        writeAGR([X['mean']],[density['mean']],
+                     [calc95conf(X['stdev'], nIndep)], [calc95conf(density['stdev'], nIndep)],
+                     [self.feed], file_name, file_description)
 
     def RvX(self):
         assert self.mol, 'Molecule needed to calculate recovery'
@@ -213,7 +236,7 @@ class IdealGasAds:
         R_stdev = pow(pow(1/Ni_tot - N[self.mol]['box%s'%self.box]['mean']/pow(Ni_tot,2),2)*pow(N[self.mol]['box%s'%self.box]['stdev'],2),0.5)*100
         writeAGR([X['mean']],[R_mean],
                          [calc95conf(X['stdev'], nIndep)], [calc95conf(R_stdev, nIndep)],
-                         [feed], file_name, file_description)
+                         [self.feed], file_name, file_description)
 
     def XvX(self):
         if (0 in self.indep) and (len(self.indep) == 1): raise NotImplemented
@@ -232,7 +255,7 @@ class IdealGasAds:
                         x_mean, x_stdev = calculateIGMolFrac(rho, mol1, box, X, self.T)
                     writeAGR([X['mean']],[x_mean],
                          [calc95conf(X['stdev'], nIndep)], [calc95conf(x_stdev, nIndep)],
-                         [feed], file_name, file_description)
+                         [self.feed], file_name, file_description)
 
     def SvX(self):
         '''
@@ -282,7 +305,7 @@ class IdealGasAds:
             file_name = 'S_%s-vs-%s.dat'%(mol_pair, self.xlabel[0])
             writeAGR([X['mean']],[S_mean],
                      [calc95conf(X['stdev'], nIndep)], [calc95conf(S_stdev, nIndep)],
-                     [feed], file_name, file_description)
+                     [self.feed], file_name, file_description)
 
 class RhoBoxAds(IdealGasAds):
     def __init__(self, **kwargs):
@@ -649,3 +672,5 @@ if __name__ == '__main__':
             my_plotter.Pig_xy()
         elif args['yaxis'] == 'Txy':
             my_plotter.Txy()
+        elif args['yaxis'] == 'dens':
+            my_plotter.DensvX()
