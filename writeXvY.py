@@ -315,11 +315,15 @@ class IdealGasAds:
                     MW_W = self.solventMW
                     MW_D = gen_data['molecular weight'][self.mol]
                     S_mean = (
-        K_to['mean']*(self.density[0]/X['mean'] - 1)*MW_W/MW_D
+        K_to['mean']*(self.density[0]/X['mean'] - 1)*MW_D/MW_W
                     )
-                    dS_dKto = (self.density[0]/X['mean'] - 1)*MW_W/MW_D
-                    dS_drho = K_to['mean']/X['mean']*MW_W/MW_D
-                    dS_dC = -K_to['mean']*self.density[0]/math.pow(X['mean'],2)*MW_W/MW_D
+                    w = X['mean']/self.density[0]
+                    S_long = K_to['mean']/(
+                    (w/MW_D)/((1-w)/MW_W )
+                    )
+                    dS_dKto = (self.density[0]/X['mean'] - 1)*MW_D/MW_W
+                    dS_drho = K_to['mean']/X['mean']*MW_D/MW_W
+                    dS_dC = -K_to['mean']*self.density[0]/math.pow(X['mean'],2)*MW_D/MW_W
                     S_95conf = math.sqrt(
                         math.pow(dS_dKto*K_to['95conf'],2) +
                         math.pow(dS_drho*self.density[1],2) +
