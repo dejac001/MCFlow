@@ -736,7 +736,6 @@ def xyz(file):
 
 import os
 import copy
-#import numpy as np
-#from MCFlow.runAnalyzer import calc95conf
-#from MCFlow import properties
-#from MCFlow.calc_tools import weighted_avg_and_std
+import numpy as np
+from MCFlow import properties
+from MCFlow.calc_tools import weighted_avg_and_std
