@@ -36,17 +36,17 @@ class Struc:
                                      type = str, nargs = '+')
         my_parser.parser.add_argument('-abc','--vectors', help='unit cell vectors. For folding coordinates into a unit cell',
                                       type = float, nargs = '+', default = [20.022,19.899,13.383])
-        args = vars(my_parser.parse_args())
+        my_args = vars(my_parser.parse_args())
         self.args = my_args
+        self.filter_function = filterFunc
         self.checks()
-        self.filter_function = filterfunc
 
     def checks(self):
-        if args['vectors']:
-            assert args['box'] == '1', 'It doesnt make sense to fold into a non replicated cell'
-        if filter_function:
-            assert args['name'], 'Output ID name needed to output local structure info'
-        assert args['box'], 'Need to specify box for structure analysis'
+        if self.args['vectors']:
+            assert self.args['box'] == '1', 'It doesnt make sense to fold into a non replicated cell'
+        if self.filter_function:
+            assert self.args['name'], 'Output ID name needed to output local structure info'
+        assert self.args['box'], 'Need to specify box for structure analysis'
         self.analysis_class = Movie
 
     def read_movies(self, *args):
@@ -75,15 +75,16 @@ class Struc:
     def myCalcs(self, D ):
         if self.filter_function:
             D.filterCoords(self.filter_function, self.args['box'])
-        D.countMols(self.args['indep'],feed, D.frame_data)
-        for mol_num in D.averages[feed].keys():
-            if self.args['vectors']: D.foldMovieToUC(args['vectors'])
+        D.countMols(self.args['indep'],self.feed, D.frame_data)
+        for mol_num in D.averages[self.feed].keys():
+            if self.args['vectors']: D.foldMovieToUC(self.args['vectors'])
             xyz_data = D.getCoords(mol_num, self.args['box'], self.args['bead'])
             flag=''
             if self.filter_function:
                 flag = '_filtered'
-            xyz('%s/%s/movie_coords_mol%s_box%s%s_sim%s.xyz'%(self.args['path'], self.feed,
-                                                        mol_num, self.args['box'],flag, ''.join(map(str,self.args['indep']))), xyz_data)
+            xyz('%s/%s/movie_coords_mol%s_box%s%s_sim%s_%s.xyz'%(self.args['path'], self.feed,
+                                                        mol_num, self.args['box'],flag, ''.join(map(str,self.args['indep'])),
+                                                        '-'.join(self.args['bead'])), xyz_data)
         if self.args['name']:
             outputDB(self.args['path'],[self.feed],self.args['type'],{self.args['name']: D } )
 

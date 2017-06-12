@@ -125,7 +125,7 @@ class Structure:
         self.parser.add_argument('-f', '--file',help='input file for analysis',type=str)
         self.parser.add_argument('-b','--bins',help='bin size for analysis',type=float)
         self.parser.add_argument('-abc','--vectors',help='unit cell vectors',type=float,nargs='+')
-        self.parser.add_argument('-B','--bead',help='bead to analyze', type = str, default=['COM'])
+        self.parser.add_argument('-B','--bead',help='bead to analyze', type = str, default=['COM'],nargs='+')
     def analysis(self):
         self.parser.add_argument('-ref','--reference',help='reference density [for dGmap (molec/nm**3)]'
                                                            ' [for S, Kref]',type=float)

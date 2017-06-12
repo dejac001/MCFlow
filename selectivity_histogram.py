@@ -68,12 +68,12 @@ if __name__ == '__main__':
     args = vars(my_parser.parse_args())
 
     coordsA = reader.xyz(args['file'])
-    xyz_dataA = getCoords(coordsA, 'COM')
+    xyz_dataA = getCoords(coordsA, args['bead'])
     coordsB = reader.xyz(args['file2'])
-    xyz_dataB = getCoords(coordsB, 'COM')
+    xyz_dataB = getCoords(coordsB, args['bead'])
 
     hist = SHist(args['vectors'],args['bins'])
     hist.Smap(xyz_dataA, xyz_dataB, args['reference'])
 
-    new_file = getFileName(args['file']) + getFileName(args['file2']) + '_beadCOM.vtk'
+    new_file = getFileName(args['file']) + getFileName(args['file2']) + '_bead%s.vtk'%('-'.join(args['bead']))
     vtkRectilinearMesh(new_file, hist.edges, hist.histogram)

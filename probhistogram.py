@@ -55,10 +55,12 @@ class dG3D(Hist3D):
 
 
 
-def getCoords(xyz_data, bead):
+def getCoords(xyz_data, beads):
+    if type(beads) == type(''):
+        beads = [beads]
     data = []
     for atom, xyz in zip(xyz_data['atoms'], xyz_data['coords']):
-        if atom == bead: data.append(xyz)
+        if atom in beads: data.append(xyz)
     return data
 
 def getFileName(file):
