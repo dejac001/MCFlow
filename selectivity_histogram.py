@@ -43,8 +43,7 @@ class SHist(Hist3D):
             ref = Kref
 
         self.edges = edgesA
-        self.histogram = np.ones(np.shape(HistA))
-        self.histogram = -1*self.histogram
+        self.histogram = np.ones(np.shape(HistA))*self.valToIgnore
         sum_hist = 0
         for x in range(len(self.histogram[:,0,0])):
             for y in range(len(self.histogram[0,:,0])):
@@ -52,8 +51,6 @@ class SHist(Hist3D):
                     sum_hist = sum_hist + HistB[x,y,z]
                     if HistB[x,y,z] > 0:
                         self.histogram[x,y,z] = (HistA[x,y,z]/HistB[x,y,z]) / ref
-                    else:
-                        self.histogram[x,y,z] = -self.valToIgnore
         assert sum_hist == len(xyzB), 'Histogram sum incorrect; %i %i'%(sum_hist, len(xyzB))
 
 

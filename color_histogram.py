@@ -5,21 +5,24 @@ def plotColorHist(data):
     legend = ['PC','NS']
     lines = ['solid','dashed']
     for i, values in enumerate(data):
+        print('number of colored values is %i'%len(values))
         n, bins  = np.histogram(values, bins=ibins, density=False)#, log=True)
         n, new_bins = hist_norm_height(n, bins, max(n))
         ax.step(new_bins, n, color=colors[i],label=legend[i],linestyle=lines[i],linewidth=0.4)
     ax.set_xlabel('ButOH Selectivity',fontsize=8)
     ax.set_ylabel('$h(S)$',fontsize=8)
-    ax.legend(loc=0,fontsize='xx-small',frameon=False, framealpha=1.0)
+    ax.legend(loc=0,fontsize='x-small')
     ax.semilogx()
-    ax.tick_params(colors='black',size=5.,width=0.5)
+    ax.tick_params(colors='black',width=0.5)
     ax.tick_params(direction='in',which='both',left=True,right=True, labelsize=8)
     ax.tick_params(axis='x',direction='out',bottom=True, top=True,which='both')
     for dirn in ['top','bottom','left','right']:
         ax.spines[dirn].set_color('black')
         ax.spines[dirn].set_linewidth(0.5)
     y_ticks = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    y_ticks_minor = [0.1,0.3,0.5,0.7,0.9]
     ax.set_yticks(y_ticks)
+    ax.set_yticks(y_ticks_minor,minor=True)
     ax.set_xlim([1., 10**6])
     ax.set_ylim([0., 1.])
     # ax.set_ylim([0.9,200.])
@@ -67,6 +70,6 @@ if __name__ == '__main__':
         hist.Smap(xyz_dataA, xyz_dataB, args['reference'])
         new_file = getFileName(f1) + getFileName(f2) + '_bead%s.vtk'%('-'.join(args['bead']))
         vtkRectilinearMesh(new_file, hist.edges, hist.histogram)
-        hist.colorValues()
+        hist.removeDummyValues()
         colors.append(hist.color_values)
     plotColorHist(colors)

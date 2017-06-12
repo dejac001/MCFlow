@@ -21,7 +21,7 @@ class Hist3D:
         self.histogram = Hist / np.sum(Hist)
         self.edges = edges
 
-    def colorValues(self):
+    def removeDummyValues(self):
         values = []
         for x in range(len(self.histogram[:,0,0])):
             for y in range(len(self.histogram[0,:,0])):
@@ -44,8 +44,7 @@ class dG3D(Hist3D):
         Hist, edges = np.histogramdd(np.array(xyzLocations, dtype=np.int8),
                                      bins=(self.xedges, self.yedges, self.zedges), normed=False)
         self.edges = edges
-        self.histogram = np.ones(np.shape(Hist))
-        self.histogram = self.histogram*5000
+        self.histogram = np.ones(np.shape(Hist))*self.valToIgnore
         for x in range(len(self.histogram[:,0,0])):
             for y in range(len(self.histogram[0,:,0])):
                 for z in range(len(self.histogram[0,0,:])):
