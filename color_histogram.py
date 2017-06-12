@@ -32,9 +32,10 @@ def plotColorHist(data):
 import numpy as np
 import matplotlib.pyplot as plt
 from MCFlow.selectivity_histogram import SHist, hist_norm_height
+from MCFlow.file_formatting.writer import vtkRectilinearMesh
 from MCFlow.parser import Structure
 from MCFlow.file_formatting import reader
-from MCFlow.probhistogram import getCoords
+from MCFlow.probhistogram import getCoords, getFileName
 
 if __name__ == '__main__':
     my_parser = Structure()
@@ -42,19 +43,30 @@ if __name__ == '__main__':
                                   type=str,nargs='+')
     my_parser.parser.add_argument('-f2','--file2',help='file 2 for selectivity analysis',
                                   type=str,nargs='+')
+    my_parser.parser.add_argument('-off','--offAxis',help='axis to average along',
+                                  default=[],nargs='+')
     my_parser.parser.add_argument('-ref','--reference',help='reference density  [for S, Kref]',type=float)
     args = vars(my_parser.parse_args())
     vectors = [[20.022, 19.899, 13.383],[80.088, 19.899, 13.383]]
+    args = vars(my_parser.parse_args())
+    axis_conf = {'x':0,'y':1,'z':2}
 
     colors = []
     for f1, f2, abc in zip(args['file1'],args['file2'],vectors):
         coordsA = reader.xyz(f1)
-        xyz_dataA = getCoords(coordsA, 'COM')
+        xyz_dataA = getCoords(coordsA, args['bead'])
         coordsB = reader.xyz(f2)
-        xyz_dataB = getCoords(coordsB, 'COM')
+        xyz_dataB = getCoords(coordsB, args['bead'])
+        for axis in args['offAxis']:
+            xyz_dataA = np.array(xyz_dataA, dtype=np.int8)
+            xyz_dataB = np.array(xyz_dataB, dtype=np.int8)
+            xyz_dataA[:, axis_conf[axis]] = 0.
+            xyz_dataB[:, axis_conf[axis]] = 0.
 
         hist = SHist(abc, args['bins'])
         hist.Smap(xyz_dataA, xyz_dataB, args['reference'])
+        new_file = getFileName(f1) + getFileName(f2) + '_bead%s.vtk'%('-'.join(args['bead']))
+        vtkRectilinearMesh(new_file, hist.edges, hist.histogram)
         hist.colorValues()
         colors.append(hist.color_values)
     plotColorHist(colors)

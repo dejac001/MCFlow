@@ -9,7 +9,7 @@ class Hist3D:
         self.yedges = [num * self.binSizes[1] for num in range(self.Nbins[1] + 1)]
         self.zedges = [num * self.binSizes[2] for num in range(self.Nbins[2] + 1)]
         self.name = 'hist'
-        self.valueToIgnore = None
+        self.valToIgnore = None
         print('Total number of bins is %i'%(self.Nbins[0]*self.Nbins[1]*self.Nbins[2]))
 
     def makeHist(self, xyzLocations):
@@ -34,7 +34,7 @@ class dG3D(Hist3D):
     def __init__(self, edges, binsize):
         Hist3D.__init__(self,edges,binsize)
         self.name = 'dG'
-        self.valueToIgnore = 5000
+        self.valToIgnore = 5000
 
     def dGmap(self, nFrames, xyzLocations, densFrom, Temp):
         '''
@@ -64,7 +64,8 @@ def getCoords(xyz_data, beads):
     return data
 
 def getFileName(file):
-    file = file[(file.find('/')+1):]
+    if '/' in file:
+        file = file[(file.find('/')+1):]
     return file.rstrip('.xyz')
 
 import numpy as np
