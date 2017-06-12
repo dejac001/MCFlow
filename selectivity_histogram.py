@@ -27,9 +27,14 @@ class SHist(Hist3D):
         :param Kref: reference K (xA/xB) in reference phase
         :return:
         '''
-        HistA, edgesA = np.histogramdd(np.array(xyzA, dtype=np.int8),
+        if not isinstance(xyzA,np.ndarray):
+            xyzA = np.array(xyzA, dtype=np.int8)
+        if not isinstance(xyzB,np.ndarray):
+            xyzB = np.array(xyzB, dtype=np.int8)
+
+        HistA, edgesA = np.histogramdd(xyzA,
                                        bins=(self.xedges, self.yedges, self.zedges), normed=False)
-        HistB, edgesB = np.histogramdd(np.array(xyzB, dtype=np.int8),
+        HistB, edgesB = np.histogramdd(xyzB,
                                        bins=(self.xedges, self.yedges, self.zedges), normed=False)
         # might need to always check here that edges are the same
         if Kref == None:
@@ -48,7 +53,7 @@ class SHist(Hist3D):
                     if HistB[x,y,z] > 0:
                         self.histogram[x,y,z] = (HistA[x,y,z]/HistB[x,y,z]) / ref
                     else:
-                        self.histogram[x,y,z] = -1
+                        self.histogram[x,y,z] = -self.valueToIgnore
         assert sum_hist == len(xyzB), 'Histogram sum incorrect; %i %i'%(sum_hist, len(xyzB))
 
 
@@ -65,12 +70,20 @@ if __name__ == '__main__':
     my_parser = Structure()
     my_parser.parser.add_argument('-f2','--file2',help='file 2 for selectivity analysis',type=str)
     my_parser.parser.add_argument('-ref','--reference',help='reference density  [for S, Kref]',type=float)
+    my_parser.parser.add_argument('-off','--offAxis',help='whether or not to average along a given axis',
+                                  default='None',choices=['x','y','z','None'])
     args = vars(my_parser.parse_args())
+    axis_conf = {'x':0,'y':1,'z':2}
 
     coordsA = reader.xyz(args['file'])
     xyz_dataA = getCoords(coordsA, args['bead'])
     coordsB = reader.xyz(args['file2'])
     xyz_dataB = getCoords(coordsB, args['bead'])
+    if (args['offAxis'] != 'None'):
+        xyz_dataA = np.array(xyz_dataA, dtype=np.int8)
+        xyz_dataB = np.array(xyz_dataB, dtype=np.int8)
+        xyz_dataA[:, axis_conf[args['offAxis']]] = 0.
+        xyz_dataB[:, axis_conf[args['offAxis']]] = 0.
 
     hist = SHist(args['vectors'],args['bins'])
     hist.Smap(xyz_dataA, xyz_dataB, args['reference'])
