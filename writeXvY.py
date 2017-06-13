@@ -569,16 +569,31 @@ class MoleFrac(LiqAds):
             self.box = kwargs['box']
             self.boxes = kwargs['boxes']
 
-    def getX(self,box):
-        rho, N = self.rho[self.feed][self.run], self.N[self.feed][self.run]
+    def XvX(self):
+        assert 'box' in self.box, 'Box needed for mole frac plot'
+        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        N = self.N[self.feed][self.run]
+        x = self.getX(self.box)
+        file_description = 'x (mol/mol)    x (mol/mol)    dx     dx'
+        for mol in N.keys():
+            y = self.getX(self.box, myMol=mol)
+            if y['mean'] > 0.:
+                file_name = 'XvX_%s_%s.dat'%(self.mol,mol)
+                writeAGR([x['mean']],[y['mean']],
+                        [calc95conf(x['stdev'], nIndep)], [calc95conf(y['stdev'], nIndep)],
+                        [self.feed], file_name, file_description)
+
+    def getX(self,box,myMol=None):
+        if myMol==None: myMol = self.mol
+        N = self.N[self.feed][self.run]
         N_tot = sum(N[i][box]['mean'] for i in N.keys())
-        x_mean = N[self.mol][box]['mean']/N_tot
+        x_mean = N[myMol][box]['mean']/N_tot
         x_stdev = 0.
         for i in N.keys():
-            if i == self.mol:
-                df_di = (N_tot-N[self.mol][box]['mean'])/pow(N_tot,2)
+            if i == myMol:
+                df_di = (N_tot-N[myMol][box]['mean'])/pow(N_tot,2)
             else:
-                df_di = (-N[self.mol][box]['mean'])/pow(N_tot,2)
+                df_di = (-N[myMol][box]['mean'])/pow(N_tot,2)
             x_stdev += math.pow( df_di,2)*math.pow(N[i][box]['stdev'],2)
         x_stdev = math.sqrt(x_stdev)
         return {'mean':x_mean, 'stdev':x_stdev}

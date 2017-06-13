@@ -117,6 +117,24 @@ def getRelMols(N, box):
             mols.append(mol)
     return sorted(mols)
 
+def getX(N):
+    X = {}
+    for box in N['1'].keys():
+        X[box] = {}
+        mols = getRelMols(N,box)
+        if len(mols) <= 1:
+            X[box] = {i:[0.] for i in mols}
+            continue
+        N_total = np.zeros(len(N[mols[0]][box]))
+        for imol, mol1 in enumerate(mols):
+            N_total = N_total + np.array(N[mol1][box])
+        for imol, mol1 in enumerate(mols):
+            N_i = np.array(N[mol1][box])
+            x = np.divide(N_i,N_total)
+            X[box][mol1] = x.tolist()
+    return X
+    
+
 def getK(N):
     K = {}
     for box in N['1'].keys():
@@ -156,6 +174,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                  ncycle_old, molWeights, E) = reader.read_fort12(my_dir, old_begin,
                                                                  nfiles, tag=type)
                 K = getK(N)
+                X = getX(N)
                 (number_densities, chemical_potential,
                  swap_info, biasPot, volumes,
                  totalComposition, cbmc_info,
@@ -173,6 +192,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 # initialize vars
                 if (seed == indep[0]) and (feed == feeds[0]):
                     k_ratio = properties.AnyProperty(K)
+                    mole_frac = properties.AnyProperty(X)
                     boxlx = properties.AnyProperty(boxLengths)
                     CBMC = properties.AnyProperty(cbmc_info)
                     Press = properties.AnyProperty(P)
@@ -183,7 +203,8 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                     dG = properties.AnyProperty( deltaG )
                     data = {'CBMC':CBMC, 'P':Press, 'N':Nmlcl,
                             'SWAP':SWAP, 'U':U, 'rho':rho,
-                            'boxlx':boxlx, 'dG':dG, 'K':k_ratio}
+                            'boxlx':boxlx, 'dG':dG, 'K':k_ratio,
+                            'X':mole_frac}
                     if liq:
                         if (verbosity > 1):
                             print('Doing analysis for C [ g/mL ] for mol {}'.format(mol))
@@ -199,6 +220,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 boxlx.addVals(boxLengths)
                 dG.addVals(deltaG)
                 k_ratio.addVals(K)
+                mole_frac.addVals(X)
                 if liq:
                     C.addVals(concentrations)
             except FileNotFoundError:
