@@ -16,7 +16,9 @@ class Hist3D:
         '''
         xyzLocations is a nested list ->  [[x1,y1,z1],[x2,y2,z2]...[xN,yN,zN]]
         '''
-        Hist, edges = np.histogramdd(np.array(xyzLocations, dtype=np.int8),
+        if not isinstance(xyzLocations,np.ndarray):
+            xyz = np.array(xyzLocations, dtype=np.int8)
+        Hist, edges = np.histogramdd(xyz,
                                      bins=(self.xedges, self.yedges, self.zedges), normed=False)
         self.histogram = Hist / np.sum(Hist)
         self.edges = edges
@@ -41,7 +43,9 @@ class dG3D(Hist3D):
         xyzLocations is a nested list ->  [[x1,y1,z1],[x2,y2,z2]...[xN,yN,zN]]
         densFrom is number density from in units molec/nm**3
         '''
-        Hist, edges = np.histogramdd(np.array(xyzLocations, dtype=np.int8),
+        if not isinstance(xyzLocations,np.ndarray):
+            xyz = np.array(xyzLocations, dtype=np.int8)
+        Hist, edges = np.histogramdd(xyz,
                                      bins=(self.xedges, self.yedges, self.zedges), normed=False)
         self.edges = edges
         self.histogram = np.ones(np.shape(Hist))*self.valToIgnore

@@ -42,7 +42,7 @@ from MCFlow.probhistogram import getCoords, getFileName
 
 if __name__ == '__main__':
     my_parser = Structure()
-    my_parser.parser.add_argument('-f1','--file1',help='file 2 for selectivity analysis',
+    my_parser.parser.add_argument('-f1','--file1',help='file 1 for selectivity analysis',
                                   type=str,nargs='+')
     my_parser.parser.add_argument('-f2','--file2',help='file 2 for selectivity analysis',
                                   type=str,nargs='+')
