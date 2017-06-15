@@ -113,46 +113,35 @@ def getRelMols(N, box):
     mols = []
     for mol in N.keys():
         means = {box:np.mean(value) for box,value in N[mol].items()}
-        if (means[box] > 0.) and (means[box] < sum(means.values())):
+        if (means[box] > 0.):# and (means[box] < sum(means.values())):
             mols.append(mol)
     return sorted(mols)
 
-def getX(N):
+def getKX(N):
+    K = {}
     X = {}
     for box in N['1'].keys():
-        X[box] = {}
-        mols = getRelMols(N,box)
-        if len(mols) <= 1:
-            X[box] = {i:[0.] for i in mols}
-            continue
-        N_total = np.zeros(len(N[mols[0]][box]))
-        for imol, mol1 in enumerate(mols):
-            N_total = N_total + np.array(N[mol1][box])
-        for imol, mol1 in enumerate(mols):
-            N_i = np.array(N[mol1][box])
-            x = np.divide(N_i,N_total)
-            X[box][mol1] = x.tolist()
-    return X
-    
-
-def getK(N):
-    K = {}
-    for box in N['1'].keys():
         K[box] = {}
+        X[box] = {}
         mols = getRelMols(N,box)
         mols.reverse()
         if len(mols) <= 1:
             K[box] = { i:[0.] for i in mols }
+            X[box] = {i:[1.] for i in mols}
             continue
+        N_total = np.zeros(len(N['1'][box]))
         for imol, mol1 in enumerate(mols):
+            N_total = N_total + np.array(N[mol1][box])
             for mol2 in mols[(imol+1):]:
                 # calculate K
                 K[box][mol1 +'/'+ mol2] = []
                 for (i,j) in zip(N[mol1][box], N[mol2][box]):
                     if j > 0.:
                         K[box][mol1 +'/'+ mol2].append( i/j )
-    return K
-
+        for imol, mol1 in enumerate(mols):
+            x_np = np.divide( N[mol1][box], N_total)
+            X[box][mol1] = x_np.tolist()
+    return K, X
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
                 verbosity, liq=False, mol='-1', **kargs):
@@ -173,8 +162,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 (N, P, boxLengths,
                  ncycle_old, molWeights, E) = reader.read_fort12(my_dir, old_begin,
                                                                  nfiles, tag=type)
-                K = getK(N)
-                X = getX(N)
+                K, mole_frac = getKX(N)
                 (number_densities, chemical_potential,
                  swap_info, biasPot, volumes,
                  totalComposition, cbmc_info,
@@ -192,7 +180,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 # initialize vars
                 if (seed == indep[0]) and (feed == feeds[0]):
                     k_ratio = properties.AnyProperty(K)
-                    mole_frac = properties.AnyProperty(X)
+                    X = properties.AnyProperty(mole_frac)
                     boxlx = properties.AnyProperty(boxLengths)
                     CBMC = properties.AnyProperty(cbmc_info)
                     Press = properties.AnyProperty(P)
@@ -204,7 +192,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                     data = {'CBMC':CBMC, 'P':Press, 'N':Nmlcl,
                             'SWAP':SWAP, 'U':U, 'rho':rho,
                             'boxlx':boxlx, 'dG':dG, 'K':k_ratio,
-                            'X':mole_frac}
+                             'X':X}
                     if liq:
                         if (verbosity > 1):
                             print('Doing analysis for C [ g/mL ] for mol {}'.format(mol))
@@ -220,7 +208,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 boxlx.addVals(boxLengths)
                 dG.addVals(deltaG)
                 k_ratio.addVals(K)
-                mole_frac.addVals(X)
+                X.addVals(mole_frac)
                 if liq:
                     C.addVals(concentrations)
             except FileNotFoundError:
