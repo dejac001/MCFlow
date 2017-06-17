@@ -10,7 +10,10 @@ class Hist3D:
         self.zedges = [num * self.binSizes[2] for num in range(self.Nbins[2] + 1)]
         self.name = 'hist'
         self.valToIgnore = None
-        print('Total number of bins is %i'%(self.Nbins[0]*self.Nbins[1]*self.Nbins[2]))
+        print('Total number of bins is %i x %i x %i =  %i'%(
+            self.Nbins[0],self.Nbins[1],self.Nbins[2],
+            self.Nbins[0]*self.Nbins[1]*self.Nbins[2]))
+        print('Volume of bins is %f nm**3'%(self.Vbin/1000.))
 
     def makeHist(self, xyzLocations):
         '''

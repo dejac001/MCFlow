@@ -79,6 +79,29 @@ def calculate_angle(c1,c2,c3,abc):
     )
     return theta
 
+def ePropC2K(mean, error):
+    '''
+    do error propagation when converting celcius to kelvin
+    '''
+    df_dT = -1/math.pow(mean+273.15,2)
+    error_new = abs(df_dT*error)
+    return error_new
+
+def eProp_division(A, sA, B, sB):
+    '''
+    error propagation when dividing A by B
+    '''
+#   abs_f = abs(A/B)
+#   factor = math.sqrt(
+#       math.pow(sA/A,2) + math.pow(sB/B,2)
+#   )
+#   return abs_f*factor
+    B2 = B*B
+    return math.sqrt(
+    1/B2*sA*sA +
+    math.pow(-A/B2,2)*sB*sB
+    )
+
 
 import numpy as np
 import math

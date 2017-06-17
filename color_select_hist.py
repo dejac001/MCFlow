@@ -53,6 +53,7 @@ if __name__ == '__main__':
     vectors = [[20.022, 19.899, 13.383],[80.088, 19.899, 13.383]]
     args = vars(my_parser.parse_args())
     axis_conf = {'x':0,'y':1,'z':2}
+    assert args['bins'], 'binsize needed'
 
     colors = []
     for f1, f2, abc in zip(args['file1'],args['file2'],vectors):
