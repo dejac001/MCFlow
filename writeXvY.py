@@ -73,11 +73,6 @@ def calculateS_ab(Na, Nb, boxFrom='box2', boxTo='box1'):
                        )
     return mean, stdev
 
-def errorPropDiv(num, den, num_error, den_error):
-    f = num/den
-    stdev = f*np.sqrt( math.pow(num_error/num,2) + math.pow(den_error/den,2) )
-    return stdev
-
 class IdealGasAds:
     def __init__(self, **kwargs):
 
@@ -306,7 +301,7 @@ class IdealGasAds:
                     pb, pb_stdev = P[vapor_box_b]['mean'], P[vapor_box_b]['stdev']
                     K_from = {
                         'mean':pa/pb,
-                              'stdev': errorPropDiv(pa, pb, pa_stdev, pb_stdev)
+                              'stdev': eProp_division(pa, pa_stdev, pb, pb_stdev)
                     }
                 elif 'P' in self.xlabel[0]:
                     vapor_box = self.findVapBox(rho, '%i'%mol1)
@@ -314,8 +309,8 @@ class IdealGasAds:
                 elif 'C' in self.xlabel[0]:
                     K_from = K['box2'][mol_pair]
                 S_mean = K_to['mean'] / K_from['mean']
-                S_stdev = errorPropDiv(K_to['mean'], K_from['mean'],
-                                       K_to['stdev'], K_from['stdev'])
+                S_stdev = eProp_division(K_to['mean'], K_to['stdev'],
+                                      K_from['mean'], K_from['stdev'])
                 writeAGR([X['mean']], [S_mean],
                          [calc95conf(X['stdev'],nIndep)], [calc95conf(S_stdev,nIndep)],
                          [self.feed], file_name, file_description)
@@ -676,6 +671,7 @@ class MoleFrac(LiqAds):
 
 from MCFlow.runAnalyzer import checkRun, calc95conf
 from MCFlow.chem_constants import N_av, R
+from MCFlow.calc_tools import eProp_division
 from MCFlow.parser import Plot
 import numpy as np
 import os, math, shelve

@@ -129,9 +129,9 @@ def getKX(N):
             K[box] = { i:[0.] for i in mols }
             X[box] = {i:[1.] for i in mols}
             continue
-        N_total = np.zeros(len(N['1'][box]))
+        N_total = np.zeros(len(N['1'][box]),dtype=int)
         for imol, mol1 in enumerate(mols):
-            N_total = N_total + np.array(N[mol1][box])
+            N_total = N_total + np.array(N[mol1][box],dtype=int)
             for mol2 in mols[(imol+1):]:
                 # calculate K
                 K[box][mol1 +'/'+ mol2] = []
@@ -140,6 +140,7 @@ def getKX(N):
                         K[box][mol1 +'/'+ mol2].append( i/j )
         for imol, mol1 in enumerate(mols):
             x_np = np.divide( N[mol1][box], N_total)
+            x_np = x_np[np.where(x_np < np.inf)]
             X[box][mol1] = x_np.tolist()
     return K, X
 
@@ -233,6 +234,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
 
 import math, os, sys
 import numpy as np
+#np.seterr(all='raise')
 try:
     from MCFlow import properties, calc_tools, file_formatting
     from MCFlow.chem_constants import R, N_av
