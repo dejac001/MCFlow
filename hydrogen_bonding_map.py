@@ -35,22 +35,13 @@ class HB_map(HydrogenBond):
                                             self.histogram[pair]['distance'].append( rOH )
                                             self.histogram[pair]['angle'].append( aOHO )
 
-    def formatAx(my_ax):
-        xlabel, ylabel= ['$r_{\mathrm{HO}}$', '$\\angle~\mathrm{OHO}$']
-        my_ax.set_xlabel(xlabel,fontdict=font)
-        my_ax.set_ylabel(ylabel,fontdict=font)
-        # set y ticks
-        y_ticks = [0., 20., 40., 60., 80., 100., 120., 140., 160., 180.]
-        my_ax.set_yticks(y_ticks)
-        y_minor = [(y_ticks[i] + y_ticks[i+1])/2. for i in range(len(y_ticks)-1)]
-        my_ax.set_yticks(y_minor,minor=True)
-        my_ax.tick_params(axis='y',direction='out',which='both',labelsize=14,left=True,right=True)
-        # set x ticks
-        x_ticks = [1.0, 1.5, 2.0, 2.5, 3.0]
-        my_ax.set_xticks(x_ticks)
-        my_ax.tick_params(axis='x',direction='out',which='both',labelsize=14,bottom=True,top=True)
-        x_minor = [(x_ticks[i] + x_ticks[i+1])/2. for i in range(len(x_ticks)-1)]
-        my_ax.set_xticks(x_minor, minor=True)
+    def storeHist(self, path, type):
+        import time
+        with shelve.open(path + '/HB-map.db',writeback=True) as db:
+            nextRun = runAnalyzer.findNextRun('%s/%s/1/'%(path, self.feed), type)
+            db[self.feed] = {}
+            db[self.feed]['%s%i'%(type, nextRun-1)] = self.histogram
+            db[self.feed]['time'] = time.time()
 
     def plotHist(self, box, path):
         xmin_plot = 1.0
@@ -107,16 +98,18 @@ class HB_format_map(HB):
 
     def myCalcs(self, H):
         H.makeMap(self.args['box'])
-        directory = self.args['path'] + '/' + self.feed 
+        directory = self.args['path'] + '/' + self.feed
+        H.storeHist(directory, self.args['type'])
         H.plotHist(self.args['box'], directory)
 
 from MCFlow.calc_tools import calculate_distance, calculate_angle, calculate_distance2
-from MCFlow.plotter import formatAxis
 import numpy as np
 import matplotlib.pyplot as plt
+import shelve
+from MCFlow import runAnalyzer
 
 font = {'size':18}
-r_max = 3.0
+r_max = 5.0
 from matplotlib import rc
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ## for Palatino and other serif fonts use:
