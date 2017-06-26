@@ -113,23 +113,29 @@ class IdealGasAds:
         return mols_adsorbed
 
     def dGvX(self):
-        if (0 in self.indep) and (len(self.indep) == 1): raise NotImplemented
         assert len(self.boxes) == 2, 'Too many boxes'
         file_description = '%s    dG(kJ/mol)    %s     dG'%(self.xlabel[0],self.xlabel[1])
         N = self.N[self.feed][self.run]
         dG = self.dG[self.feed][self.run]
         nIndep = self.gen_data[self.feed][self.run]['numIndep']
-        X = self.getX()
         boxFrom, boxTo = self.boxes
+        X = self.getX()
         assert 'box' in boxFrom, 'Wrong notation for box'
         molecules = sorted([i for i in N.keys()
                                     if ((N[i][boxTo]['mean'] > 0.)
                           and (N[i][boxFrom]['mean'] > 0.))      ])
         for mol in molecules:
             file_name = 'dG-mol%s_vs_%s_%s-->%s.dat'%(mol, self.xlabel[0], boxFrom, boxTo)
-            dG_mean, dG_stdev = (dG[mol]['--'.join([boxFrom, boxTo])]['mean'],
-                                dG[mol]['--'.join([boxFrom, boxTo])]['stdev'])
-            writeAGR([X['mean']],[dG_mean],
+            if (0 in self.indep) and (len(self.indep) == 1):
+                dG_vals = dG[mol]['--'.join([boxFrom,boxTo])]['raw']
+                x_vals = X['raw']
+                writeAGR(x_vals,dG_vals,
+                        None, None,
+                     [self.feed for i in x_vals], file_name, file_description)
+            else:
+                dG_mean, dG_stdev = (dG[mol]['--'.join([boxFrom, boxTo])]['mean'],
+                                    dG[mol]['--'.join([boxFrom, boxTo])]['stdev'])
+                writeAGR([X['mean']],[dG_mean],
                      [calc95conf(X['stdev'], nIndep)], [calc95conf(dG_stdev, nIndep)],
                      [self.feed], file_name, file_description)
 
@@ -561,14 +567,12 @@ class LiqAds(IdealGasAds):
 
 class MoleFrac(LiqAds):
     def __init__(self, **kwargs):
-        #self.dG = {};
-        self.N = {}; self.rho = {}; self.gen_data = {}
-        self.files = [#'dG-data.db',
-    'N-data.db','rho-data.db','general-data.db']
-        self.variables = [#self.dG,
-                self.N, self.rho, self.gen_data]
+        self.dG = {};self.N = {}; self.rho = {}; self.gen_data = {}; self.X = {}
+        self.files = ['dG-data.db','N-data.db','rho-data.db','general-data.db','X-data.db']
+        self.variables = [self.dG, self.N, self.rho, self.gen_data, self.X]
         if kwargs:
             assert kwargs['mol'], 'Mol needed for axes mole fractions'
+            assert ('box' in kwargs['box']), 'Box needed for axes mole fractions'
             self.T = kwargs['Temp']
             self.xlabel = ['x(mol/mol)','dx']
             self.mol = kwargs['mol']
@@ -595,20 +599,10 @@ class MoleFrac(LiqAds):
                         [self.feed], file_name, file_description)
 
     def getX(self,box=None,myMol=None):
-        if myMol==None: myMol = self.mol
+        mole_frac = self.X[self.feed][self.run]
+        if myMol == None: myMol = self.mol
         if box == None: box = self.box
-        N = self.N[self.feed][self.run]
-        N_tot = sum(N[i][box]['mean'] for i in N.keys())
-        x_mean = N[myMol][box]['mean']/N_tot
-        x_stdev = 0.
-        for i in N.keys():
-            if i == myMol:
-                df_di = (N_tot-N[myMol][box]['mean'])/pow(N_tot,2)
-            else:
-                df_di = (-N[myMol][box]['mean'])/pow(N_tot,2)
-            x_stdev += math.pow( df_di,2)*math.pow(N[i][box]['stdev'],2)
-        x_stdev = math.sqrt(x_stdev)
-        return {'mean':x_mean, 'stdev':x_stdev}
+        return mole_frac[box][myMol]
 
     def Txy(self):
         nIndep = self.gen_data[self.feed][self.run]['numIndep']

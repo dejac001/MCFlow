@@ -160,7 +160,8 @@ class Movie:
                         mean, stdev = weighted_avg_and_std(N[box][mol]['raw data'], frame_by_seed)
                     except TypeError:
                         print('no molecules of type %s in %s! -->'%(mol,box), N[box][mol]['raw data'])
-                        mean, stdev = 0.0, 0.0
+                        num_molec_data.pop(mol_num)
+                        continue
                 else:
                     mean, stdev = np.mean(N[box][mol]['raw data'][0]), np.std(N[box][mol]['raw data'][0])
                 num_molec_data[mol_num][box]['mean'] = mean
@@ -177,8 +178,7 @@ class Movie:
                     num_molec_data[mol_num][box]['histogram'] = histogram
                     num_molec_data[mol_num][box]['edges'] = edges
                 except ValueError:
-                    num_molec_data[mol_num][box]['histogram'] = np.array([0,0])
-                    num_molec_data[mol_num][box]['edges'] = np.array([0,1,2])
+                    num_molec_data.pop(mol_num)
         self.averages[feed] = num_molec_data
 
     def foldMovieToUC(self, uc_vectors):
