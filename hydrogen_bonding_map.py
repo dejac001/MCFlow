@@ -35,13 +35,17 @@ class HB_map(HydrogenBond):
                                             self.histogram[pair]['distance'].append( rOH )
                                             self.histogram[pair]['angle'].append( aOHO )
 
-    def storeHist(self, path, type):
+    def storeHist(self, feed, path, type,box):
         import time
+        nextRun = runAnalyzer.findNextRun('%s/1/'%path, type)
         with shelve.open(path + '/HB-map.db',writeback=True) as db:
-            nextRun = runAnalyzer.findNextRun('%s/%s/1/'%(path, self.feed), type)
-            db[self.feed] = {}
-            db[self.feed]['%s%i'%(type, nextRun-1)] = self.histogram
-            db[self.feed]['time'] = time.time()
+            if feed not in list(db.keys()):
+                db[feed] = {}
+            run = '%s%i'%(type, nextRun-1)
+            if run not in db[feed].keys():
+                db[feed][run] = {}
+            db[feed][run]['box%s'%box] = self.histogram
+            db[feed]['time'] = time.time()
 
     def plotHist(self, box, path):
         xmin_plot = 1.0
@@ -99,7 +103,7 @@ class HB_format_map(HB):
     def myCalcs(self, H):
         H.makeMap(self.args['box'])
         directory = self.args['path'] + '/' + self.feed
-        H.storeHist(directory, self.args['type'])
+        H.storeHist(self.feed, directory, self.args['type'], self.args['box'])
         H.plotHist(self.args['box'], directory)
 
 from MCFlow.calc_tools import calculate_distance, calculate_angle, calculate_distance2
