@@ -4,31 +4,6 @@ class HB_map(HydrogenBond):
     def __init__(self, file_name, *args):
         HydrogenBond.__init__(self, file_name, *args)
 
-#    def getBeads(self, box):
-#        '''
-#        '''
-#        my_box = 'box%s'%box
-#        self.HB_info = []
-#        OTypes = {'62':'alkanol','114':'water','178':'zeo','181':'silanol'}
-#        HTypes ={'61':'alkanol','115':'water','182':'silanol'}
-#        for iframe, FRAME_DATA in enumerate(self.frame_data):
-#            # store H and O for all other mols
-#            HB_mols = {}
-#            for molType in FRAME_DATA[my_box].keys():
-#                if molType not in HB_mols.keys():
-#                    HB_mols[molType] = []
-#                for imol, each_molecule in enumerate(FRAME_DATA[my_box][molType]):
-#                    beads = {'H':[],'O':[]}
-#                    for bead in each_molecule.keys():
-#                        if bead in OTypes.keys():
-#                            for coord in each_molecule[bead]:
-#                                beads['O'].append( list(map(float,coord)) )
-#                        elif bead in HTypes.keys():
-#                            for coord in each_molecule[bead]:
-#                                beads['H'].append( list(map(float,coord)) )
-#                    HB_mols[molType].append( beads )
-#            self.HB_info.append( HB_mols )
-
     def makeMap(self, box):
         self.getBeads( box)
         my_box = 'box%s'%box
@@ -71,7 +46,7 @@ class HB_map(HydrogenBond):
         my_ax.set_yticks(y_minor,minor=True)
         my_ax.tick_params(axis='y',direction='out',which='both',labelsize=14,left=True,right=True)
         # set x ticks
-        x_ticks = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+        x_ticks = [1.0, 1.5, 2.0, 2.5, 3.0]
         my_ax.set_xticks(x_ticks)
         my_ax.tick_params(axis='x',direction='out',which='both',labelsize=14,bottom=True,top=True)
         x_minor = [(x_ticks[i] + x_ticks[i+1])/2. for i in range(len(x_ticks)-1)]
@@ -104,7 +79,7 @@ class HB_map(HydrogenBond):
                 cbar.set_label('$h(r,\\angle)$',fontdict=font)
                 cbar.ax.tick_params(labelsize=14)
                 fig.set_size_inches(5.0, 5.0)
-                fig.savefig('%s/HB-map-box%s_%s.png'%(path,box,pair), dpi=600)
+                fig.savefig('%s/HB-map-box%s_%s_rOH%2.1f.png'%(path,box,pair,r_max), dpi=600)
         pair = 'all'
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -117,7 +92,7 @@ class HB_map(HydrogenBond):
         cbar.set_label('$h(r,\\angle)$',fontdict=font)
         cbar.ax.tick_params(labelsize=14)
         fig.set_size_inches(5.0, 5.0)
-        fig.savefig('%s/HB-map-box%s_%s.png'%(path,box,pair), dpi=600)
+        fig.savefig('%s/HB-map-box%s_%s_rOH%2.1f.png'%(path,box,pair,r_max), dpi=600)
 #       plt.show()
                 
 
@@ -141,7 +116,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 font = {'size':18}
-r_max = 4.0
+r_max = 3.0
 from matplotlib import rc
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ## for Palatino and other serif fonts use:
