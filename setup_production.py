@@ -59,7 +59,7 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
     write_restart(new_restart_data, path +'config.prod-1')
     shutil.copy(path +'config.prod-1', path +'fort.77')
 
-import math, copy, shutil
+import math, copy, shutil, os
 from file_formatting.reader import read_restart, read_fort4
 from file_formatting.writer import write_restart, write_fort4
 from runAnalyzer import what2Analyze
@@ -83,6 +83,9 @@ if __name__ == '__main__':
             my_dir = '%s/%s/%i/'%(args['path'],feed,seed)
             (old_begin, nfiles) = what2Analyze(my_dir, args['type'],
                                                    args['guessStart'],args['interval'])
+            assert os.path.isfile('%s/fort.4.%s%i'%(my_dir,args['type'],old_begin +nfiles)), 'New fort.4 not found'
+            if os.path.isfile('%s/fort.4.%s%i'%(my_dir,args['type'],old_begin +nfiles)):
+                shutil.copy('%s/fort.4.%s%i'%(my_dir,args['type'],old_begin +nfiles), '%s/fort.4'%my_dir)
             if args['verbosity'] > 0:
                 print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
             makeProdFiles(my_dir, old_begin+nfiles-1, nstep, imv, time)
