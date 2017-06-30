@@ -4,17 +4,21 @@ class HB_map(HydrogenBond):
     def __init__(self, file_name, *args):
         HydrogenBond.__init__(self, file_name, *args)
 
-    def makeMap(self, box):
+    def makeMap(self, box, numFrames):
+        assert numFrames < self.nframes, 'Not enough frames'
+        if numFrames <= 0: numFrames = self.nframes
         self.getBeads( box)
         my_box = 'box%s'%box
         self.histogram = {}
         for iframe, HB_data in enumerate(self.HB_info):
             abc = self.boxlengths[iframe][my_box]
             try:
-                if (iframe+1)%(self.nframes//4) == 0:
-                    print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/self.nframes))
+                if (iframe+1)%(numFrames//4) == 0:
+                    print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/numFrames))
             except ZeroDivisionError:
-                print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/self.nframes))
+                print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/numFrames))
+            if iframe + 1 > numFrames:
+                break
             for molType1 in HB_data.keys():
                 for molType2 in HB_data.keys():
                     mols_int = sorted(map(int,[molType1.strip('mol'), molType2.strip('mol')]))
@@ -35,9 +39,11 @@ class HB_map(HydrogenBond):
                                             self.histogram[pair]['distance'].append( rOH )
                                             self.histogram[pair]['angle'].append( aOHO )
 
-    def storeHist(self, feed, path, type,box):
+    def storeHist(self, feed, path, type, box, indep):
         import time
         nextRun = runAnalyzer.findNextRun('%s/1/'%path, type)
+        if len(indep) == 1:
+            path = '%s/%i/'%(path,indep[0])
         with shelve.open(path + '/HB-map.db',writeback=True) as db:
             if feed not in list(db.keys()):
                 db[feed] = {}
@@ -96,29 +102,38 @@ class HB_format_map(HB):
     def __init__(self):
         HB.__init__(self)
 
+    def getArgs(self):
+        self.parser.parser.add_argument('-n','--numFrames',help='number of frames to analyze',type=int,default=0)
+        my_args = vars(self.parser.parse_args())
+        self.args = my_args
+        self.checks()
+
     def checks(self):
         self.analysis_class = HB_map
         assert self.args['box'], 'Box needed for hydrogen bonding'
 
     def myCalcs(self, H):
-        H.makeMap(self.args['box'])
+        H.makeMap(self.args['box'], self.args['numFrames'])
         directory = self.args['path'] + '/' + self.feed
-        H.storeHist(self.feed, directory, self.args['type'], self.args['box'])
-        H.plotHist(self.args['box'], directory)
+        H.storeHist(self.feed, directory, self.args['type'], self.args['box'], self.args['indep'])
+        if os.name != 'posix':
+            H.plotHist(self.args['box'], directory)
 
 from MCFlow.calc_tools import calculate_distance, calculate_angle, calculate_distance2
 import numpy as np
-import matplotlib.pyplot as plt
 import shelve
 from MCFlow import runAnalyzer
 
 font = {'size':18}
 r_max = 5.0
-from matplotlib import rc
-rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-## for Palatino and other serif fonts use:
-#rc('font',**{'family':'serif','serif':['Palatino']})
-rc('text', usetex=True)
+import os
+if os.name != 'posix':
+    import matplotlib.pyplot as plt
+    from matplotlib import rc
+    rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+    ## for Palatino and other serif fonts use:
+    #rc('font',**{'family':'serif','serif':['Palatino']})
+    rc('text', usetex=True)
 
 if __name__ == '__main__':
     H = HB_format_map()

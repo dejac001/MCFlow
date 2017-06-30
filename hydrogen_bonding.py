@@ -114,13 +114,16 @@ class HydrogenBond(Movie):
 
 class HB(Struc):
     def __init__(self):
-        my_parser = MultMols()
+        self.parser = MultMols()
         #TODO: make able to do multiple boxes at same time
-        my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
+        self.parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
                                type=str,default = '')
-        my_parser.parser.add_argument('-H','--htype',help='hydrogen bonding criteria type',
+        self.parser.parser.add_argument('-H','--htype',help='hydrogen bonding criteria type',
                                       type=str, choices = ['loose','strict'],default='strict')
-        my_args = vars(my_parser.parse_args())
+        self.getArgs()
+
+    def getArgs(self):
+        my_args = vars(self.parser.parse_args())
         self.args = my_args
         self.checks()
 
