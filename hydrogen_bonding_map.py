@@ -53,49 +53,56 @@ class HB_map(HydrogenBond):
             db[feed][run]['box%s'%box] = self.histogram
             db[feed]['time'] = time.time()
 
-    def plotHist(self, box, path):
-        xmin_plot = 1.0
-        xmax_plot = r_max
-        ymin_plot = 0.
-        ymax_plot = 180.
-        xedges = np.linspace(xmin_plot, xmax_plot,100)
-        yedges = np.linspace(ymin_plot, ymax_plot,100)
-        all_x = []; all_y = []
-        for pair in self.histogram.keys():
-            x, y = (self.histogram[pair]['distance'], self.histogram[pair]['angle'])
-            all_x += x
-            all_y += y
-            assert len(x) == len(y), 'x and y lengths not equal'
-            if len(x) > 0:
-                fig = plt.figure()
-                ax = fig.add_subplot(111)
-                H, xedges, yedges = np.histogram2d(x,y,bins=(xedges,yedges),normed=False)
-                H = H/np.max(H)
-                image =  ax.contour(H.T, extent=[xedges[0], xedges[-1],yedges[0],yedges[-1]],
-                                    linewidths=3, levels=[0.2, 0.4, 0.8, 0.9, 1.0])
-#               hist, xedges, yedges, image = ax.hist2d(x, y, normed=False,bins=(xbins,ybins))
-                # format Axis
-                plt.subplots_adjust(left=0.15,right=0.96,top = 0.98, bottom=0.02)
-                cbar =fig.colorbar(image, orientation='horizontal',pad=0.13)#,fraction = 0.046)
-                cbar.set_label('$h(r,\\angle)$',fontdict=font)
-                cbar.ax.tick_params(labelsize=14)
-                fig.set_size_inches(5.0, 5.0)
-                fig.savefig('%s/HB-map-box%s_%s_rOH%2.1f.png'%(path,box,pair,r_max), dpi=600)
-        pair = 'all'
+def plotHist(histogram, box, path, rMax, aMin):
+    def plot(x_data,y_data, x_edges, y_edges):
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        H, xedges, yedges = np.histogram2d(all_x,all_y,bins=(xedges,yedges),normed=False)
-        H = H/np.max(H)
-        image =  ax.contour(H.T, extent=[xedges[0], xedges[-1],yedges[0],yedges[-1]],
-                                    linewidths=3, levels=[0.2, 0.4, 0.8, 0.9, 1.0])
-        plt.subplots_adjust(left=0.15,right=0.96,top = 0.98, bottom=0.02)
-        cbar =fig.colorbar(image, orientation='horizontal',pad=0.13)#,fraction = 0.046)
-        cbar.set_label('$h(r,\\angle)$',fontdict=font)
-        cbar.ax.tick_params(labelsize=14)
-        fig.set_size_inches(5.0, 5.0)
-        fig.savefig('%s/HB-map-box%s_%s_rOH%2.1f.png'%(path,box,pair,r_max), dpi=600)
-#       plt.show()
-                
+
+    xmin_plot = 1.0
+    xmax_plot = rMax # maximum radius
+    ymin_plot = aMin # minimum angle
+    ymax_plot = 180.
+    xedges = np.linspace(xmin_plot, xmax_plot,100)
+    yedges = np.linspace(ymin_plot, ymax_plot,100)
+    all_x = []; all_y = []
+    for pair in histogram.keys():
+        x = []; y = []
+        for (i,j) in zip(histogram[pair]['distance'], histogram[pair]['angle']):
+            if (i <= x_max_plot) and (j >= ymin_plot):
+                x.append(i)
+                y.append(j)
+        all_x += x
+        all_y += y
+#       if len(x) > 0:
+#           fig = plt.figure()
+#           ax = fig.add_subplot(111)
+#           H, xedges, yedges = np.histogram2d(x,y,bins=(xedges,yedges),normed=False)
+#           H = H/np.max(H)
+#           image =  ax.contour(H.T, extent=[xedges[0], xedges[-1],yedges[0],yedges[-1]],
+#                               linewidths=3, levels=[0.2, 0.4, 0.8, 0.9, 1.0])
+#           hist, xedges, yedges, image = ax.hist2d(x, y, normed=False,bins=(xbins,ybins))
+            # format Axis
+#           plt.subplots_adjust(left=0.15,right=0.96,top = 0.98, bottom=0.02)
+#           cbar =fig.colorbar(image, orientation='horizontal',pad=0.13)#,fraction = 0.046)
+#           cbar.set_label('$h(r,\\angle)$',fontdict=font)
+#           cbar.ax.tick_params(labelsize=14)
+#           fig.set_size_inches(5.0, 5.0)
+#           fig.savefig('%s/HB-map-box%s_%s_rOH%2.1f.png'%(path,box,pair,r_max), dpi=600)
+    pair = 'all'
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    H, xedges, yedges = np.histogram2d(all_x,all_y,bins=(xedges,yedges),normed=False)
+    H = H/np.max(H)
+    image =  ax.contour(H.T, extent=[xedges[0], xedges[-1],yedges[0],yedges[-1]],
+                                linewidths=3, levels=[0.2, 0.4, 0.8, 0.9, 1.0])
+    plt.subplots_adjust(left=0.15,right=0.96,top = 0.98, bottom=0.02)
+    cbar =fig.colorbar(image, orientation='horizontal',pad=0.13)#,fraction = 0.046)
+    cbar.set_label('$h(r,\\angle)$',fontdict=font)
+    cbar.ax.tick_params(labelsize=14)
+    fig.set_size_inches(5.0, 5.0)
+    fig.savefig('%s/HB-map-box%s_%s_rOH%2.1f.png'%(path,box,pair,r_max), dpi=600)
+#   plt.show()
+
 
 class HB_format_map(HB):
 

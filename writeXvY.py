@@ -398,7 +398,8 @@ class LoadAds(IdealGasAds):
             self.indep = kwargs['indep']
             self.T = kwargs['Temp']
             self.boxes = kwargs['boxes']
-            self.film = kwargs['film']
+            if 'film' in kwargs.keys():
+                self.film = kwargs['film']
     def getX(self):
         if (0 in self.indep) and (len(self.indep) == 1): raise NotImplemented
         N = self.N[self.feed][self.run]
