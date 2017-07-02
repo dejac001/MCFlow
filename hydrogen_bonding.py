@@ -33,29 +33,33 @@ def findHB(beadsFrom, beadsTo, abc, criteria):
     for O1 in beadsFrom['O']:
         for O2 in [j for j in beadsTo['O'] if calculate_distance2(O1,j,abc) > 0.1]:
             # iterate through all H on molecule 1 that are bonded to O1
-#           our_HB = 0
             for H1 in [i for i in beadsFrom['H'] if calculate_distance2(O1,i,abc) < 1.0]:
-                # iterate through all H on molecule 2 that are bonded to O2
-                for H2 in [i for i in beadsTo['H'] if calculate_distance2(O2,i,abc) < 1.0]:
-                    if criteria == 'loose':
-                        if ((calculate_distance2(O1, O2, abc) < rOO_max) and
-                            ((calculate_distance2(O1, H2, abc) < rOH_max) or
-                            (calculate_distance2(O2, H1, abc) < rOH_max))):
-                            nHB += 1
-                    elif criteria == 'strict':
-                        if calculate_distance2(H1,O2,abc) < rOH_max:
-                            # 1 can be charge acceptor
-                            if calculate_angle(O1,H1,O2,abc) > aOHO_min:
-                                nHB +=1
-                        elif calculate_distance2(H2,O1,abc) < rOH_max:
-                            # 2 can be charge acceptor
-                            if calculate_angle(O2,H2,O1,abc) > aOHO_min:
-                                nHB += 1
+                # look for O1--H1...O2 hbonds
+                if criteria == 'loose':
+                    if ((calculate_distance2(O1, O2, abc) < rOO_max) and
+                        (calculate_distance2(O2, H1, abc) < rOH_max)):
+                        nHB += 1
+                elif criteria == 'strict':
+                    if ((calculate_distance2(H1,O2,abc) < rOH_max) and
+                        (calculate_angle(O1,H1,O2,abc) > aOHO_min)):
+                            nHB +=1
+            # iterate through all H on molecule 2 that are bonded to O2
+            for H2 in [i for i in beadsTo['H'] if calculate_distance2(O2,i,abc) < 1.0]:
+                # look for O2--H2...O1 hbonds
+                if criteria == 'loose':
+                    if ((calculate_distance2(O1, O2, abc) < rOO_max) and
+                        (calculate_distance2(O1, H2, abc) < rOH_max)):
+                        nHB += 1
+                elif criteria == 'strict':
+                    if ((calculate_distance2(H2,O1,abc) < rOH_max) and
+                        (calculate_angle(O2,H2,O1,abc) > aOHO_min)):
+                            nHB +=1
     return nHB
 
 def readDBs(path, my_feed, my_type, boxes):
     my_hist_data = {}
     with shelve.open('%s/%s/HB-map.db'%(path,my_feed)) as db:
+        if my_feed not in db.keys(): return my_hist_data
         for key, value in db[my_feed].items():
             if my_type in key:
                 my_hist_data = value
@@ -189,6 +193,7 @@ class HB(Struc):
         if (('nchain count' in hist_data.keys()) and
             (self.args['box'] in hist_data['nchain count'].keys()) and
             (len(hist_data['nchain count'][self.args['box']].keys()) > 0)):
+            print('get HB rfrom db')
             # make HB from database
             HB = hy_bond_fromDB(hist_data, self.args['box'], self.args['htype'],
                             self.args['name'], self.feed)
@@ -204,7 +209,7 @@ from MCFlow.file_formatting.writer import xyz
 from MCFlow.calc_tools import calculate_distance2, calculate_angle
 from MCFlow.parser import MultMols
 from MCFlow.getData import outputDB
-import shelve
+import shelve, os
 
 if __name__ == '__main__':
     M = HB()

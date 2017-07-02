@@ -583,7 +583,8 @@ class MoleFrac(LiqAds):
             self.path = kwargs['path']
             self.box = kwargs['box']
             self.boxes = kwargs['boxes']
-            self.film = kwargs['film']
+            if 'film' in kwargs.keys():
+                self.film = kwargs['film']
 
     def XvX(self):
         assert 'box' in self.box, 'Box needed for mole frac plot'
