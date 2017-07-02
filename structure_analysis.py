@@ -111,3 +111,12 @@ from MCFlow.getData import outputDB
 if __name__ == '__main__':
     M = Struc()
     M.main()
+    {'prod-2': {'1->1': {'box1': {'edges': array([0, 1, 2, 3, 4, 5, 6]),
+                                          'histogram': array([2573,   20, 1345,    9,  201,    9]),
+                                                                        'mean': 0.69173240908477596,
+                                                                                                      'stdev': 0.17704486850570988}},
+                                                                                                                  '1->10': {'box1': {'edges': array([0, 1, 2, 3]),
+                                                                                                                                                         'histogram': array([3455,  483,  219]),
+                                                                                                                                                                                        'mean': 0.21571659900959916,
+                                                                                                                                                                                                                       'stdev': 0.07372243515548409}},
+                                                                                                                              '1->2': {'box1': {'edges': array([0]),
