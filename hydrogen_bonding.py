@@ -174,6 +174,8 @@ class HB(Struc):
                                type=str,default = '')
         self.parser.parser.add_argument('-H','--htype',help='hydrogen bonding criteria type',
                                       type=str, choices = ['loose','strict'],default='strict')
+        self.parser.parser.add_argument('-R','--readDB',help='whether or not to read databases',
+                                      type=bool, default=False)
         self.getArgs()
 
     def getArgs(self):
@@ -189,15 +191,15 @@ class HB(Struc):
 
     def myCalcs(self, D ):
         D.criteria = self.args['htype']
-        hist_data = readDBs(self.args['path'], self.feed, self.args['type'], [self.args['box']])
-        if (('nchain count' in hist_data.keys()) and
-            (self.args['box'] in hist_data['nchain count'].keys()) and
-            (len(hist_data['nchain count'][self.args['box']].keys()) > 0)):
-            print('get HB rfrom db')
-            # make HB from database
-            HB = hy_bond_fromDB(hist_data, self.args['box'], self.args['htype'],
-                            self.args['name'], self.feed)
-            # output DB somehow
+        if self.args['readDB']:
+            hist_data = readDBs(self.args['path'], self.feed, self.args['type'], [self.args['box']])
+        if self.args['readDB'] and (('nchain count' in hist_data.keys()) and
+                (self.args['box'] in hist_data['nchain count'].keys()) and
+                (len(hist_data['nchain count'][self.args['box']].keys()) > 0)):
+                print('get HB rfrom db')
+                # make HB from database and write
+                HB = hy_bond_fromDB(hist_data, self.args['box'], self.args['htype'],
+                                self.args['name'], self.feed)
         else:
             D.calcHB(self.args['box'])
             HB = D.countHB(self.args['indep'],self.feed, D.HB)
