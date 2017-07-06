@@ -8,8 +8,11 @@ class HB_map(HydrogenBond):
     def makeMap(self, box, numFrames):
         assert numFrames < self.nframes, 'Not enough frames'
         if numFrames <= 0: numFrames = self.nframes
-        self.getBeads( box)
-        my_box = 'box%s'%box
+        if 'box' not in box:
+            my_box = 'box%s'%box
+        else:
+            my_box = box
+        self.getBeads( my_box)
         self.histogram = {}
         for iframe, HB_data in enumerate(self.HB_info):
             abc = self.boxlengths[iframe][my_box]
@@ -73,7 +76,7 @@ class HB_format_map(HB):
 
     def checks(self):
         self.analysis_class = HB_map
-        assert self.args['box'], 'Box needed for hydrogen bonding'
+        assert self.args['box'].isdigit(), 'Box needed for hydrogen bonding'
 
     def myCalcs(self, H):
         H.makeMap(self.args['box'], self.args['numFrames'])
