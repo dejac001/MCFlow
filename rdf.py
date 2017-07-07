@@ -76,6 +76,7 @@ class RDF(Movie):
         mol1, mol2 = ['mol%s'%m1,'mol%s'%m2]
         self.m1 = m1
         self.m2 = m2
+        self.ignored_frames = 0
         for iframe, FRAME_DATA in enumerate(self.frame_data):
             try:
                 if (iframe+1)%(self.nframes//4) == 0:
@@ -100,7 +101,13 @@ class RDF(Movie):
                             c2_xyz.append( list(map(float,each_bead) ) )
             c1_xyz = np.array(c1_xyz)
             c2_xyz = np.array(c2_xyz)
+            if len(c1_xyz) == 0 or len(c2_xyz) == 0:
+                self.ignored_frames += 1
+                continue
             self.g_frame( c1_xyz, c2_xyz, self.boxlengths[iframe][self.box])
+        if self.ignored_frames > 0:
+            print('Out of %i total frames, %i were ignored b/c of lack of mlcl'%(
+                    self.nframes,self.ignored_frames))
         self.averageG()
 
 class G(Struc):

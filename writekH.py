@@ -25,6 +25,10 @@ class kH(IdealGasAds):
             assert kwargs['density'], 'Infinite-dilution liquid density needed for kH iso'
             self.density = kwargs['density']
             self.solventMW = kwargs['molecWeight']
+            if 'film' in kwargs.keys():
+                self.film = kwargs['film']
+            else:
+                self.film = False
 
     def getX(self):
         # pressure info ----------------------
