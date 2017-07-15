@@ -1,5 +1,55 @@
 
 from MCFlow.writeXvY import *
+from MCFlow.writekH import kH
+
+class mykH(kH):
+    def __init__(self, **kwargs):
+        kH.__init__(self, **kwargs)
+    def QvX(self):
+        '''
+        :var X: either solution concentration (g/mL) or pressure (kPa)
+        '''
+        assert self.units, 'Units must be defined for isotherm'
+        N = self.N[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run]
+        file_description = '%s    Q(%s)    %s     dQ'%(self.xlabel[0], self.units,
+                                                       self.xlabel[1])
+        X = self.getX()
+        nIndep = gen_data['numIndep']
+        zeolite_mass_g = gen_data['zeolite']['mass (g)']
+        for mol in N.keys():
+            for channel, values in N[mol].items():
+                file_name  = 'Q%s-%s-%s-w%sin-zeo-vs-%s.dat'%(mol,channel,self.units,''.join(sorted(N.keys())),
+                                                               self.xlabel[0][:self.xlabel[0].find('(')])
+                if self.units == 'molec/uc':
+                    qfactor = 1/gen_data['zeolite']['unit cells']
+                elif self.units == 'g/g':
+                    qfactor = ((gen_data['molecular weight'][mol]/N_av) /
+                                zeolite_mass_g )
+                elif self.units == 'mol/kg':
+                    qfactor = gen_data['zeolite'][' mol/kg / 1 mlcl adsorbed']
+                if (0 in self.indep) and (len(self.indep) == 1):
+                    Q_vals = [i*qfactor for i in values['raw']]
+                    Q_stdev = [0. for i in Q_vals]
+                    writeAGR( X['raw'], Q_vals, None,
+                                None, ['%s/%i'%(self.feed,j) for j in
+                                range(1, nIndep+1)], file_name, file_description)
+                else:
+                    Q_mean, Q_stdev = values['mean']*qfactor, values['stdev']*qfactor
+                    if '95conf' in X.keys():
+                        dX = X['95conf']
+                    else:
+                        dX = calc95conf(X['stdev'], nIndep)
+                    writeAGR([X['mean']],[Q_mean],
+                             [dX], [calc95conf(Q_stdev, nIndep)],
+                             [self.feed], file_name, file_description)
+
+class myLiqAds(LiqAds, mykH):
+
+    def __init__(self, **kwargs):
+        LiqAds.__init__(self, **kwargs)
+
+    
 
 if __name__ == '__main__':
     # TODO: find way to have conditional arguments based off of what xaxis and yaxis are
@@ -17,7 +67,7 @@ if __name__ == '__main__':
 
 
     if args['xaxis'] == 'C':
-        my_plotter = LiqAds(**args)
+        my_plotter = myLiqAds(**args)
     elif args['xaxis'] == 'Pig':
         # TODO: add alternative way to calculate P w/ P-data.db & using mole fraction in box
         my_plotter = IdealGasAds(**args)
@@ -31,6 +81,8 @@ if __name__ == '__main__':
         my_plotter = LoadAds(**args)
     elif args['xaxis'] == 'x':
         my_plotter = MoleFrac(**args)
+    elif args['xaxis'] == 'kH':
+        my_plotter = mykH(**args)
     old_index = my_plotter.files.index('N-data.db')
     my_plotter.files[old_index] = args['NDATA']
     my_plotter.readDBs()

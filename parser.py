@@ -43,7 +43,7 @@ class Plot(Main):
 
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',
-                                 choices = ['C','Pig', 'Pbox','Pi','Q','rho','x'])
+                                 choices = ['C','Pig', 'Pbox','Pi','Q','rho','x','kH'])
         self.parser.add_argument('-y','--yaxis',help='y axis of plot',
                                  choices = ['Q','dG','S','R',
                                             'X','dH','dU','dHig',
@@ -51,15 +51,15 @@ class Plot(Main):
         self.parser.add_argument('-B','--boxes',help='box numbers to use',
                                  type=str,nargs='+',default=['box3','box2'])
     def isotherm(self):
+        self.parser.add_argument('-kH','--henry',help='Henry constant (g/mL/kPa) '
+                                                       'fmt: (mean, 95%%conf.) ',
+                                  type=float, nargs= '+')
         self.parser.add_argument('-u','--units',help='choices for units on plot',
                                  choices=['molec/uc','g/g','mol/kg',
                                           '(mol/mol)/(mol/mol)','(mol/mol)/(kPa/kPa)'])
         self.parser.add_argument('-V','--ZeoVolume',help='Volume of zeolite box (\AA**3)',
                                  type = float, default = 40.044*39.798*40.149 )
     def kH(self):
-        self.parser.add_argument('-kH','--henry',help='Henry constant (g/mL/kPa) '
-                                                       'fmt: (mean, 95%%conf.) ',
-                                  type=float, nargs= '+')
         self.parser.add_argument('-y', '--yaxis', help='y axis of plot',
                                  choices=['Q','S'])
         self.parser.add_argument('-d','--density',help='infinite dilution density',type=float,
@@ -132,7 +132,11 @@ class Structure:
         self.parser.add_argument('-ref','--reference',help='reference density [for dGmap (molec/nm**3)]'
                                                            ' [for S, Kref]',type=float)
         self.parser.add_argument('-n','--numFrames',help='total number of frames',type=int)
+        self.parser.add_argument('-c','--numUC',help='total number of unit cells',type=int)
         self.parser.add_argument('-T','--Temp',help='Temperature [ K ]',type=float)
+        self.parser.add_argument('-ID','--name',help='name of new file',
+                                    type=str)
+        self.parser.add_argument('-f2', '--file2',help='2nd input file for analysis',type=str)
     def parse_args(self):
         return self.parser.parse_args()
 

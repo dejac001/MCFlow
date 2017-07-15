@@ -1,4 +1,5 @@
-from writeXvY import IdealGasAds
+from MCFlow.writeXvY import IdealGasAds
+
 class kH(IdealGasAds):
     def __init__(self, **kwargs):
         self.N={};self.P={};self.rho={};self.gen_data={};self.K={}
@@ -22,9 +23,9 @@ class kH(IdealGasAds):
             self.indep = kwargs['indep']
             self.feeds = kwargs['feeds']
             self.path = kwargs['path']
-            assert kwargs['density'], 'Infinite-dilution liquid density needed for kH iso'
-            self.density = kwargs['density']
-            self.solventMW = kwargs['molecWeight']
+#           assert kwargs['density'], 'Infinite-dilution liquid density needed for kH iso'
+#           self.density = kwargs['density']
+#           self.solventMW = kwargs['molecWeight']
             if 'film' in kwargs.keys():
                 self.film = kwargs['film']
             else:
@@ -39,6 +40,7 @@ class kH(IdealGasAds):
             rho = self.rho[self.feed][self.run][self.mol][self.box]
             p_mean = rho['mean']/N_av*R['nm**3*kPa/(mol*K)']*self.T
             p_stdev = rho['stdev']/N_av*R['nm**3*kPa/(mol*K)']*self.T
+            p_raw = [i/N_av*R['nm**3*kPa/(mol*K)']*self.T for i in rho['raw']]
         except KeyError:
             pressure = self.P[self.feed][self.run][self.box]
             print('No num dens. data for feed {}, using box pressure'.format(feed))
@@ -48,7 +50,8 @@ class kH(IdealGasAds):
         C_95conf = p_mean * self.kH_mean * math.pow(
             math.pow(self.kH_95conf / self.kH_mean, 2) +
             math.pow(p_95conf / p_mean, 2), 0.5)
-        return {'mean':p_mean*self.kH_mean,'95conf':C_95conf}
+        return {'mean':p_mean*self.kH_mean,'95conf':C_95conf, 
+                'raw':[i*self.kH_mean for i in p_raw]}
 
 '''
 Write isotherm from previously generated databank files

@@ -216,7 +216,7 @@ class IdealGasAds:
                 if '95conf' in X.keys():
                     dX = X['95conf']
                 else:
-                    dX = X['stdev']
+                    dX = calc95conf(X['stdev'], nIndep)
                 writeAGR([X['mean']],[Q_mean],
                          [dX], [calc95conf(Q_stdev, nIndep)],
                          [self.feed], file_name, file_description)
@@ -548,9 +548,8 @@ class LiqAds(IdealGasAds):
             self.path = kwargs['path']
             self.box = kwargs['box']
             self.boxes = kwargs['boxes']
-            self.film = kwargs['film']
-
-
+            if 'film' in kwargs.keys():
+                self.film = kwargs['film']
 
     def getX(self):
         def getC(c_data, mol='', box=''):

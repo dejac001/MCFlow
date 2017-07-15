@@ -76,8 +76,8 @@ class Struc:
         if self.filter_function:
             D.filterCoords(self.filter_function, self.args['box'])
         D.countMols(self.args['indep'],self.feed, D.frame_data)
+        if self.args['vectors']: D.foldMovieToUC(self.args['vectors'])
         for mol_num in D.averages[self.feed].keys():
-            if self.args['vectors']: D.foldMovieToUC(self.args['vectors'])
             xyz_data = D.getCoords(mol_num, self.args['box'], self.args['bead'])
             flag=''
             if self.filter_function:
