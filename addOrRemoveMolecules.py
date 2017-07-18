@@ -67,7 +67,10 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID):
     # initialize volume to ideal gas volume in new box
     p = float(input_dat['SIMULATION_BOX']['box%s'%box]['pressure'])
     N = restart_dat['box types'].count(box) + nAdd
-    T = float(input_dat['SIMULATION_BOX']['box%s'%box]['temperature'])
+    temperature = input_dat['SIMULATION_BOX']['box%s'%box]['temperature']
+    if 'd0' in temperature:
+        temperature = temperature.rstrip('d0')
+    T = float(temperature)
     V = N/N_av*R['\AA**3*MPa/(mol*K)']*T/p
     boxlx = pow(V, 1/3)
     boxlx_old = next(map(float,restart_dat['box dimensions']['box%s'%box].split()))
