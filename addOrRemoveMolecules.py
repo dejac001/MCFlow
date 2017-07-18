@@ -58,7 +58,7 @@ def initialize(input, restart,  molID, box):
         q.append( float(bead['q'].rstrip('\n')) )
     return (boxlx, boxly, boxlz), mol_number, old_coords, q
 
-def addMolecules(input_dat, restart_dat, nAdd, box, molID):
+def addMolecules(input_dat, restart_dat, nAdd, box, molID, changeVol):
     def getXYZCoords(mol_coords):
         coords = []
         for bead in mol_coords:
@@ -74,9 +74,9 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID):
     V = N/N_av*R['\AA**3*MPa/(mol*K)']*T/p
     boxlx = pow(V, 1/3)
     boxlx_old = next(map(float,restart_dat['box dimensions']['box%s'%box].split()))
-    if boxlx > boxlx_old:
+    if (boxlx > boxlx_old) and changeVol:
         restart_dat['box dimensions']['box%s'%box] = '{} {} {}\n'.format(boxlx, boxlx, boxlx)
-        input_dat['SIMULATION_BOX']['box%s'%box]['rcut'] = '%e'%(boxlx/2)
+        input_dat['SIMULATION_BOX']['box%s'%box]['rcut'] = '%e'%(boxlx/2*0.99)
     input_dat['&mc_shared']['iratio'] = '500'
     input_dat['&analysis']['imv'] = '%i'%(int(input_dat['&mc_shared']['nstep']) + 10)
     input_dat['&mc_volume']['iratv'] = '500'
@@ -166,6 +166,7 @@ if __name__ == '__main__':
     from parser import ChangeInput
     my_parser = ChangeInput()
     my_parser.molecules()
+    my_parser.parser.add_argument('-cv','--changeVol',help='whether to change volume',type=bool,default=False)
     args = vars(my_parser.parse_args())
     assert args['nAdd'] != 0, 'Cannot add or remove 0 molecules'
 
@@ -181,7 +182,7 @@ if __name__ == '__main__':
             restart_data = reader.read_restart('%s%s'%(base_dir,args['restart']),nmolty, nbox)
             if args['boxAdd']:
                 new_input_data, new_restart_data = addMolecules(input_data, restart_data,
-                                                args['nAdd'], args['boxAdd'],args['molID'])
+                                                args['nAdd'], args['boxAdd'],args['molID'], args['changeVol'])
                 if args['boxRemove']:
                     new_input_data, new_restart_data = removeMolecules(new_input_data, new_restart_data,
                         -1*args['nAdd'], args['boxRemove'],args['molID'])
