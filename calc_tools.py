@@ -8,19 +8,26 @@ def calcRelDiff(val1, val2):
     '''
     return abs( (val1 - val2) / ( (val1+val2)/2 ) )
 
+def pbc(coord, boxlength):
+    if coord > boxlength:
+        folded = coord - boxlength
+    elif coord < 0:
+        folded = coord + boxlength
+    else:
+        folded = coord
+    return folded
+
 def fold(xyz, boxlengths):
-    def pbc(coord, boxlength):
-        if coord > boxlength:
-            folded = coord - boxlength
-        elif coord < 0:
-            folded = coord + boxlength
-        else:
-            folded = coord
-        return folded
     new_coords = []
     for i, boxl in zip(xyz, boxlengths):
         new_coords.append( pbc(i,boxl) )
     return new_coords
+
+def fold_coords(xyz, boxlengths):
+    new_coords = []
+    for coords in xyz:
+        new_coords.append( fold(coords, boxlengths) )
+    return np.matrix(new_coords)
 
 def get_vector(xyz1, xyz2, abc):
     vector = [xyz1[i] - xyz2[i] for i in range(len(xyz1))]
@@ -70,7 +77,7 @@ def calculate_angle(c1,c2,c3,abc):
     :param c2: xyz coords of middle bead
     :param c3: xyz coords of final bead
     :param abc:
-    :return: angle in radians!!
+    :return: angle in radians!!; limits are from 0 to pi
     '''
     a = get_vector(c2,c1,abc)
     b = get_vector(c2,c3,abc)

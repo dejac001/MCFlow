@@ -6,6 +6,10 @@ def convertMovieCoordsXYZ(each_molecule):
             data['coords'].append( [float(i) for i in bead_xyz] )
     return data
 
+class BeadNotFound(BaseException):
+    def __init__(self):
+        BaseException.__init__(self)
+
 class Movie:
     def __init__(self, file_name, *args):
         self.file_name = file_name
@@ -87,7 +91,10 @@ class Movie:
         :param box: box number as string
         :param beadNames: list of bead numbers as strings as in topmon.inp
         '''
-        my_box = 'box%s'%box
+        if 'box' in box:
+            my_box = box
+        else:
+            my_box = 'box%s'%box
         for FRAME_DATA in self.frame_data:
             for molType in FRAME_DATA[my_box].keys():
                 indices_to_keep = []
@@ -220,6 +227,40 @@ class Movie:
                         print('No beads of type %s found for mol%s'%(beadType, mlcl))
         return xyz_data
 
+    def getAngles(self, uc_vectors, beadOrder=['62','COM','62']):
+        '''
+        :param mlcl: String molecule number.
+        :param box: String box number.
+        of all molecules in this box
+        '''
+        from MCFlow.calc_tools import calculate_angle
+        assert self.nframes == len(self.frame_data), 'Error in adding frames'
+        print('Total amount of frames analyzed was %i'%self.nframes)
+        angle_histogram = {}
+        for iframe, FRAME_DATA in enumerate(self.frame_data):
+            for box in FRAME_DATA.keys():
+                if box not in angle_histogram.keys(): angle_histogram[box] = {}
+                for mlcl, data in FRAME_DATA[box].items():
+                    try:
+                        for each_molecule in data:
+                            angle_coords = {}
+                            for bead in set(beadOrder):
+                                if (bead not in each_molecule.keys() or
+                                    len(each_molecule[bead]) != beadOrder.count(bead)):
+                                    raise BeadNotFound
+                                angle_coords[bead] = (i for i in each_molecule[bead])
+                            coords = []
+                            for bead in beadOrder:
+                                coords.append([float(i) for i in next(angle_coords[bead])])
+                            if box == 'box1':
+                                abc = uc_vectors
+                            else:
+                                abc = self.boxlengths[iframe][box]
+                            if mlcl not in angle_histogram[box].keys(): angle_histogram[box][mlcl] = []
+                            angle_histogram[box][mlcl].append(calculate_angle(coords[0],coords[1],coords[2],abc))
+                    except BeadNotFound:
+                        continue
+        return angle_histogram
 
 def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
     def initVars(nbox, nmolty):

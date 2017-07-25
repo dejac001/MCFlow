@@ -27,6 +27,34 @@ class Region:
         else:
             return False
 
+def intersection(coords):
+    rcut = 5.0/2.
+    rcut_2 = rcut*rcut
+    a, b, c = [20.022, 19.899, 13.383] # MFI
+    center = [10.011,4.9748,0.] # (a/2, b/4, 0)
+    x, y, z = center
+    sphere = [
+            [x,y,z],
+            [a/2-x,b/2+y,c/2+z],
+            [x,b/2-y,z],
+            [a/2+x,y,c/2-z],
+            [a-x,b-y,c-z],
+            [a/2+x,b/2-y,c/2-z],
+            [a-x,b/2+y,c-z],
+            [a/2-x,b-y,c/2+z]
+        ]
+    for my_center in sphere:
+        if calculate_distance2(my_center, coords, [a,b,c]) < rcut_2:
+            return True
+    return False
+
+def SnSPP(coords):
+    x,y,z = coords
+    if ((z > 2.73) and (z < 32.12)):
+        return True
+    else:
+        return False
+
 class Struc:
     def __init__(self, filterFunc=None):
         my_parser = Results()
@@ -95,18 +123,13 @@ class Struc:
             analysis = self.read_movies()
             self.myCalcs(analysis)
 
-def SnSPP(coords):
-    x,y,z = coords
-    if ((z > 2.73) and (z < 32.12)):
-        return True
-    else:
-        return False
 
 from MCFlow.runAnalyzer import what2Analyze
 from MCFlow.file_formatting.reader import Movie
 from MCFlow.file_formatting.writer import xyz
 from MCFlow.parser import Results
 from MCFlow.getData import outputDB
+from MCFlow.calc_tools import calculate_distance2
 
 if __name__ == '__main__':
     M = Struc()

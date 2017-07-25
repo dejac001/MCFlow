@@ -13,8 +13,9 @@ def plotTrajectory(figNumStart, ydata, steps):
         pltIndex = 0
         figNum += 1
         plt.figure(figNum)
+        plt.subplots_adjust(left=0.19,right=0.94,hspace=0.35,top=0.85)
         boxes = sorted(ydata[conc].keys())
-        plt.suptitle('%s-mols#%s'%(conc,','.join(ydata[conc][boxes[0]].keys())), fontsize=24)
+        plt.suptitle('%s-mols%s'%(conc,','.join(ydata[conc][boxes[0]].keys())))
         if conc == sorted(ydata.keys())[0]:
             nRows = len(boxes) # rows are number of boxes
             nColumns = len(ydata[conc][boxes[0]]) # columns are different molecules
