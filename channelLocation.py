@@ -216,7 +216,7 @@ import numpy as np
 from MCFlow.file_formatting.writer import xyz
 
 if __name__ == '__main__':
-#   mapToExp = {'straight':{'H','Li'}, 'zig-zag':{'Be','B','He','D'}}
-    mapToExp = {'straight':{'D'}, 'zig-zag':{'F'}, 'intersection':{'H'}}
+    mapToExp = {'straight':{'H','Li'}, 'zig-zag':{'Be','B','He','D'}}
+#   mapToExp = {'straight':{'D'}, 'zig-zag':{'F'}, 'intersection':{'H'}}
     M = Channel(mapToExp)
     M.main()

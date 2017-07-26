@@ -57,7 +57,6 @@ class RDF(Movie):
         num_particles = n_coords1 + n_coords2
         constant = n_coords1/(boxLengths[0]*boxLengths[1]*boxLengths[2])
 
-
         for index in range(n_coords1): #TODO: figure out if this summation is correct
             dx = coords1[index,0] - coords2[:,0]
             dy = coords1[index,1] - coords2[:,1]
@@ -68,14 +67,12 @@ class RDF(Movie):
             dist = np.sqrt(np.square(dx) + np.square(dy) + np.square(dz))
             if (index < len(dist)) and (dist[index] < 0.01): dist[index] = 1000.
             (result, bins) = np.histogram(dist, bins=self.edges, normed=False)
-            self.numInt.append( [ sum(result[:i]) for i in range(len(result))] ) #self.N[self.box]['mol%s'%self.m1] for i in range(len(result)) ] )
+            self.numInt.append( [ sum(result[:i]) for i in range(len(result))] )
             self.g_bead.append( result / constant )
 
     def calculateRDF(self, m1, b1, m2, b2, sbox):
         self.box = 'box%s'%sbox
         mol1, mol2 = ['mol%s'%m1,'mol%s'%m2]
-        self.m1 = m1
-        self.m2 = m2
         self.ignored_frames = 0
         for iframe, FRAME_DATA in enumerate(self.frame_data):
             try:
@@ -85,16 +82,12 @@ class RDF(Movie):
                 print('%5.1f %% of RDF frames completed'%(100*(iframe+1)/self.nframes))
             c1_xyz = []
             c2_xyz = []
-            self.N = {self.box: {mol1: 0} }
             for i, each_mol in enumerate(FRAME_DATA[self.box][mol1]):
-                self.N[self.box][mol1] += 1
                 for bead, coords in each_mol.items():
                     if bead == b1:
                         for each_bead in coords:
                             c1_xyz.append( list(map(float,each_bead) ) )
-            if mol1 != mol2: self.N[self.box][mol2] = 0
             for i, each_mol in enumerate(FRAME_DATA[self.box][mol2]):
-                if mol1 != mol2: self.N[self.box][mol2] += 1
                 for bead, coords in each_mol.items():
                     if bead == b2:
                         for each_bead in coords:
