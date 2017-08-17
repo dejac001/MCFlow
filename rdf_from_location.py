@@ -25,7 +25,7 @@ class LocRDF(RDF):
             if len(c1_xyz) == 0:
                 self.ignored_frames += 1
                 continue
-            self.g_frame( c1_xyz, c2_xyz, self.boxlengths[iframe][self.box])
+            self.g_frame( c2_xyz, c1_xyz, self.boxlengths[iframe][self.box])
         if self.ignored_frames > 0:
             print('Out of %i total frames, %i were ignored b/c of lack of mlcl'%(
                     self.nframes,self.ignored_frames))

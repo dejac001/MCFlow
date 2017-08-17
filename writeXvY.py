@@ -24,6 +24,7 @@ def writeAGR(x, y, dx, dy, names, file, description):
             f.write(my_line)
 
 def calculateMoleFrac(N, mol, box):
+    # note: old way, dont use this unless absolutely necessary. error propagation makes error bad
     N_tot = sum(N[i][box]['mean'] for i in N.keys())
     mean = N[mol][box]['mean']/N_tot
     stdev2 = math.pow((1/N_tot - N[mol][box]['mean']/N_tot**2),2)*math.pow(N[mol][box]['mean'],2)
@@ -77,9 +78,9 @@ class IdealGasAds:
     def __init__(self, **kwargs):
 
         # TODO: make general db reader that all files can do
-        self.N = {}; self.rho = {}; self.gen_data = {}; self.dG = {}; self.K = {}; self.P = {}
-        self.files = ['N-data.db','rho-data.db','general-data.db','dG-data.db','K-data.db','P-data.db']
-        self.variables = [self.N, self.rho, self.gen_data, self.dG, self.K, self.P]
+        self.N = {}; self.rho = {}; self.gen_data = {}; self.dG = {}; self.K = {}; self.P = {}; self.X = {}
+        self.files = ['N-data.db','rho-data.db','general-data.db','dG-data.db','K-data.db','P-data.db','X-data.db']
+        self.variables = [self.N, self.rho, self.gen_data, self.dG, self.K, self.P, self.X]
         if kwargs:
             # assert kwargs['mol'], 'Mol needed for number density to calculate P assuming I.G.'
             # assert kwargs['Temp'], 'Temperature needed for number density to calculate P assuming I.G.'
@@ -263,20 +264,28 @@ class IdealGasAds:
     def XvX(self):
         if (0 in self.indep) and (len(self.indep) == 1): raise NotImplemented
         N = self.N[self.feed][self.run]
+        mol_frac = self.X[self.feed][self.run]
         X = self.getX()
         nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        if '95conf' in X.keys():
+            dX = X['95conf']
+        else:
+            dX = calc95conf(X['stdev'], nIndep)
         file_description = '%s    x (mol/mol)    %s     dx'%(self.xlabel[0],  self.xlabel[1])
         for box in N['1'].keys():
             for mol1 in N.keys():
-                if sum(N[mol1][ibox]['mean'] for ibox in N[mol1].keys()) > 0.:
+                print(mol_frac.keys())
+                if mol1 in mol_frac[box].keys():
                     file_name = 'X_mol%s_%s-vs-%s.dat'%(mol1, box,self.xlabel[0])
-                    x_mean, x_stdev = calculateMoleFrac(N, mol1, box)
+                    x_mean, x_stdev = mol_frac[box][mol1]['mean'], mol_frac[box][mol1]['stdev']
+                    if box == 'box1':
+                        print(x_mean, x_stdev)
                     if ('P-box' in self.xlabel[0]) and (x_mean < 0.75):
                         assert self.T, 'Temperature needed for vapor p'
                         rho = self.rho[self.feed][self.run]
                         x_mean, x_stdev = calculateIGMolFrac(rho, mol1, box, X, self.T)
                     writeAGR([X['mean']],[x_mean],
-                         [calc95conf(X['stdev'], nIndep)], [calc95conf(x_stdev, nIndep)],
+                         [dX], [calc95conf(x_stdev, nIndep)],
                          [self.feed], file_name, file_description)
 
     def SvX(self):
@@ -536,9 +545,9 @@ class GasMolAds(IdealGasAds):
 
 class LiqAds(IdealGasAds):
     def __init__(self, **kwargs):
-        self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}; self.K = {}
-        self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db','K-data.db']
-        self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data,self.K]
+        self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}; self.K = {}; self.X = {}
+        self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db','K-data.db','X-data.db']
+        self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data,self.K, self.X]
         if kwargs:
             self.xlabel = ['C(g/mL)','dC']
             self.mol = kwargs['mol']

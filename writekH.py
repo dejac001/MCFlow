@@ -2,9 +2,9 @@ from MCFlow.writeXvY import IdealGasAds
 
 class kH(IdealGasAds):
     def __init__(self, **kwargs):
-        self.N={};self.P={};self.rho={};self.gen_data={};self.K={}
-        self.files = ['N-data.db','P-data.db', 'rho-data.db','general-data.db','K-data.db']
-        self.variables = [self.N, self.P, self.rho, self.gen_data,self.K]
+        self.N={};self.P={};self.rho={};self.gen_data={};self.K={}; self.X={};
+        self.files = ['N-data.db','P-data.db', 'rho-data.db','general-data.db','K-data.db','X-data.db']
+        self.variables = [self.N, self.P, self.rho, self.gen_data,self.K, self.X]
         self.xlabel = ['kH', 'dkH']
         if kwargs:
             self.units = kwargs['units']
@@ -81,5 +81,5 @@ if __name__ == '__main__':
             my_plotter.QvX()
         elif args['yaxis'] == 'S':
             my_plotter.SvX()
-
-
+        elif args['yaxis'] == 'X':
+            my_plotter.XvX()
