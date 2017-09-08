@@ -21,10 +21,13 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
     def getBiasMol(molNum, nVapor, volVapor, rhoReal, vaporBox='box3'):
         molNum = molNum.strip('mol')
         volVapor = volVapor/1000 # convert to nm**3
-        rho_vapor = rhoReal[molNum][vaporBox]['mean']
-        rho_desired = nVapor/volVapor
-        bias = -T*math.log( rho_desired/rho_vapor )
-        return bias
+        if vaporBox in rhoReal[molNum].keys():
+            rho_vapor = rhoReal[molNum][vaporBox]['mean']
+            rho_desired = nVapor/volVapor
+            bias = -T*math.log( rho_desired/rho_vapor )
+            return bias
+        else:
+            return 0.0
     def getVaporVolume(sorbates, rhoReal, vaporBox='box3', liquidBox='box2', nVapor=[2]):
         '''
         calculate so that 2 sorbate molecules in vapor box
@@ -41,12 +44,13 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
             # we have multiple sorbates
             Kmin = 10**5
             for mol in sorbates:
-                K = rhoReal[mol.strip('mol')][vaporBox]['mean']/rhoReal[mol.strip('mol')][liquidBox]['mean']
-                if K < Kmin:
-                    Kmin = K
-                    least_volatile = mol
-                    volume_AA3 = nVapor[sorbates.index(mol)]/rhoReal[mol.strip('mol')][vaporBox]['mean']*1000
-                    boxlx_AA3 = math.pow( volume_AA3, 1/3 )
+                if vaporBox in rhoReal[mol.strip('mol')].keys():
+                    K = rhoReal[mol.strip('mol')][vaporBox]['mean']/rhoReal[mol.strip('mol')][liquidBox]['mean']
+                    if K < Kmin:
+                        Kmin = K
+                        least_volatile = mol
+                        volume_AA3 = nVapor[sorbates.index(mol)]/rhoReal[mol.strip('mol')][vaporBox]['mean']*1000
+                        boxlx_AA3 = math.pow( volume_AA3, 1/3 )
             print('- To have {} molecules of least volatile mol#{} in vapor phase,'
                                     ' boxlength should be {}'.format(
                 nVapor[sorbates.index(least_volatile)],least_volatile, boxlx_AA3))
@@ -82,7 +86,8 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
     sorbates = []
     impurities = []
     solvent = -1
-    for mol in N.keys():
+    mols_sorted = list(map(int,[i.strip('mol') for i in N.keys()]))
+    for mol in ['mol%i'%i for i in mols_sorted]:
         total_number_mol = sum([N[mol][i]['mean'] for i in N[mol].keys()])
         if total_number_mol > maxSorbate:
             if solvent == -1:
@@ -106,7 +111,10 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
             impurities.append( mol )
             print('- impurity molecule is {}'.format(mol))
 
-    if (N[sorbates[0]]['box1']['mean'] == 0.) and (nbox == 3):
+    if len(sorbates) == 0:
+        nSorbate_vapor = [1.0]
+        sorbates = [impurities.pop(-1)]
+    elif (N[sorbates[0]]['box1']['mean'] == 0.) and (nbox == 3):
         print(' no "sorbates" in zeolite')
         nSorbate_vapor = [0.50*nchain_sorbate]
 #   elif nchain_sorbate > 250:
