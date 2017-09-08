@@ -61,7 +61,7 @@ class Plot(Main):
                                  type = float, default = 40.044*39.798*40.149 )
     def kH(self):
         self.parser.add_argument('-y', '--yaxis', help='y axis of plot',
-                                 choices=['Q','S'])
+                                 choices=['Q','S','X'])
         self.parser.add_argument('-d','--density',help='infinite dilution density',type=float,
                                  nargs='+',default=[0.981,0.006]
                                  # Jorgensen and Jenson, J. Comput. Chem.
@@ -126,8 +126,10 @@ class Structure:
         self.parser.add_argument('-b','--bins',help='bin size for analysis',type=float)
         self.parser.add_argument('-abc','--vectors',help='unit cell vectors',type=float,nargs='+')
         self.parser.add_argument('-B','--bead',help='bead to analyze', type = str, default=['COM'],nargs='+')
-        self.parser.add_argument('-off','--offAxis',help='axis to average along',
-                                  default=[],nargs='+')
+        self.parser.add_argument('-off','--offAxis',help='axis(es) to average along',
+                                 default=[],type=str,nargs='+')
+        self.parser.add_argument('-p','--plane',help='plane to average along',
+                                  default=None,type=int,nargs='+')
     def analysis(self):
         self.parser.add_argument('-ref','--reference',help='reference density [for dGmap (molec/nm**3)]'
                                                            ' [for S, Kref]',type=float)
@@ -137,6 +139,7 @@ class Structure:
         self.parser.add_argument('-ID','--name',help='name of new file',
                                     type=str)
         self.parser.add_argument('-f2', '--file2',help='2nd input file for analysis',type=str)
+
     def parse_args(self):
         return self.parser.parse_args()
 

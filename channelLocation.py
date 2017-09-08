@@ -30,7 +30,6 @@ class Channel(Struc):
     def checks(self):
         assert self.args['name'], 'Output ID name needed to output local structure info'
         assert 'box' in self.args['box'], 'Need to specify box for structure analysis'
-        assert len(self.args['bead']) == 1, 'Not supported'
         self.analysis_class = Movie
 
     def initGrids(self):
@@ -175,7 +174,11 @@ class Channel(Struc):
             seed_index = frame_seeds[total_frames] - 1
             for mol in FRAME_DATA[box].keys():
                 for each_molecule in FRAME_DATA[box][mol]:
-                    for each_coord in each_molecule['COM']:
+                    beads = list(set(each_molecule.keys()) &
+                                set(self.args['bead']))
+                    assert len(beads) == 1, 'Ambiguous beads'
+                    bead = beads[0]
+                    for each_coord in each_molecule[bead]:
                         (i, j, k) = self.findBin(each_coord)
                         region = self.labels[i, j, k]
                         if region == self.defaultLabel:
@@ -216,7 +219,7 @@ import numpy as np
 from MCFlow.file_formatting.writer import xyz
 
 if __name__ == '__main__':
-    mapToExp = {'straight':{'H','Li'}, 'zig-zag':{'Be','B','He','D'}}
-#   mapToExp = {'straight':{'D'}, 'zig-zag':{'F'}, 'intersection':{'H'}}
+#   mapToExp = {'straight':{'H','Li'}, 'zig-zag':{'Be','B','He','D'}}
+    mapToExp = {'straight':{'D'}, 'zig-zag':{'F'}, 'intersection':{'H'}}
     M = Channel(mapToExp)
     M.main()

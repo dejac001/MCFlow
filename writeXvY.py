@@ -332,7 +332,7 @@ class IdealGasAds:
             elif 'kH' in self.xlabel[0]:
                 if mol_pair == '%s/1'%self.mol:
                     K_to['95conf'] = calc95conf(K_to['stdev'],nIndep)
-                    MW_W = self.solventMW
+                    MW_W = gen_data['molecular weight']['1']
                     MW_D = gen_data['molecular weight'][self.mol]
                     S_mean = (
         K_to['mean']*(self.density[0]/X['mean'] - 1)*MW_D/MW_W
@@ -391,9 +391,9 @@ class GasBoxAds(IdealGasAds):
 
 class LoadAds(IdealGasAds):
     def __init__(self, **kwargs):
-        self.N = {}; self.P = {}; self.gen_data = {}; self.U = {}; self.boxlx = {}; self.dG = {}
-        self.files = ['N-data.db','P-data.db','general-data.db','U-data.db','boxlx-data.db','dG-data.db']
-        self.variables = [self.N, self.P, self.gen_data, self.U, self.boxlx, self.dG]
+        self.N = {}; self.P = {}; self.gen_data = {}; self.U = {}; self.boxlx = {}; self.dG = {}; self.X = {}
+        self.files = ['N-data.db','P-data.db','general-data.db','U-data.db','boxlx-data.db','dG-data.db','X-data.db']
+        self.variables = [self.N, self.P, self.gen_data, self.U, self.boxlx, self.dG, self.X]
         if kwargs:
             # assert ('box' in kwargs['box']
             #         or 'box' in kwargs['boxes'][0]), 'Box needed for enthalpy of adsorption from'
@@ -420,6 +420,7 @@ class LoadAds(IdealGasAds):
         elif self.units == 'mol/kg':
             qfactor = gen_data['zeolite'][' mol/kg / 1 mlcl adsorbed']
         if self.mol:
+            print('plotting for mol',self.mol)
             Q_mean, Q_stdev = (N[self.mol]['box1']['mean']*qfactor, N[self.mol]['box1']['stdev']*qfactor)
         else:
             Q_mean, Q_stdev = (sum(N[i]['box1']['mean'] for i in N.keys())*qfactor,

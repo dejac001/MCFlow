@@ -24,8 +24,8 @@ class kH(IdealGasAds):
             self.feeds = kwargs['feeds']
             self.path = kwargs['path']
 #           assert kwargs['density'], 'Infinite-dilution liquid density needed for kH iso'
-#           self.density = kwargs['density']
-#           self.solventMW = kwargs['molecWeight']
+            if 'density' in kwargs.keys():
+                self.density = kwargs['density']
             if 'film' in kwargs.keys():
                 self.film = kwargs['film']
             else:

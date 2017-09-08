@@ -25,7 +25,9 @@ class LocRDF(RDF):
             if len(c1_xyz) == 0:
                 self.ignored_frames += 1
                 continue
-            self.g_frame( c2_xyz, c1_xyz, self.boxlengths[iframe][self.box])
+            frame_boxlengths = self.boxlengths[iframe][self.box]
+            self.boxLengths.append(frame_boxlengths)
+            self.g_frame( c2_xyz, c1_xyz, frame_boxlengths)
         if self.ignored_frames > 0:
             print('Out of %i total frames, %i were ignored b/c of lack of mlcl'%(
                     self.nframes,self.ignored_frames))
@@ -47,10 +49,16 @@ class LocationG(G):
     def myCalcs(self, D, m1, b1):
         for box in self.args['boxes']:
             D.calculateRDF(m1, b1, self.getPositions(), box)
-            writeXY(D.radii, D.g_average, '%s/%s/rdf-box%s_mol%s-%s.dat'%(self.args['path'],self.feed,box,
-                                            m1, b1))
-            writeXY(D.radii, D.n_average, '%s/%s/nint-box%s_mol%s-%s.dat'%(self.args['path'],self.feed,box,
-                                            m1, b1))
+            file_path = '%s/%s/'%(self.args['path'],self.feed)
+            file_info = 'box%s_mol%s-%s.dat'%(box, m1, b1)
+            if len(self.args['dimensions']) == 3:
+                writeXY(D.radii, D.g_average, file_path + 'rdf-' + file_info)
+                writeXY(D.radii, D.n_average, file_path + 'nint-' + file_info)
+            else:
+                writeXY(D.radii, D.g_average, file_path +
+                        'rdf%s-'%(''.join(self.args['dimensions'])) + file_info)
+                writeXY(D.radii, D.n_average, file_path +
+                        'nint%s-'%(''.join(self.args['dimensions'])) + file_info)
 
     def getPositions(self):
         raise NotImplemented
@@ -59,7 +67,7 @@ class LocationG(G):
         for feed in self.args['feeds']:
             self.feed = feed
             if self.args['verbosity'] > 0: print('-'*12 + 'Dir is %s'%self.feed + '-'*12)
-            analysis = self.read_movies(self.args['rmax'], self.args['bins'])
+            analysis = self.read_movies(self.args['rmax'], self.args['bins'], self.args['dimensions'])
             for m1, b1, in zip(self.args['mol1'], self.args['bead1']):
                 self.myCalcs(analysis, m1, b1)
 

@@ -185,7 +185,7 @@ class Movie:
                     num_molec_data[mol_num][box]['histogram'] = histogram
                     num_molec_data[mol_num][box]['edges'] = edges
                 except ValueError:
-                    num_molec_data.pop(mol_num)
+                    num_molec_data[mol_num].pop(box)
         self.averages[feed] = num_molec_data
 
     def foldMovieToUC(self, uc_vectors):
@@ -224,7 +224,8 @@ class Movie:
                             xyz_data['atoms'].append(beadType)
                             xyz_data['coords'].append(each_coord)
                     except KeyError:
-                        print('No beads of type %s found for mol%s'%(beadType, mlcl))
+                        pass
+#                       print('No beads of type %s found for mol%s'%(beadType, mlcl))
         return xyz_data
 
     def getAngles(self, uc_vectors, beadOrder=['62','COM','62']):
