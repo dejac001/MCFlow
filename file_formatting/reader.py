@@ -313,9 +313,13 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
                 for mol in range(1, nMolTy+1):
                     biasPot[str(mol)] = {}
                     line = f.readline().split()
-                    for box in range(len(line)):
-                        if '*****' not in line[box]:
-                            bp = float(line[box])
+                    offSet = 0
+                    for box in range(nBox):
+                        if box == len(line):
+                            line = f.readline().split()
+                            offSet = box
+                        if '*****' not in line[box-offSet]:
+                            bp = float(line[box-offSet])
                         else:
                             bp = 10**5
                         biasPot[str(mol)]['box%i'%(box+1)] = bp
