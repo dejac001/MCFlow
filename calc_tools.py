@@ -1,3 +1,6 @@
+
+
+
 def g_mL(nmlcl, boxlx, MW=0.):
     Concs = [   (n/N_av*MW) / ((math.pow(b,3))*10**(-24)) for (n,b) in zip(nmlcl, boxlx)]
     return Concs
@@ -7,7 +10,7 @@ def calcRelDiff(val1, val2):
     define rel. diff. as abs difference over mean
     '''
     return abs( (val1 - val2) / ( (val1+val2)/2 ) )
-
+                                        
 def pbc(coord, boxlength):
     if coord > boxlength:
         folded = coord - boxlength
@@ -85,6 +88,36 @@ def calculate_angle(c1,c2,c3,abc):
         np.dot(a,b) / ( np.linalg.norm(a,2,0)*np.linalg.norm(b,2,0) )
     )
     return theta
+
+def determine_gauche(phi):
+    if (phi <= 60.*np.pi/180.) or (phi >= 300.*np.pi/180):
+        return False # Trans
+    else:
+        return True # gauche
+
+def calculate_torsion_poor(vectors):
+    # phi convention trappe website; 180 is trans
+    b1, b2, b3 = vectors
+    b1_c_b2 = np.cross(b1,b2)
+    b2_c_b3 = np.cross(b2,b3)
+    denominator = np.linalg.norm(b1_c_b2,ord=2)*np.linalg.norm(b2_c_b3,ord=2)
+    numerator = np.dot(b1_c_b2,b2_c_b3)
+    return np.arccos(numerator/denominator)
+
+def calculate_torsion(vectors):
+    # phi convention trappe website; 180 is trans
+    b1, b2, b3 = vectors
+    b1_c_b2 = np.cross(b1,b2)
+    b2_c_b3 = np.cross(b2,b3)
+    atan = np.arctan2(np.dot(np.cross(b1_c_b2,b2_c_b3),b2/np.linalg.norm(b2,ord=2)),
+                      np.dot(b1_c_b2,b2_c_b3))
+    # if abs(atan) < 1e-8:
+    #     print(atan)
+    #     print(b1,b2,b3)
+    #     print(np.cross(b1,b2),np.linalg.norm(b1-b2,1))
+    #     print(np.linalg.norm(b1,ord=1)+np.linalg.norm(b2,ord=1))
+    #     quit()
+    return atan + np.pi
 
 def ePropC2K(mean, error):
     '''

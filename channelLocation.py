@@ -1,36 +1,14 @@
 from MCFlow.structure_analysis import Struc
 from MCFlow.file_formatting.reader import Movie
 
-class Channel(Struc):
-
-    def __init__(self, regionMap):
-        my_parser = Results()
-        my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
-                               type=str)
-        my_parser.parser.add_argument('-B','--bead',help='bead for structure analysis',default=['COM'],
-                                     type = str, nargs = '+')
-        my_parser.parser.add_argument('-abc','--vectors', help='unit cell vectors. For folding coordinates into a unit cell',
-                                      type = float, nargs = '+', default = [20.022,19.899,13.383])
-        my_parser.parser.add_argument('-g','--gridName', help='energy grid file name',
-                        default = '/Users/dejacor/Documents/butanol-water'
-                                  '/323K/MFI/energy_grid_114_O.out', type=str)
-        my_parser.parser.add_argument('-M', '--mergedGridName', help='energy grid merged file name',
-                        default='/Users/dejacor/Documents/butanol-water/323K/MFI/'
-                                'energy_grid_114_O_merged2.5.xyz', type=str)
-        my_args = vars(my_parser.parse_args())
-        self.args = my_args
+class FindRegion(Struc):
+    def __init__(self,vectors,channelMap={'straight':{'D'}, 'zig-zag':{'F'}, 'intersection':{'H'}}):
+        self.boxLengths = vectors
+        self.gridName = '/Users/dejacor/Documents/butanol-water/323K/MFI/energy_grid_114_O.out'
+        self.mergedGridName = '/Users/dejacor/Documents/butanol-water/323K/MFI/energy-grids-merged/new_channels.xyz'
+        self.channelMap = channelMap
         self.defaultLabel = 'other'
-        self.boxLengths = self.args['vectors']
-        self.numIndep = self.args['indep']
-        self.gridName = self.args['gridName']
-        self.channelMap = regionMap
-        self.checks()
         self.initGrids()
-
-    def checks(self):
-        assert self.args['name'], 'Output ID name needed to output local structure info'
-        assert 'box' in self.args['box'], 'Need to specify box for structure analysis'
-        self.analysis_class = Movie
 
     def initGrids(self):
         self.missedCoords = False
@@ -47,7 +25,7 @@ class Channel(Struc):
                 for j in range(self.numBins[1]):
                     for k in range(self.numBins[2]):
                         self.labels[i,j,k] = self.defaultLabel
-        with open(self.args['mergedGridName']) as f:
+        with open(self.mergedGridName) as f:
             next(f)
             next(f)
             for line in f:
@@ -61,11 +39,6 @@ class Channel(Struc):
                     print('Check that unit cell vectors are correct')
                     print(binName, xyz, i,j,k)
                     quit()
-        self.count = {name:[0 for i in self.numIndep]
-                            for name in self.regionNames}
-        self.data = {region:[] for region in self.regionNames}
-        self.averages = {region:{} for region in self.regionNames}
-
 
     def findBin(self, xyz):
         (x, y, z) = xyz
@@ -80,6 +53,53 @@ class Channel(Struc):
         if zbin == nzbin: zbin = 0
         return xbin, ybin, zbin
 
+    def getRegion(self, xyz):
+        (i, j, k) = self.findBin(xyz)
+        return self.labels[i,j,k]
+
+    def getChannel(self, xyz):
+        region = self.getRegion(xyz)
+        for channel, vals in self.channelMap.items():
+            if region in vals:
+                return channel
+        assert True, 'channel not found'
+
+class Channel(FindRegion):
+
+    def __init__(self, regionMap):
+        my_parser = Results()
+        my_parser.parser.add_argument('-ID','--name',help='Name of db for molecule number counting',
+                               type=str)
+        my_parser.parser.add_argument('-B','--bead',help='bead for structure analysis',default=['COM'],
+                                     type = str, nargs = '+')
+        my_parser.parser.add_argument('-abc','--vectors', help='unit cell vectors. For folding coordinates into a unit cell',
+                                      type = float, nargs = '+', default = [20.022,19.899,13.383])
+        my_parser.parser.add_argument('-g','--gridName', help='energy grid file name',
+                        default = '/Users/dejacor/Documents/butanol-water'
+                                  '/323K/MFI/energy_grid_114_O.out', type=str)
+        my_parser.parser.add_argument('-M', '--mergedGridName', help='energy grid merged file name',
+                        default = '/Users/dejacor/Documents/butanol-water/323K/MFI/'
+                                    'energy-grids-merged/new_channels.xyz',type=str)
+        my_args = vars(my_parser.parse_args())
+        self.args = my_args
+        self.defaultLabel = 'other'
+        self.boxLengths = self.args['vectors']
+        self.mergedGridName = self.args['mergedGridName']
+        self.numIndep = self.args['indep']
+        self.gridName = self.args['gridName']
+        self.channelMap = regionMap
+        self.checks()
+        self.initGrids()
+        self.count = {name:[0 for i in self.numIndep]
+                            for name in self.regionNames}
+        self.data = {region:[] for region in self.regionNames}
+        self.averages = {region:{} for region in self.regionNames}
+
+    def checks(self):
+        assert self.args['name'], 'Output ID name needed to output local structure info'
+        assert 'box' in self.args['box'], 'Need to specify box for structure analysis'
+        self.analysis_class = Movie
+
     def findBinEnergy(self, bins):
         (i, j, k) = bins
         with open(self.gridName) as g:
@@ -91,8 +111,7 @@ class Channel(Struc):
                     return
 
     def addToGrid(self, xyz, iseed):
-        (i, j, k) = self.findBin(xyz)
-        region = self.labels[i, j, k]
+        region = self.getRegion(xyz)
         self.count[region][iseed] += 1
         if region == self.defaultLabel:
             x = bins[0]/self.numBins[0] * self.boxLengths[0]

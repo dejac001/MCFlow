@@ -43,7 +43,7 @@ class Plot(Main):
 
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',
-                                 choices = ['C','Pig', 'Pbox','Pi','Q','rho','x','kH'])
+                                 choices = ['C','Pig', 'Pbox','Pi','Q','rho','x','kH','T'])
         self.parser.add_argument('-y','--yaxis',help='y axis of plot',
                                  choices = ['Q','dG','S','R',
                                             'X','dH','dU','dHig',
@@ -55,7 +55,7 @@ class Plot(Main):
                                                        'fmt: (mean, 95%%conf.) ',
                                   type=float, nargs= '+')
         self.parser.add_argument('-u','--units',help='choices for units on plot',
-                                 choices=['molec/uc','g/g','mol/kg',
+                                 choices=['molec/uc','g/g','mol/kg','None',
                                           '(mol/mol)/(mol/mol)','(mol/mol)/(kPa/kPa)'])
         self.parser.add_argument('-V','--ZeoVolume',help='Volume of zeolite box (\AA**3)',
                                  type = float, default = 40.044*39.798*40.149 )

@@ -10,6 +10,7 @@ class mykH(kH):
         :var X: either solution concentration (g/mL) or pressure (kPa)
         '''
         assert self.units, 'Units must be defined for isotherm'
+        print(self.feed, self.run)
         N = self.N[self.feed][self.run]
         gen_data = self.gen_data[self.feed][self.run]
         file_description = '%s    Q(%s)    %s     dQ'%(self.xlabel[0], self.units,
@@ -19,6 +20,8 @@ class mykH(kH):
         zeolite_mass_g = gen_data['zeolite']['mass (g)']
         for mol in N.keys():
             for channel, values in N[mol].items():
+                if None in N.keys():
+                    N['None'] = N.pop(None)
                 file_name  = 'Q%s-%s-%s-w%sin-zeo-vs-%s.dat'%(mol,channel,self.units,''.join(sorted(N.keys())),
                                                                self.xlabel[0][:self.xlabel[0].find('(')])
                 if self.units == 'molec/uc':
@@ -28,6 +31,8 @@ class mykH(kH):
                                 zeolite_mass_g )
                 elif self.units == 'mol/kg':
                     qfactor = gen_data['zeolite'][' mol/kg / 1 mlcl adsorbed']
+                elif self.units == 'None':
+                    qfactor = 1.
                 if (0 in self.indep) and (len(self.indep) == 1):
                     Q_vals = [i*qfactor for i in values['raw']]
                     Q_stdev = [0. for i in Q_vals]

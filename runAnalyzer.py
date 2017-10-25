@@ -118,7 +118,18 @@ def getRelMols(N, box):
             mols.append(mol)
     return sorted(mols)
 
-def getKX(N):
+def getTotalMols(N):
+    Ntotal = {}
+    for box in N['1'].keys():
+        mols = getRelMols(N, box)
+        mols.reverse()
+        N_total = np.zeros(len(N['1'][box]),dtype=int)
+        for imol, mol in enumerate(mols):
+            N_total = N_total + np.array(N[mol][box], dtype=int)
+        Ntotal[box] = N_total
+    return Ntotal
+
+def getKX(N, Ntot):
     K = {}
     X = {}
     for box in N['1'].keys():
@@ -130,9 +141,7 @@ def getKX(N):
             K[box] = { i:[0.] for i in mols }
             X[box] = {i:[1.] for i in mols}
             continue
-        N_total = np.zeros(len(N['1'][box]),dtype=int)
         for imol, mol1 in enumerate(mols):
-            N_total = N_total + np.array(N[mol1][box],dtype=int)
             for mol2 in mols[(imol+1):]:
                 # calculate K
                 K[box][mol1 +'/'+ mol2] = []
@@ -140,10 +149,45 @@ def getKX(N):
                     if j > 0.:
                         K[box][mol1 +'/'+ mol2].append( i/j )
         for imol, mol1 in enumerate(mols):
-            x_np = np.divide( N[mol1][box], N_total)
+            x_np = np.divide( N[mol1][box], Ntot[box])
             x_np = x_np[np.where(x_np < np.inf)]
             X[box][mol1] = x_np.tolist()
     return K, X
+
+def getRhoTotal(dens):
+    rho = {}
+    for mol, vals in dens.items():
+        for box, value in vals.items():
+            if box not in rho.keys(): rho[box] = 0.
+            rho[box] += value
+    return rho
+
+def calcdH_mixt(U, P, rhomol, Ntot):
+    if 'box3' not in U.keys():
+        p_box = 'box%i'%(len(U.keys()))
+    else:
+        p_box = 'box3'
+    rho_total = getRhoTotal(rhomol)
+    dH = {}
+    boxes = sorted(list(U.keys()))
+    boxes.reverse()
+    for i, boxFrom in enumerate(boxes):
+        for boxTo in [j for j in boxes[i:] if j != boxFrom]:
+            key = boxFrom + '-->' + boxTo
+            dH[key] = []
+            for p, u_from, u_to, N_from, N_to in zip(P[p_box],
+                U[boxFrom], U[boxTo],
+                Ntot[boxFrom], Ntot[boxTo]
+            ):
+                if (N_to > 0) and (N_from > 0):
+                    v_from = 1000./rho_total[boxFrom]*N_av
+                    v_to = 1000./rho_total[boxTo]*N_av
+                    delta_H =( (u_to/N_to - u_from/N_from)*R['kJ/(mol*K)'] +
+                           p*(v_from - v_to)/R['\AA**3*kPa/(mol*K)']*R['kJ/(mol*K)'])
+                    dH[key].append(delta_H)
+    return dH
+
+
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
                 verbosity, liq=False, mol='-1', **kargs):
@@ -164,7 +208,9 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 (N, P, boxLengths,
                  ncycle_old, molWeights, E) = reader.read_fort12(my_dir, old_begin,
                                                                  nfiles, tag=type)
-                K, mole_frac = getKX(N)
+                Ntotal = getTotalMols(N)
+
+                K, mole_frac = getKX(N, Ntotal)
                 (number_densities, chemical_potential,
                  swap_info, biasPot, volumes,
                  totalComposition, cbmc_info,
@@ -174,6 +220,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 # do calculations for other data that may be needed
                 number_dens_real = getRealRho(number_densities, biasPot, T)
                 deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
+                dH_mixt = calcdH_mixt(E, P, number_dens_real, Ntotal)
                 if liq:
                     concentrations = {}
                     c = calc_tools.g_mL(N[mol]['box2'], boxLengths['box2'],
@@ -189,12 +236,13 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                     Nmlcl = properties.AnyProperty(N)
                     SWAP = properties.AnyProperty(swap_info)
                     U = properties.AnyProperty(E)
+                    dH = properties.AnyProperty(dH_mixt)
                     rho = properties.AnyProperty(number_dens_real)
                     dG = properties.AnyProperty( deltaG )
                     data = {'CBMC':CBMC, 'P':Press, 'N':Nmlcl,
                             'SWAP':SWAP, 'U':U, 'rho':rho,
                             'boxlx':boxlx, 'dG':dG, 'K':k_ratio,
-                             'X':X}
+                             'X':X, 'dH-mixt':dH}
                     if liq:
                         if (verbosity > 1):
                             print('Doing analysis for C [ g/mL ] for mol {}'.format(mol))
@@ -206,6 +254,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 Nmlcl.addVals(N)
                 SWAP.addVals(swap_info)
                 U.addVals(E)
+                dH.addVals(dH_mixt)
                 rho.addVals(number_dens_real)
                 boxlx.addVals(boxLengths)
                 dG.addVals(deltaG)

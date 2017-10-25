@@ -56,7 +56,7 @@ class Movie:
                 mlcl_info = {'COM':[COM] }
                 for bead in range(nunit):
                     line = self.file.readline()
-                    xyz = line.split()[:3]
+                    xyz = list(map(float,line.split()[:3]))
                     BeadType = line.split()[-1] # as defined in topmon.inp
                     if BeadType in list(mlcl_info.keys()):
                         mlcl_info[BeadType].append(xyz)
@@ -263,6 +263,34 @@ class Movie:
                         continue
         return angle_histogram
 
+    def getTorsions(self, uc_vectors):
+        '''
+        :param mlcl: String molecule number.
+        :param box: String box number.
+        of all molecules in this box
+        '''
+        from MCFlow.calc_tools import get_tors
+        assert self.nframes == len(self.frame_data), 'Error in adding frames'
+        print('Total amount of frames analyzed was %i'%self.nframes)
+        torsion_histogram = {}
+        for iframe, FRAME_DATA in enumerate(self.frame_data):
+            for box in FRAME_DATA.keys():
+                if box not in torsion_histogram.keys(): torsion_histogram[box] = {}
+                for mlcl, data in FRAME_DATA[box].items():
+                    for each_molecule in data:
+                        if box == 'box1':
+                            abc = uc_vectors
+                        else:
+                            abc = self.boxlengths[iframe][box]
+                        torsion_data = get_tors(each_molecule,abc)
+                        if mlcl not in torsion_histogram[box].keys(): torsion_histogram[box][mlcl] = []
+                        # combine torsion types
+                        all_tors_data = []
+                        for torsion_type, tdata in torsion_data.items():
+                            all_tors_data += tdata
+                        torsion_histogram[box][mlcl].append(all_tors_data) # do we want to append here, or would it be better to +=?
+        return torsion_histogram
+
 def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
     def initVars(nbox, nmolty):
         chemical_potential = properties.MolProperty(nbox, nmolty)
@@ -437,7 +465,7 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
             N_mlcls = properties.MolProperty(nbox, nmolty)
             Pressure = properties.Property(nbox)
             InternalEnergy = properties.Property(nbox)
-            Volume = properties.Property(nbox)
+            # Volume = properties.Property(nbox)
             boxlength = properties.Property(nbox)
             # note that boxlength should only be used for cubic boxes--or should I store as volume?
             molWeights = {}
