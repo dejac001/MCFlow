@@ -74,6 +74,8 @@ class MultMols(Plot):
         Main.__init__(self)
         Main.other(self)
         self.parser.description = 'Obtain results for multiple molecules'
+        self.parser.add_argument('-ig','--ignore',help='fraction of frames to consider',type=int,
+                                      default=1)
         self.parser.add_argument('-m','--mol',help='MoleculeS to analyze', type=str, nargs='+')
         self.parser.add_argument('-TK','--Temp',help='Temperature in K', type=float)
         self.parser.add_argument('-b','--box',help='box to analyze', type=str)

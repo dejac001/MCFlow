@@ -4,6 +4,28 @@ aOHO_min = 120./180*3.1415926535897931 # degrees
 rOH_max = 6.25 # 2.5*2.5
 rOO_max = 10.89 # 3.3*3.3
 
+class DoneSearching(Exception):
+    pass
+
+def FloydWarshallWithPath(weights):
+    '''
+    '''
+    dist = np.zeros(np.shape(weights))*np.inf
+    prev = np.ones(np.shape(weights),dtype=int)*-9999
+    N, M = np.shape(weights)
+    assert N == M, 'Weights matrix not square'
+    for u in range(N):
+        for v in range(N):
+            dist[u,v] = weights[u,v]
+            prev[u,v] = u
+    for k in range(N):
+        for i in range(N):
+            for j in range(N):
+                if dist[i,j] > dist[i,k] + dist[k,j]:
+                    dist[i,j] = dist[i,k] + dist[k,j]
+                    prev[i,j] = prev[k,j]
+    return dist, prev
+
 def findHydroxylHydrogen(Oxyz, Hcoords, abc):
     for Hxyz in Hcoords:
         if calculate_distance2(Oxyz, Hxyz, abc) < 1.0:
@@ -28,10 +50,20 @@ def hy_bond_from_DB(hmap_data, box, htype, name, feed):
     with shelve.open(name +'-'+ htype + '-'+box+'-data.db',writeback=True) as db:
         db[feed] = my_db
 
-def findHB(beadsFrom, beadsTo, abc, criteria):
+def findHB(beadsFrom, beadsTo, abc, criteria, molNum1, molNum2):
+    def addData(molDonor, molAcceptor, O_Donor, O_Acceptor):
+        HB_pairs['mol donor'].append(molDonor)
+        HB_pairs['oxygen donor'].append(O_Donor)
+        HB_pairs['mol acceptor'].append(molAcceptor)
+        HB_pairs['oxygen acceptor'].append(O_Acceptor)
     nHB = 0
-    for O1 in beadsFrom['O']:
-        for O2 in [j for j in beadsTo['O'] if calculate_distance2(O1,j,abc) > 0.1]:
+    HB_pairs = {'mol donor':[],
+                         'mol acceptor':[],
+                         'oxygen donor':[],
+                         'oxygen acceptor':[]}
+    for nO1, O1 in enumerate(beadsFrom['O']):
+        for nO2, O2 in enumerate(beadsTo['O']):
+            if calculate_distance2(O1,O2,abc) < 0.1: continue
             # iterate through all H on molecule 1 that are bonded to O1
             for H1 in [i for i in beadsFrom['H'] if calculate_distance2(O1,i,abc) < 1.0]:
                 # look for O1--H1...O2 hbonds
@@ -39,10 +71,12 @@ def findHB(beadsFrom, beadsTo, abc, criteria):
                     if ((calculate_distance2(O1, O2, abc) < rOO_max) and
                         (calculate_distance2(O2, H1, abc) < rOH_max)):
                         nHB += 1
+                        addData(molNum2, molNum1, nO2+1, nO1+1)
                 elif criteria == 'strict':
                     if ((calculate_distance2(H1,O2,abc) < rOH_max) and
                         (calculate_angle(O1,H1,O2,abc) > aOHO_min)):
-                            nHB +=1
+                        nHB +=1
+                        addData(molNum2, molNum1, nO2+1, nO1+1)
             # iterate through all H on molecule 2 that are bonded to O2
             for H2 in [i for i in beadsTo['H'] if calculate_distance2(O2,i,abc) < 1.0]:
                 # look for O2--H2...O1 hbonds
@@ -50,11 +84,13 @@ def findHB(beadsFrom, beadsTo, abc, criteria):
                     if ((calculate_distance2(O1, O2, abc) < rOO_max) and
                         (calculate_distance2(O1, H2, abc) < rOH_max)):
                         nHB += 1
+                        addData(molNum1, molNum2, nO1+1, nO2+1)
                 elif criteria == 'strict':
                     if ((calculate_distance2(H2,O1,abc) < rOH_max) and
                         (calculate_angle(O2,H2,O1,abc) > aOHO_min)):
-                            nHB +=1
-    return nHB
+                        nHB +=1
+                        addData(molNum1, molNum2, nO1+1, nO2+1)
+    return nHB, HB_pairs
 
 def readDBs(path, my_feed, my_type, boxes):
     my_hist_data = {}
@@ -99,7 +135,6 @@ class HydrogenBond(Movie):
     def __init__(self, file_name, *args):
         Movie.__init__(self, file_name, *args)
 
-
     def getBeads(self, my_box):
         '''
         '''
@@ -124,27 +159,71 @@ class HydrogenBond(Movie):
                     HB_mols[molType].append( beads )
             self.HB_info.append( HB_mols )
 
-    def calcHB(self, my_box):
+    def calcHB(self, my_box, verbosity):
         self.getBeads(my_box)
         self.HB = []
+        self.HB_chains = []
         for iframe, HB_data in enumerate(self.HB_info):
-            try:
-                if (iframe+1)%(self.nframes//4) == 0:
+            if verbosity > 0:
+                try:
+                    if (iframe+1)%(self.nframes//4) == 0:
+                        print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/self.nframes))
+                except ZeroDivisionError:
                     print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/self.nframes))
-            except ZeroDivisionError:
-                print('%5.1f %% of frames analyzed for HB'%(100*(iframe+1)/self.nframes))
             self.HB.append( {my_box:{}  } )
+            self.HB_chains.append( {my_box:{}} )
+            self.HB_pairs = {}
             for mol1 in sorted(HB_data.keys()):
                 for mol2 in sorted(HB_data.keys()):
                     pair = mol1.strip('mol') + '->' + mol2.strip('mol')
+                    # if pair in self.HB[iframe][my_box].keys(): continue
                     self.HB[iframe][my_box][pair] = []
-                    for HB_from_beads in HB_data[mol1]:
+                    self.HB_pairs[pair] = {
+                        'mol donor':[],
+                         'mol acceptor':[],
+                         'oxygen donor':[],
+                         'oxygen acceptor':[]
+                                     }
+                    for n1, HB_from_beads in enumerate(HB_data[mol1]):
                         my_from_HB = 0
-                        for HB_to_beads in HB_data[mol2]:
+                        for n2, HB_to_beads in enumerate(HB_data[mol2]):
                             # determine hydrogen bonds with molecules of interest
-                            my_nHB = findHB(HB_from_beads, HB_to_beads, self.boxlengths[iframe][my_box], self.criteria)
+                            my_nHB, HB_pairs = findHB(HB_from_beads, HB_to_beads, self.boxlengths[iframe][my_box], self.criteria,
+                                            n1+1, n2+1)
                             my_from_HB += my_nHB
-                        self.HB[iframe][my_box][pair].append( my_from_HB )
+                            for key, value in HB_pairs.items():
+                                self.HB_pairs[pair][key] += value
+                        if my_from_HB > 0:
+                            self.HB[iframe][my_box][pair].append( my_from_HB )
+            for pair, values in self.HB_pairs.items():
+                if sum(self.HB[iframe][my_box][pair]) == 0.:
+                    continue
+                mol1, mol2 = pair.split('->')
+                if mol1 != mol2 or mol1 == '1': continue
+                nMol = len(HB_data['mol'+mol1])
+                # make distance matrix for pair
+                G = nx.Graph()
+                for md, ma, od, oa in zip(values['mol donor'],values['mol acceptor'],
+                                          values['oxygen donor'], values['oxygen acceptor']):
+                    i = md-1 + nMol*(od-1)
+                    j = ma-1 + nMol*(oa-1)
+                    G.add_edge(i,j)
+                    G.add_edge(j,i)
+                for I in range(nMol):
+                    G.add_edge(I, I+nMol)
+                    G.add_edge(I+nMol, I)
+                graphs = list(nx.connected_component_subgraphs(G))
+                path_lengths = []
+                for m in graphs:
+                    end_nodes = [i for i in m if m.degree[i]==1]
+                    for i, source in enumerate(end_nodes):
+                        for j in range(i+1,len(end_nodes)):
+                            my_path = nx.shortest_path(m,source=source,
+                                                       target=end_nodes[j])
+                            path_lengths.append(len(my_path))
+                self.HB[iframe][my_box][pair+' oxygen path length'] = path_lengths
+                self.HB[iframe][my_box][pair+' cluster size'] = [len(m.nodes) for
+                                                                 m in graphs]
 
     def countHB(self, nIndep, feed, data):
         new = self.__class__('HB-data')
@@ -188,16 +267,24 @@ class HB(Struc):
                 HB = hy_bond_fromDB(hist_data, self.args['box'], self.args['htype'],
                                 self.args['name'], self.feed)
         else:
-            D.calcHB(self.args['box'])
+            D.calcHB(self.args['box'], self.args['verbosity'])
             HB = D.countHB(self.args['indep'],self.feed, D.HB)
             outputDB(self.args['path'],[self.feed],self.args['type'],
                 {self.args['name']+'-' + self.args['htype'] + '-'+self.args['box']:HB})
 
-from MCFlow.runAnalyzer import what2Analyze
-from MCFlow.file_formatting.writer import xyz
+
+nx_options = {
+ 'node_color': 'black',
+'node_size': 8,
+'width': 1}
+
+import matplotlib.pyplot as plt
+import networkx as nx
 from MCFlow.calc_tools import calculate_distance2, calculate_angle
 from MCFlow.parser import MultMols
 from MCFlow.getData import outputDB
+import numpy as np
+import scipy.sparse as sps
 import shelve, os
 
 if __name__ == '__main__':

@@ -158,6 +158,7 @@ class Movie:
         for box in N.keys():
             for mol in N[box].keys():
                 mol_num = mol.strip('mol')
+                print(mol_num, N[box][mol]['raw data'])
                 if not N[box][mol]:
                     continue
                 if mol_num not in num_molec_data.keys():
@@ -183,11 +184,17 @@ class Movie:
                             all_data.append(seed_data)
                         else:
                             all_data += seed_data
-                    histogram, edges = np.histogram(all_data, bins=list(range(max(all_data)+2)))
-                    num_molec_data[mol_num][box]['histogram'] = histogram
-                    num_molec_data[mol_num][box]['edges'] = edges
+                    if len(all_data) > 0:
+                        histogram, edges = np.histogram(all_data, bins=list(range(max(all_data)+2)))
+                        num_molec_data[mol_num][box]['histogram'] = histogram
+                        num_molec_data[mol_num][box]['edges'] = edges
+                    else:
+                        raise ValueError
                 except ValueError:
-                    num_molec_data[mol_num].pop(box)
+                    if len(num_molec_data[mol_num].keys()) > 1:
+                        num_molec_data[mol_num].pop(box)
+                    else:
+                        num_molec_data.pop(mol_num)
         self.averages[feed] = num_molec_data
 
     def foldMovieToUC(self, uc_vectors):

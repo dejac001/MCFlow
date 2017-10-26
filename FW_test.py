@@ -1,30 +1,28 @@
 def FloydWarshallWithPath(weights):
     '''
     '''
-    dist = np.ones(np.shape(weights[:]))
-    my_next = np.ones(np.shape(weights[:]))*-1
+    dist = np.ones(np.shape(weights))
+    prev = np.ones(np.shape(weights),dtype=int)*-9999
     N, M = np.shape(weights)
     assert N == M, 'Weights matrix not square'
     for u in range(N):
         for v in range(N):
             dist[u,v] = weights[u,v]
-            my_next[u,v] = v
+            prev[u,v] = u
     for k in range(N):
         for i in range(N):
             for j in range(N):
                 if dist[i,j] > dist[i,k] + dist[k,j]:
                     dist[i,j] = dist[i,k] + dist[k,j]
-                    my_next[i,j] = my_next[i,k]
-    return dist, my_next
+                    prev[i,j] = prev[k,j]
+    return dist, prev
 
-def Path(u,v,nexxt):
-    if nexxt[u,v] == -1:
-        return []
-    path = []
-    while u != v:
-        u = nexxt[u,v]
-        path.append(u)
-    return path
+def Path_new(u,v, prev, path=[]):
+    if u != v:
+        v = prev[u,v]
+        return Path_new(u,v,prev, path=[v] + path)
+    else:
+        return path
 
 def test():
     weights = np.matrix([
@@ -34,12 +32,22 @@ def test():
     [np.inf, -1, np.inf, 0]])
     return weights
 
+def test1():
+    w = test()
+    return FloydWarshallWithPath(w)
+
+def test2():
+    weights = test()
+    return sps.csgraph.floyd_warshall(weights,return_predecessors=True)
+
+import scipy.sparse as sps
 import numpy as np
 
 if __name__ == '__main__':
-    w = test()
-    d,n = FloydWarshallWithPath(w)
-    print(d)
-    print(Path(2,1,n))
-    print(Path(2,0,n))
-    print(Path(0,1,n))
+    d,n1 = test1()
+    d,n2 = test2()
+    u,v=0,1
+    test_mine = Path_new(u,v,n1)
+    test_yours = Path_new(u,v,n2)
+    print(test_mine + [v])
+    print(test_yours + [v])
