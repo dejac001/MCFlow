@@ -82,6 +82,8 @@ class Results(Plot):
     def __init__(self):
         Plot.__init__(self)
         Main.other(self)
+        self.parser.add_argument('-ig','--ignore',help='fraction of frames to consider',type=int,
+                                      default=1)
         self.parser.description = 'Obtain results for simulations'
     def multi(self):
         self.parser.add_argument('-M','--molecules',help='Molecules to analyze for trajectory',

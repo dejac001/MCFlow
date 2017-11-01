@@ -15,7 +15,7 @@ class Movie:
         self.file_name = file_name
         self.anal_args = args
 
-    def read_header(self):
+    def read_header(self, frac_of_frames=1):
         self.file = open(self.file_name)
         (self.nframes, self.nchain, self.nmolty,
          self.nbox, nBeadType) = [int(i) for i in self.file.readline().split()]
@@ -29,9 +29,11 @@ class Movie:
         self.frame_data = []
         self.boxlengths = []
         self.frame_seed = []
+        self.fraction_read = frac_of_frames
 
     def read_movie_frames(self, seed):
         for frame_count in range(1, self.nframes+1):
+            if (frame_count-1)%self.fraction_read != 0: continue
             try:
                 NumPrevCycles = int(self.file.readline()) # num cycles since last frame
             except ValueError:
@@ -181,7 +183,7 @@ class Movie:
                             all_data.append(seed_data)
                         else:
                             all_data += seed_data
-                    histogram, edges = np.histogram(all_data, bins=list(range(max(all_data)+1)))
+                    histogram, edges = np.histogram(all_data, bins=list(range(max(all_data)+2)))
                     num_molec_data[mol_num][box]['histogram'] = histogram
                     num_molec_data[mol_num][box]['edges'] = edges
                 except ValueError:

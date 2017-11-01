@@ -91,11 +91,11 @@ class Struc:
                 if (fileNum == old_begin) and (seed == self.args['indep'][0]):
                     # keep track of info only for each feed
                     I = self.analysis_class(movie_file, *args)
-                    I.read_header()
+                    I.read_header(self.args['ignore'])
                     I.read_movie_frames(seed)
                 else:
                     F = self.analysis_class(movie_file, *args)
-                    F.read_header()
+                    F.read_header(self.args['ignore'])
                     F.read_movie_frames(seed)
                     I = I + F
         return I

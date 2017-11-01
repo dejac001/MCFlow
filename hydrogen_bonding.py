@@ -146,19 +146,6 @@ class HydrogenBond(Movie):
                             my_from_HB += my_nHB
                         self.HB[iframe][my_box][pair].append( my_from_HB )
 
-    def filterHB(self):
-        '''
-        we want to only keep positions of O and H involved in a hydrogen bond
-        '''
-        for iframe, FRAME_DATA in enumerate(self.frame_data):
-            for box, values in self.HB[iframe].items():
-                for pair in values.keys():
-                    indices_to_keep = []
-                    for ipair, nHB in enumerate(values[pair]):
-                        if nHB > 0:
-                            indices_to_keep.append( ipair )
-                    FRAME_DATA[box][pair] = [value for i, value in enumerate(FRAME_DATA[box][pair])
-                                                   if i in indices_to_keep]
     def countHB(self, nIndep, feed, data):
         new = self.__class__('HB-data')
         for attr, value in self.__dict__.items():
