@@ -127,4 +127,4 @@ if __name__ == '__main__':
     parent_parser.add_argument('-lmn','--replicate',help='integer number of cells in each dimension '
                                                   '(1 does no replication)',
                         type=int, nargs='+')
-    replicate_file(parent_parser)
+    replicate_box(parent_parser)

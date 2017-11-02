@@ -158,7 +158,6 @@ class Movie:
         for box in N.keys():
             for mol in N[box].keys():
                 mol_num = mol.strip('mol')
-                print(mol_num, N[box][mol]['raw data'])
                 if not N[box][mol]:
                     continue
                 if mol_num not in num_molec_data.keys():

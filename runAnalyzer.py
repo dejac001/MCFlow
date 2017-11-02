@@ -98,6 +98,8 @@ def calcDGfromNumDens(rho, N_i, T):
         if (N_i[mlcl_name] > 0):
             assert mol in rho.keys(), '{} not in rho.keys()!'.format(mlcl_name)
             dG[mol] = {}
+            if mol not in rho.keys():
+                continue
             for boxFrom in sorted(rho[mol].keys()):
                 for boxTo in [i for i in list(rho[mol].keys()) if i != boxFrom]:
                     key = boxFrom + '--' + boxTo
