@@ -197,6 +197,8 @@ class HydrogenBond(Movie):
                             self.HB[iframe][my_box][pair].append( my_from_HB )
             for pair, values in self.HB_pairs.items():
                 if sum(self.HB[iframe][my_box][pair]) == 0.:
+                    self.HB[iframe][my_box][pair+' oxygen path length'] = []
+                    self.HB[iframe][my_box][pair+' cluster size'] = []
                     continue
                 mol1, mol2 = pair.split('->')
                 if mol1 != mol2 or mol1 == '1': continue

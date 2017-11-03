@@ -15,14 +15,14 @@ class HB:
                     if (feed in db.keys()) and (len(db[feed].keys()) > 1):
                         self.HB[feed] = db[feed]
         # also try DBs in main directory
-        files_list = set(i for i in os.listdir(self.path)
-                                if (i.startswith('HB-')) )
-        for feed in [i for i in self.feeds if i not in self.HB.keys()]:
-            for file in files_list:
-                with shelve.open('%s/%s'%(self.path,file)) as db:
-                    if (feed in db.keys()) and (len(db[feed].keys()) > 1):
-                        self.HB[feed] = db[feed]
-                
+#       files_list = set(i for i in os.listdir(self.path)
+#                               if (i.startswith('HB-')) )
+#       for feed in [i for i in self.feeds if i not in self.HB.keys()]:
+#           for file in files_list:
+#               with shelve.open('%s/%s'%(self.path,file)) as db:
+#                   if (feed in db.keys()) and (len(db[feed].keys()) > 1):
+#                       self.HB[feed] = db[feed]
+
         notInDB = []
         for feed in self.feeds:
             if feed not in self.HB.keys():
@@ -35,6 +35,10 @@ class HB:
     def HB_write(self):
         assert self.mol, 'Mol needed  for HB plot x axis'
         nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        if self.run not in self.HB[self.feed].keys():
+            print('not plotting for %s %s %s'%(self.feed, self.run, self.box))
+            print(self.run, self.HB[self.feed].keys())
+            return
         HB = self.HB[self.feed][self.run]
         file_description = 'Q       N_HB        dQ          dN_HB'
         if self.box == 'box3':
@@ -45,13 +49,12 @@ class HB:
             X = self.getX()
         for pair in HB.keys():
             if self.box not in HB[pair].keys():
-                pass
+                continue
             elif HB[pair][self.box]['mean'] > 0.:
-                file_name = 'HB_%s_v_%s_%s.dat'%(pair.replace('->','-'), self.mol, self.xlabel[0])
+                file_name = 'HB_%s_v_%s_%s.dat'%(pair.replace('->','-').replace(' ',''), self.mol, self.xlabel[0])
                 writeAGR([X['mean']], [HB[pair][self.box]['mean']],
                          [calc95conf(X['stdev'],nIndep)], [calc95conf(HB[pair][self.box]['stdev'], nIndep)],
                          [self.feed], file_name, file_description)
-
 class HBvQ(LoadAds, HB):
     def __init__(self, **kwargs):
         LoadAds.__init__(self, **kwargs)
