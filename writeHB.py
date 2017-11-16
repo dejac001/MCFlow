@@ -8,20 +8,33 @@ class HB:
         self.HB = {}
         for feed in self.feeds:
             my_dir = '%s/%s'%(self.path,feed)
-            files_list = set(i[:-4] for i in os.listdir(my_dir)
-                            if (('HB-120deg' in i) and (self.box in i)))
+            files_list = []
+            for i in os.listdir(my_dir):
+                if (('HB-120deg' in i) and (self.box in i)):
+                    if i[-3:] == '.db':
+                        files_list.append(i)
+                    else:
+                        files_list.append(i[:-4])
+            files_list = set(files_list)
             for file in files_list:
+                print(my_dir, file)
                 with shelve.open('%s/%s'%(my_dir, file)) as db:
                     if (feed in db.keys()) and (len(db[feed].keys()) > 1):
                         self.HB[feed] = db[feed]
         # also try DBs in main directory
-#       files_list = set(i for i in os.listdir(self.path)
-#                               if (i.startswith('HB-')) )
-#       for feed in [i for i in self.feeds if i not in self.HB.keys()]:
-#           for file in files_list:
-#               with shelve.open('%s/%s'%(self.path,file)) as db:
-#                   if (feed in db.keys()) and (len(db[feed].keys()) > 1):
-#                       self.HB[feed] = db[feed]
+        files_list = []
+        for i in os.listdir(self.path):
+            if i.startswith('HB-120deg'):
+                if i[-3:] == '.db':
+                    files_list.append(i)
+                else:
+                    files_list.append(i[:-4])
+        files_list = set(files_list)
+        for feed in [i for i in self.feeds if i not in self.HB.keys()]:
+            for file in files_list:
+                with shelve.open('%s/%s'%(self.path,file)) as db:
+                    if (feed in db.keys()) and (len(db[feed].keys()) > 1):
+                        self.HB[feed] = db[feed]
 
         notInDB = []
         for feed in self.feeds:

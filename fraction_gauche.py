@@ -60,6 +60,7 @@ class Torsion(Movie):
         assert self.nframes == len(self.frame_data), 'Error in adding frames'
         print('Total amount of frames analyzed was %i'%self.nframes)
         torsion_histogram = {}
+        all_trans_histogram = {}
         no_torsion_mols = []
         for iframe, FRAME_DATA in enumerate(self.frame_data):
             try:
@@ -81,26 +82,35 @@ class Torsion(Movie):
                             else:
                                 name = box
                                 abc = self.boxlengths[iframe][box]
-                            if name not in torsion_histogram.keys(): torsion_histogram[name] = {}
+                            if name not in torsion_histogram.keys():
+                                torsion_histogram[name] = {}
+                                all_trans_histogram[name] = {}
                             torsion_data = get_tors(each_molecule,abc)
                             if len(torsion_data.keys()) == 0:
                                 raise NoTorsions
                             if mlcl not in torsion_histogram[name].keys():
                                 torsion_histogram[name][mlcl] = [[] for
-                                                             i in range(len(set(self.frame_seed)))]
+                                            i in range(len(set(self.frame_seed)))]
+                                all_trans_histogram[name][mlcl] = [[] for
+                                            i in range(len(set(self.frame_seed)))]
                             # combine torsion types
                             all_tors_data = []
                             for torsion_type, tdata in torsion_data.items():
                                 all_tors_data += tdata
+                            l_gauche = [determine_gauche(i) for i in all_tors_data]
                             torsion_histogram[name][mlcl][seed-1] += all_tors_data
+                            if l_gauche.count(False) == len(l_gauche):
+                                all_trans_histogram[name][mlcl][seed-1].append(True)
+                            else:
+                                all_trans_histogram[name][mlcl][seed-1].append(False)
                     except NoTorsions:
                         print('No torsions found for %s'%mlcl)
                         no_torsion_mols.append(mlcl)
                         continue
-        return torsion_histogram
+        return torsion_histogram, all_trans_histogram
 
     def getFracGauche(self, uc_vectors):
-        torsion_histogram = self.getTorsions(uc_vectors)
+        torsion_histogram, all_trans_h = self.getTorsions(uc_vectors)
         fraction_gauche = {}
         for box, d1 in torsion_histogram.items():
             if box not in fraction_gauche.keys(): fraction_gauche[box]  = {}
@@ -114,9 +124,15 @@ class Torsion(Movie):
                     if len(l_gauche) > 0:
                         f_gauche = l_gauche.count(True)/len(l_gauche)
                         fraction_gauche[box][mlcl]['raw data'].append(f_gauche)
+                f_all_trans = []
+                for seed_data in all_trans_h[box][mlcl]:
+                    if len(seed_data) > 0:
+                        f_all_trans.append(seed_data.count(True)/len(seed_data))
                 fraction_gauche[box][mlcl]['mean'] = np.mean(fraction_gauche[box][mlcl]['raw data'])
+                fraction_gauche[box][mlcl]['all trans mean'] = np.mean(f_all_trans)
+                fraction_gauche[box][mlcl]['all trans stdev'] = np.std(f_all_trans)
                 fraction_gauche[box][mlcl]['stdev'] = np.std(fraction_gauche[box][mlcl]['raw data'])
-                # fraction_gauche[box][mlcl]['hist'] = hist
+#               fraction_gauche[box][mlcl]['hist'] = hist
         return fraction_gauche
 
 class T(Struc):

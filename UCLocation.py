@@ -1,10 +1,12 @@
 from MCFlow.structure_analysis import Struc
 from MCFlow.file_formatting.reader import Movie
+from MCFlow.calc_tools import fold
 
 class FindRegion(Struc):
     def __init__(self,vectors,lmn):
         self.abc = vectors
         self.lmn = lmn
+        self.ABC = [i*j for i,j in zip(vectors, lmn)]
 
     def init_grids(self):
         unit_cells = []
@@ -16,7 +18,7 @@ class FindRegion(Struc):
         self.regionNames = unit_cells
 
     def getRegion(self, xyz):
-        (x,y,z) = xyz
+        (x,y,z) = fold(xyz, self.ABC)
         (a,b,c) = self.abc
         x_unit_cell = math.floor(x/a)
         y_unit_cell = math.floor(y/b)
@@ -42,8 +44,7 @@ class Channel(FindRegion):
                                       type = int, nargs = '+', default=None)
         my_args = vars(my_parser.parse_args())
         self.args = my_args
-        self.abc = self.args['vectors']
-        self.lmn = self.args['replications']
+        FindRegion.__init__(self, self.args['vectors'],self.args['replications'])
         self.numIndep = self.args['indep']
         self.checks()
         self.init_grids()

@@ -12,7 +12,7 @@ def calcRelDiff(val1, val2):
     return abs( (val1 - val2) / ( (val1+val2)/2 ) )
                                         
 def pbc(coord, boxlength):
-    if coord > boxlength:
+    if coord >= boxlength:
         folded = coord - boxlength
     elif coord < 0:
         folded = coord + boxlength
@@ -40,7 +40,7 @@ def get_vector(xyz1, xyz2, abc):
             # positive
             vector[i] = abc[i] - vector[i]
         elif vector[i] < -1.*abc[i]/2.:
-            vector[i] = abc[i] + vector[i]
+            vector[i] = -1*(abc[i] + vector[i])
     return vector
 
 def calculate_distance(xyz1, xyz2, abc):
@@ -90,10 +90,10 @@ def calculate_angle(c1,c2,c3,abc):
     return theta
 
 def determine_gauche(phi):
-    if (phi <= 60.*np.pi/180.) or (phi >= 300.*np.pi/180):
-        return False # Trans
+    if (phi <= 120.*np.pi/180.) or (phi >= 240.*np.pi/180):
+        return True  # gauche
     else:
-        return True # gauche
+        return False # Trans
 
 def calculate_torsion_poor(vectors):
     # phi convention trappe website; 180 is trans
@@ -117,7 +117,10 @@ def calculate_torsion(vectors):
     #     print(np.cross(b1,b2),np.linalg.norm(b1-b2,1))
     #     print(np.linalg.norm(b1,ord=1)+np.linalg.norm(b2,ord=1))
     #     quit()
-    return atan + np.pi
+    if atan < 0.:
+        return atan + 2*np.pi
+    else:
+        return atan
 
 def ePropC2K(mean, error):
     '''
