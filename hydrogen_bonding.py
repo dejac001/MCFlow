@@ -193,8 +193,7 @@ class HydrogenBond(Movie):
                             my_from_HB += my_nHB
                             for key, value in HB_pairs.items():
                                 self.HB_pairs[pair][key] += value
-                        if my_from_HB > 0:
-                            self.HB[iframe][my_box][pair].append( my_from_HB )
+                        self.HB[iframe][my_box][pair].append( my_from_HB )
             for pair, values in self.HB_pairs.items():
                 if sum(self.HB[iframe][my_box][pair]) == 0.:
                     self.HB[iframe][my_box][pair+' oxygen path length'] = []
