@@ -33,7 +33,8 @@ class Movie:
 
     def read_movie_frames(self, seed):
         for frame_count in range(1, self.nframes+1):
-            if (frame_count-1)%self.fraction_read != 0: continue
+            if (frame_count-1)%self.fraction_read != 0:
+                continue
             try:
                 NumPrevCycles = int(self.file.readline()) # num cycles since last frame
             except ValueError:
@@ -84,6 +85,8 @@ class Movie:
         new.nmolty = self.nmolty
         assert self.nbox == other.nbox, 'nbox not equal for adding movie files'
         new.nbox = self.nbox
+        assert self.fraction_read == other.fraction_read, 'fraction read not equal'
+        new.fraction_read = self.fraction_read
         new.boxlengths = self.boxlengths + other.boxlengths
         return new
 
@@ -220,8 +223,9 @@ class Movie:
         :param box: String box number.
         of all molecules in this box
         '''
-        assert self.nframes == len(self.frame_data), 'Error in adding frames'
-        print('Total amount of frames analyzed was %i'%self.nframes)
+        i,j = math.floor(self.nframes/self.fraction_read) , len(self.frame_data)
+        assert i==j, 'Error in adding frames %i != %i'%(i,j)
+        print('Total amount of frames analyzed was %i'%len(self.frame_data))
         xyz_data = {'atoms':[], 'coords':[]}
         for FRAME_DATA in self.frame_data:
             for each_molecule in FRAME_DATA['box%s'%box]['mol%s'%mlcl]:
@@ -243,8 +247,6 @@ class Movie:
         of all molecules in this box
         '''
         from MCFlow.calc_tools import calculate_angle
-        assert self.nframes == len(self.frame_data), 'Error in adding frames'
-        print('Total amount of frames analyzed was %i'%self.nframes)
         angle_histogram = {}
         for iframe, FRAME_DATA in enumerate(self.frame_data):
             for box in FRAME_DATA.keys():
@@ -278,8 +280,6 @@ class Movie:
         of all molecules in this box
         '''
         from MCFlow.calc_tools import get_tors
-        assert self.nframes == len(self.frame_data), 'Error in adding frames'
-        print('Total amount of frames analyzed was %i'%self.nframes)
         torsion_histogram = {}
         for iframe, FRAME_DATA in enumerate(self.frame_data):
             for box in FRAME_DATA.keys():
@@ -821,3 +821,4 @@ import copy
 import numpy as np
 from MCFlow import properties
 from MCFlow.calc_tools import weighted_avg_and_std
+import math

@@ -379,6 +379,8 @@ class RhoBoxAds(IdealGasAds):
 
 class GasBoxAds(IdealGasAds):
     def __init__(self, **kwargs):
+        kwargs['mol'] = 'dummy'
+        kwargs['Temp'] = 1.
         IdealGasAds.__init__(self, **kwargs)
         self.vapor_box = self.box
         self.xlabel= ['P-box(kPa)', 'dP-box(kPa)']
@@ -587,7 +589,10 @@ class MoleFrac(LiqAds):
         mole_frac = self.X[self.feed][self.run]
         if myMol == None: myMol = self.mol
         if box == None: box = self.box
-        return mole_frac[box][myMol]
+        if myMol in mole_frac[box].keys():
+            return mole_frac[box][myMol]
+        else:
+            return {'mean':0.,'stdev':0.}
 
     def Txy(self):
         nIndep = self.gen_data[self.feed][self.run]['numIndep']
