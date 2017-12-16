@@ -171,8 +171,21 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
                 newSwaps[moveType][direction] = 1.0
                 index += 1
                 addToMatrix(swapMatrix, index, pctAct[moveType][direction])
+        elif len(swapInfo[moveType].keys()) == 3:
+            dir1, dir2, dir3 = swapInfo[moveType].keys()
+            A = np.matrix([[pctAct[moveType][dir1], -1*pctAct[moveType][dir2], 0.],
+                            [0.,    pctAct[moveType][dir2], -1*pctAct[moveType][dir3]],
+                            [1.,                1.,             1.]])
+            b = np.matrix([[0],[0],[1]])
+            pDir1, pDir2, pDir3 = np.linalg.solve(A, b)
+            newSwaps[moveType][dir1] = pDir1[0]
+            newSwaps[moveType][dir2] = pDir2[0]
+            newSwaps[moveType][dir3] = pDir3[0]
+            effective_acceptance = pDir1[0]*pctAct[moveType][dir1]
+            index += 1
+            addToMatrix(swapMatrix, index, effective_acceptance)
         else:
-            print('!!!probability script not ready for 3 different types of directions')
+            print('!!!probability script not ready for %i different types of directions'%(len(swapInfo[moveType].keys())))
             quit()
     swapMatrix[-1,:] = 1
 
