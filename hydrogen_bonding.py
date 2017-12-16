@@ -1,7 +1,5 @@
 
 from MCFlow.structure_analysis import Struc
-aOHO_min = 120./180*3.1415926535897931 # degrees
-rOH_max = 6.25 # 2.5*2.5
 rOO_max = 10.89 # 3.3*3.3
 
 class DoneSearching(Exception):
@@ -41,7 +39,7 @@ def hy_bond_from_DB(hmap_data, box, htype, name, feed):
         nHB = 0
         for rOH, aOHO in zip(values['distance'], values['angle']):
             if htype == 'strict':
-                if (rOH < rOH_max) and (aOHO > aOHO_min):
+                if (rOH < rOH_max) and (aOHO > angle):
                     nHB += 1
         n1 = hmap_data[box][mol1]
         n2 = hmap_data[box][mol2]
@@ -50,7 +48,7 @@ def hy_bond_from_DB(hmap_data, box, htype, name, feed):
     with shelve.open(name +'-'+ htype + '-'+box+'-data.db',writeback=True) as db:
         db[feed] = my_db
 
-def findHB(beadsFrom, beadsTo, abc, criteria, molNum1, molNum2):
+def findHB(beadsFrom, beadsTo, abc, criteria, angle, dist_sq, molNum1, molNum2):
     def addData(molDonor, molAcceptor, O_Donor, O_Acceptor):
         HB_pairs['mol donor'].append(molDonor)
         HB_pairs['oxygen donor'].append(O_Donor)
@@ -69,12 +67,12 @@ def findHB(beadsFrom, beadsTo, abc, criteria, molNum1, molNum2):
                 # look for O1--H1...O2 hbonds
                 if criteria == 'loose':
                     if ((calculate_distance2(O1, O2, abc) < rOO_max) and
-                        (calculate_distance2(O2, H1, abc) < rOH_max)):
+                        (calculate_distance2(O2, H1, abc) < dist_sq)):
                         nHB += 1
                         addData(molNum2, molNum1, nO2+1, nO1+1)
                 elif criteria == 'strict':
-                    if ((calculate_distance2(H1,O2,abc) < rOH_max) and
-                        (calculate_angle(O1,H1,O2,abc) > aOHO_min)):
+                    if ((calculate_distance2(H1,O2,abc) < dist_sq) and
+                        (calculate_angle(O1,H1,O2,abc) > angle)):
                         nHB +=1
                         addData(molNum2, molNum1, nO2+1, nO1+1)
             # iterate through all H on molecule 2 that are bonded to O2
@@ -82,12 +80,12 @@ def findHB(beadsFrom, beadsTo, abc, criteria, molNum1, molNum2):
                 # look for O2--H2...O1 hbonds
                 if criteria == 'loose':
                     if ((calculate_distance2(O1, O2, abc) < rOO_max) and
-                        (calculate_distance2(O1, H2, abc) < rOH_max)):
+                        (calculate_distance2(O1, H2, abc) < dist_sq)):
                         nHB += 1
                         addData(molNum1, molNum2, nO1+1, nO2+1)
                 elif criteria == 'strict':
-                    if ((calculate_distance2(H2,O1,abc) < rOH_max) and
-                        (calculate_angle(O2,H2,O1,abc) > aOHO_min)):
+                    if ((calculate_distance2(H2,O1,abc) < dist_sq) and
+                        (calculate_angle(O2,H2,O1,abc) > angle)):
                         nHB +=1
                         addData(molNum1, molNum2, nO1+1, nO2+1)
     return nHB, HB_pairs
@@ -188,7 +186,9 @@ class HydrogenBond(Movie):
                         my_from_HB = 0
                         for n2, HB_to_beads in enumerate(HB_data[mol2]):
                             # determine hydrogen bonds with molecules of interest
-                            my_nHB, HB_pairs = findHB(HB_from_beads, HB_to_beads, self.boxlengths[iframe][my_box], self.criteria,
+                            my_nHB, HB_pairs = findHB(HB_from_beads, HB_to_beads, 
+                                                    self.boxlengths[iframe][my_box], self.criteria,
+                                                    self.angle_radians, self.dist_squared,
                                             n1+1, n2+1)
                             my_from_HB += my_nHB
                             for key, value in HB_pairs.items():
@@ -243,6 +243,10 @@ class HB(Struc):
                                       type=str, choices = ['loose','strict'],default='strict')
         self.parser.parser.add_argument('-R','--readDB',help='whether or not to read databases',
                                       type=bool, default=False)
+        self.parser.parser.add_argument('-a','--minAngle',help='minimum OHO angle (degrees) for strict criteria',
+                                            type=float,default=120)
+        self.parser.parser.add_argument('-d','--minDist',help='minimum OH dist (angstrom) for strict criteria',
+                                            type=float,default=2.5)
         self.getArgs()
 
     def getArgs(self):
@@ -258,6 +262,7 @@ class HB(Struc):
 
     def myCalcs(self, D ):
         D.criteria = self.args['htype']
+        D.angle_radians, D.dist_squared = self.args['minAngle']/180.*np.pi, self.args['minDist']*self.args['minDist']
         if self.args['readDB']:
             hist_data = readDBs(self.args['path'], self.feed, self.args['type'], [self.args['box']])
         if self.args['readDB'] and (('nchain count' in hist_data.keys()) and
@@ -271,7 +276,8 @@ class HB(Struc):
             D.calcHB(self.args['box'], self.args['verbosity'])
             HB = D.countHB(self.args['indep'],self.feed, D.HB)
             outputDB(self.args['path'],[self.feed],self.args['type'],
-                {self.args['name']+'-' + self.args['htype'] + '-'+self.args['box']:HB})
+                {self.args['name']+'-%ideg.-%.2fAngst.'%(self.args['minAngle'], self.args['minDist'])
+                        +'-' + self.args['htype'] + '-'+self.args['box']:HB})
 
 
 nx_options = {
