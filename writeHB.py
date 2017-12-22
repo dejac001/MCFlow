@@ -10,49 +10,31 @@ class HB:
             my_dir = '%s/%s'%(self.path,feed)
             files_list = []
             for i in os.listdir(my_dir):
-                if (('HB-120deg' in i) and (self.box in i)):
+                if i.startswith('HB-%sdeg-%sAngst-'%(self.angle, self.dist)) and (self.box in i):
                     if i[-3:] == '.db':
                         files_list.append(i)
-                    else:
+                    elif i[:-4][-3:] == '.db':
                         files_list.append(i[:-4])
             files_list = set(files_list)
             for file in files_list:
-                print(my_dir, file)
                 with shelve.open('%s/%s'%(my_dir, file)) as db:
                     if (feed in db.keys()) and (len(db[feed].keys()) > 1):
                         self.HB[feed] = db[feed]
-        # also try DBs in main directory
-        files_list = []
-        for i in os.listdir(self.path):
-            if i.startswith('HB-120deg'):
-                if i[-3:] == '.db':
-                    files_list.append(i)
-                else:
-                    files_list.append(i[:-4])
-        files_list = set(files_list)
-        for feed in [i for i in self.feeds if i not in self.HB.keys()]:
-            for file in files_list:
-                with shelve.open('%s/%s'%(self.path,file)) as db:
-                    if (feed in db.keys()) and (len(db[feed].keys()) > 1):
-                        self.HB[feed] = db[feed]
-
         notInDB = []
         for feed in self.feeds:
             if feed not in self.HB.keys():
                 notInDB.append(feed)
         assert len(notInDB) == 0, 'Feeds {} not in databases'.format(notInDB)
         for i in notInDB:
-            print('not plotting for feed %s'%i)
+            print('not plotting for feed %s, %sdeg-%sAngst'%(i,self.angle,self.dist))
             self.feeds.remove( i )
 
     def HB_write(self):
         assert self.mol, 'Mol needed  for HB plot x axis'
         nIndep = self.gen_data[self.feed][self.run]['numIndep']
-        if self.run not in self.HB[self.feed].keys():
-            print('not plotting for %s %s %s'%(self.feed, self.run, self.box))
-            print(self.run, self.HB[self.feed].keys())
-            return
-        HB = self.HB[self.feed][self.run]
+        print([i for i in self.HB[self.feed].keys() if i[:-1] in self.run])
+        my_run = [i for i in self.HB[self.feed].keys() if i[:-1] in self.run][0]
+        HB = self.HB[self.feed][my_run]
         file_description = 'Q       N_HB        dQ          dN_HB'
         if self.box == 'box3':
             self.box = 'box2'
@@ -61,26 +43,44 @@ class HB:
         else:
             X = self.getX()
         for pair in HB.keys():
-            if self.box not in HB[pair].keys():
-                continue
-            elif HB[pair][self.box]['mean'] > 0.:
+            if HB[pair][self.box]['mean'] > 0.:
                 file_name = 'HB_%s_v_%s_%s.dat'%(pair.replace('->','-').replace(' ',''), self.mol, self.xlabel[0])
                 writeAGR([X['mean']], [HB[pair][self.box]['mean']],
                          [calc95conf(X['stdev'],nIndep)], [calc95conf(HB[pair][self.box]['stdev'], nIndep)],
                          [self.feed], file_name, file_description)
+
 class HBvQ(LoadAds, HB):
     def __init__(self, **kwargs):
         LoadAds.__init__(self, **kwargs)
         assert self.units, 'Units needed for plot'
         if kwargs['feeds']:
             self.feeds = kwargs['feeds']
+        if kwargs['angle']:
+            self.angle = kwargs['angle']
+        if kwargs['dist']:
+            self.dist = kwargs['dist']
 
 class HBvX(MoleFrac, HB):
     def __init__(self, **kwargs):
         MoleFrac.__init__(self, **kwargs)
         if kwargs['feeds']:
             self.feeds = kwargs['feeds']
+        if kwargs['angle']:
+            self.angle = kwargs['angle']
+        if kwargs['dist']:
+            self.dist = kwargs['dist']
         
+
+def parse_input():
+    my_parser = Plot()
+    my_parser.axes()
+    my_parser.isotherm()
+    my_parser.parser.add_argument('-a','--angle',help='angle for db criteria',type=str)
+    my_parser.parser.add_argument('-d','--dist',help='distance for db criteria',type=str)
+
+    kwargs = vars(my_parser.parse_args())
+    assert kwargs['xaxis'], 'No x axis chosen for plot'
+    return kwargs
 import shelve, os
 from MCFlow.parser import Plot
 from MCFlow.runAnalyzer import calc95conf, checkRun
@@ -89,12 +89,7 @@ from MCFlow.writeXvY import writeAGR
 if __name__ == '__main__':
     # TODO: find way to have conditional arguments based off of what xaxis and yaxis are
     # (in other words, we have an excess of variables as arguments)
-    my_parser = Plot()
-    my_parser.axes()
-    my_parser.isotherm()
-
-    args = vars(my_parser.parse_args())
-    assert args['xaxis'], 'No x axis chosen for plot'
+    args = parse_input()
 
     if args['xaxis'] == 'Q':
         my_plotter = HBvQ(**args)

@@ -10,7 +10,6 @@ class mykH(kH):
         :var X: either solution concentration (g/mL) or pressure (kPa)
         '''
         assert self.units, 'Units must be defined for isotherm'
-        print(self.feed, self.run)
         N = self.N[self.feed][self.run]
         gen_data = self.gen_data[self.feed][self.run]
         file_description = '%s    Q(%s)    %s     dQ'%(self.xlabel[0], self.units,
@@ -40,7 +39,11 @@ class mykH(kH):
                                 None, ['%s/%i'%(self.feed,j) for j in
                                 range(1, nIndep+1)], file_name, file_description)
                 else:
-                    Q_mean, Q_stdev = values['mean']*qfactor, values['stdev']*qfactor
+                    if 'all trans mean' in values.keys():
+                        Q_mean, Q_stdev = values['all trans mean']*qfactor, values['all trans stdev']*qfactor
+                    else:
+                        Q_mean, Q_stdev = values['mean']*qfactor, values['stdev']*qfactor
+#                   Q_mean, Q_stdev = values['mean']*qfactor, values['stdev']*qfactor
                     if '95conf' in X.keys():
                         dX = X['95conf']
                     else:
@@ -94,6 +97,7 @@ if __name__ == '__main__':
 
     for feed in args['feeds']:
         # determine if run has been completed
+        print(feed, 'before')
         my_plotter.run = checkRun(args['type'], my_plotter.variables, feed)
         print(feed, my_plotter.run)
         my_plotter.feed = feed

@@ -206,8 +206,9 @@ class Movie:
         '''
         my_box = 'box1' # no volume moves
         a, b, c = uc_vectors
-        for FRAME_DATA in self.frame_data:
+        for iframe, FRAME_DATA in enumerate(self.frame_data):
             # changing FRAME_DATA will change self.frame_data indexes
+            self.boxlengths[iframe][my_box] = uc_vectors
             for molType in FRAME_DATA[my_box].keys():
                 for each_molecule in FRAME_DATA[my_box][molType]:
                     for beadType, beadCoords in each_molecule.items():
