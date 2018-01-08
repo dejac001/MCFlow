@@ -422,6 +422,8 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
                     safe_cbmc = True
             # swap section analysis
             elif line.startswith('between box') and swap_section:
+                my_attempt, my_accept = int(line.split()[10]), int(line.split()[-1])
+                if my_attempt == 0: continue
                 if mol_type not in swap_info.keys(): swap_info[mol_type] = {}
                 boxpair = line.split()[2] + line.split()[4] #does not account for box from and box to
                 if boxpair not in swap_info[mol_type].keys():

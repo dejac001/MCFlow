@@ -276,7 +276,7 @@ class HB(Struc):
             D.calcHB(self.args['box'], self.args['verbosity'])
             HB = D.countHB(self.args['indep'],self.feed, D.HB)
             outputDB(self.args['path'],[self.feed],self.args['type'],
-                {self.args['name']+'-%ideg.-%.2fAngst.'%(self.args['minAngle'], self.args['minDist'])
+                {self.args['name']+'-%ideg-%.2fAngst'%(self.args['minAngle'], self.args['minDist'])
                         +'-' + self.args['htype'] + '-'+self.args['box']:HB})
 
 
