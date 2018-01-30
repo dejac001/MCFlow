@@ -192,7 +192,7 @@ def calcdH_mixt(U, P, rhomol, Ntot):
 
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
-                verbosity, liq=False, mol='-1', **kargs):
+                verbosity, liq=False, mol='-1', **kwargs):
     from file_formatting import reader
     general_data = {key:{} for key in feeds}
     # TODO: add molec name (i.e. 15PDO or WATER) into general_data
@@ -225,9 +225,12 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 dH_mixt = calcdH_mixt(E, P, number_dens_real, Ntotal)
                 if liq:
                     concentrations = {}
-                    c = calc_tools.g_mL(N[mol]['box2'], boxLengths['box2'],
+                    assert kwargs['box'], 'box needed for liquid phase'
+                    if 'box' not in kwargs['box']: kwargs['box'] = 'box' + kwargs['box']
+                    l_box = kwargs['box']
+                    c = calc_tools.g_mL(N[mol][l_box], boxLengths[l_box],
                                             MW=molWeights[mol])
-                    concentrations[mol] = {'box2':c}
+                    concentrations[mol] = {l_box:c}
                 # initialize vars
                 if (seed == indep[0]) and (feed == feeds[0]):
                     k_ratio = properties.AnyProperty(K)

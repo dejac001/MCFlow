@@ -77,7 +77,7 @@ if __name__ == '__main__':
         assert args['feeds'], 'No feeds to analyze'
 
     args_to_send = args
-    for key in ('rcut', 'nstep', 'time', 'force', 'box'):
+    for key in ('rcut', 'nstep', 'time', 'force'): #
         if key in args_to_send.keys():
             args_to_send.pop(key)
 

@@ -1,3 +1,56 @@
+def calculateProbs(nMol, nBeadMolty):
+    '''
+    currently only works for binary butanol/water. Assumes that molecules are not perfectly
+    linear (like CO2) and have 3 translational and 3 rotation degrees of freedom
+
+    Does not work for one atom molecules which have no rotational DOF
+
+    note that translational_fraction returned is cbmc_fraction + translation_fraction
+
+    :param nMol: number of molecules of each type in tuple or list
+    :param nBeadMolty: list or tuple. number of cbmc DOF for each molecule type.
+    :return: ratio of probabilities for cbmc and translation, and ratio of type of cbmc for each
+    '''
+    if len(nBeadMolty) != len(nMol):
+        print('----------number of beads for each molecule not provided correctly')
+        print('----------',nMol, nBeadMolty)
+        raise TypeError
+    dof_cbmc_molty = []
+    dof_trans_molty = []
+    dof_rot_molty = []
+    for molNum in range(len(nMol)):
+        if nBeadMolty[molNum] == 0:
+            # rigid molecule
+            dof_cbmc_molty.append(0)
+            dof_trans_molty.append(3*nMol[molNum])
+            dof_rot_molty.append(3*nMol[molNum])
+        else:
+            dof_cbmc_molty.append(nBeadMolty[molNum]*nMol[molNum])
+            dof_trans_molty.append(3*nMol[molNum])
+            dof_rot_molty.append(3*nMol[molNum])
+    translation_fraction = sum(dof_trans_molty)/ (sum(dof_cbmc_molty) + sum(dof_rot_molty)
+                                                  + sum(dof_trans_molty))
+    rotation_fraction = sum(dof_rot_molty)/ (sum(dof_cbmc_molty) + sum(dof_rot_molty)
+                                                  + sum(dof_trans_molty))
+    cbmc_fraction = sum(dof_cbmc_molty)/ (sum(dof_trans_molty) + sum(dof_rot_molty)+
+                                          sum(dof_cbmc_molty))
+    # now format for fort.4 file
+    translation_fraction = cbmc_fraction + translation_fraction
+    return cbmc_fraction, translation_fraction
+
+def calcCBMCmolTy(nMlcl, nBeads):
+    probabilityCBMCmolTy = []
+    totalProb = 0.
+    for mol in range(len(nMlcl)):
+        if sum([i*j for i,j in zip(nMlcl, nBeads)]) > 0.:
+            cbmcFrac = nMlcl[mol]*nBeads[mol]/sum([i*j for i,j in zip(nMlcl, nBeads)])
+        else:
+            cbmcFrac = 0
+        totalProb += cbmcFrac
+        probabilityCBMCmolTy.append( totalProb )
+    return probabilityCBMCmolTy
+
+
 def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
                          nActPerCycle=1, tavol = 0.4, maxProb=0.6):
     '''

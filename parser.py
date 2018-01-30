@@ -39,7 +39,7 @@ class Plot(Main):
         self.parser.add_argument('-m','--mol',help='Molecule to analyze', type=str)
         self.parser.add_argument('-TK','--Temp',help='Temperature in Kelvin',
                                   type=float)
-        self.parser.add_argument('-b','--box',help='box number to analyze', type=str)
+        self.parser.add_argument('-b','--box',help='box number to analyze', type=str,default='box2')
 
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',

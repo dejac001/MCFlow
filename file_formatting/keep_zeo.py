@@ -229,7 +229,7 @@ def keep_zeo(path, fort4, restart_file, temp, boxlx_vapor):
 
 indent = ' '*4
 from writer import makeNewLine
-from specialized.probchanger import calculateProbs
+from MCFlow.changeProbs import calculateProbs
 import math
 
 
