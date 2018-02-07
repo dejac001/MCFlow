@@ -95,6 +95,7 @@ def calcDGfromNumDens(rho, N_i, T):
     dG = {}
     for mlcl_name in N_i.keys():
         mol = mlcl_name.split()[0]
+        if mol not in rho.keys(): continue
         if (N_i[mlcl_name] > 0):
             assert mol in rho.keys(), '{} not in rho.keys()!'.format(mlcl_name)
             dG[mol] = {}
@@ -181,7 +182,7 @@ def calcdH_mixt(U, P, rhomol, Ntot):
                 U[boxFrom], U[boxTo],
                 Ntot[boxFrom], Ntot[boxTo]
             ):
-                if (N_to > 0) and (N_from > 0):
+                if (N_to > 0) and (N_from > 0) and boxFrom in rho_total.keys():
                     v_from = 1000./rho_total[boxFrom]*N_av
                     v_to = 1000./rho_total[boxTo]*N_av
                     delta_H =( (u_to/N_to - u_from/N_from)*R['kJ/(mol*K)'] +

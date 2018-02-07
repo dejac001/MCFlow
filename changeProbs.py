@@ -546,13 +546,13 @@ if __name__ == '__main__':
                         my_sum = 0.
                         for drn in sorted(dirs):
                             my_sum += value[drn]
-                            info += ' %6.4fd0'%(my_sum)
+                            info += ' %e'%(my_sum)
                         info += '\n! box numbers\n'
                         for drn in sorted(dirs):
                             info += drn[0] + ' ' + drn[1] + '\n'
                         input_data['MC_SWATCH'][s_num] = info
                         pmswatch_total += value['total']
-                        input_data['&mc_swatch']['pmsatc'][s_num] = '%6.4fd0'%pmswatch_total
+                        input_data['&mc_swatch']['pmsatc'][s_num] = '%e'%pmswatch_total
             input_data['&mc_swatch']['nswaty'] = '%i'%nSwatch
             # add in other stuff
             #   general info

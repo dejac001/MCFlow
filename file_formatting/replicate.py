@@ -1,4 +1,4 @@
-def replicate(coordinates, abc, lmn):
+def replicate(coordinates, abc, lmn, alpha=90.,gamma=90.,beta=90.):
     '''
 
     :param coordinates: data type read in by xyz or pdb
@@ -6,14 +6,25 @@ def replicate(coordinates, abc, lmn):
     :param lmn: integer number of cells in each dimension
     :return:
     '''
+    import numpy as np
     a, b, c = abc
+    alpha = alpha/180.*np.pi
+    beta = beta/180.*np.pi
+    gamma = gamma/180.*np.pi
+    H = np.matrix([[a*np.sin(beta), b*np.sin(alpha)*np.cos(gamma),0.],
+                    [0., b*np.sin(alpha)*np.sin(gamma), 0.],
+                    [a*np.cos(beta), b*np.cos(alpha), c]])
+    print(H)
     replicated = {'atoms':[], 'coords':[]}
     for xcell in range(lmn[0]):
         for ycell in range(lmn[1]):
             for zcell in range(lmn[2]):
                 for atom, xyz in zip(coordinates['atoms'], coordinates['coords']):
-                    x, y, z = xyz
-                    new_xyz = [x + xcell*a, y + ycell*b, z + zcell*c]
+                    xyz_cryst = np.linalg.inv(H)*np.vstack(xyz)
+                    xyz_cryst_new = xyz_cryst + np.matrix([[xcell],[ycell],[zcell]])
+                    new_xyz = H*xyz_cryst_new
+                    new_xyz = new_xyz.tolist()
+                    new_xyz = [new_xyz[0][0], new_xyz[1][0], new_xyz[2][0]]
                     replicated['atoms'].append( atom )
                     replicated['coords'].append( new_xyz )
     return replicated
@@ -55,7 +66,7 @@ def replicate_file(parent_parser):
     my_coords = replicate(coordinates, args['boxlengths'] ,args['replicate'])
     writer.PDB(args['writeFile'], my_coords)
 
-def replicate_box(parser):
+def replicate_box(parent_parser):
     import copy
     parser = argparse.ArgumentParser(description='replicate box',parents=[parent_parser])
     parser.add_argument('-b','--box',help='box to replicate',type=str)
@@ -111,10 +122,15 @@ def replicate_box(parser):
         print('For input dir %s , %i molecules of type %s added '%(
             args['input'][:args['input'].rfind('/')], nAdded,molID)
               )
-    writer.write_restart(new_restart_data, '%s/%s/fort.77.%s'%(
-        args['path'],args['restart'][:args['restart'].rfind('/')],args['extension']))
-    writer.write_fort4(new_input_data, '%s/%s/fort.4.%s'%(
-        args['path'],args['input'][:args['input'].rfind('/')],args['extension']))
+    for func, inputName, newData, fortNum in zip( [writer.write_restart,writer.write_fort4],
+                                            [args['restart'],args['input']],
+                                            [new_restart_data, new_input_data],
+                                            ['fort.77.','fort.4.']):
+        new_file_name = '%s'%args['path']
+        if '/' in inputName:
+            new_file_name += '/%s'%inputName[:inputName.rfind('/')]
+        new_file_name += '/%s%s'%(fortNum, args['extension'])
+        func(newData, new_file_name)
 
 from MCFlow.file_formatting import reader
 from MCFlow.file_formatting import writer
