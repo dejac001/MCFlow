@@ -1,5 +1,5 @@
 def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
-            numVapor, maxSorbate, changeVol, vaporBox='box3'):
+            numVapor, maxSorbate, changeVol, liqBox='box2', vaporBox='box3'):
     '''
     changing the biasing potential here is based on the following:
     G(desired) = G(real) + R*E(bias)
@@ -18,7 +18,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
     # calculate real dG's for impurities/water
     # calculate new biasing potentials for impurities
     # calculate new biasing potential for solvent in vapor
-    def getBiasMol(molNum, nVapor, volVapor, rhoReal, vaporBox='box3'):
+    def getBiasMol(molNum, nVapor, volVapor, rhoReal, vaporBox=''):
         molNum = molNum.strip('mol')
         volVapor = volVapor/1000 # convert to nm**3
         if vaporBox in rhoReal[molNum].keys():
@@ -28,7 +28,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
             return bias
         else:
             return 0.0
-    def getVaporVolume(sorbates, rhoReal, vaporBox='box3', liquidBox='box2', nVapor=[2]):
+    def getVaporVolume(sorbates, rhoReal, vaporBox='', liquidBox='', nVapor=[2]):
         '''
         calculate so that 2 sorbate molecules in vapor box
         '''
@@ -56,10 +56,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
                 nVapor[sorbates.index(least_volatile)],least_volatile, boxlx_AA3))
         return boxlx_AA3, volume_AA3, least_volatile
     def getBiasImpurity(molNum, nLiquid, nVapor, volLiq, volVapor,
-                        rhoReal, T, vaporBox='box3', liquidBox='box2'):
-        if vaporBox != 'box3':
-            print(' vapor box must be box 3, quitting')
-            quit()
+                        rhoReal, T, vaporBox='', liquidBox=''):
         molNum = molNum.strip('mol')
         num_dens_ratio_real = rhoReal[molNum][vaporBox]['mean']/rhoReal[molNum][liquidBox]['mean']
         num_dens_ratio_desired = (nVapor/volVapor)/(nLiquid/volLiq)
@@ -76,7 +73,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
         nGhost = int(   vapor_volume*10**(-24)*P/(83.14*T)*N_av    )
         return nGhost
 
-    pressure = pressure[vapor_box]['mean']/100. # convert to bar
+    pressure = pressure[vaporBox]['mean']/100. # convert to bar
     print('pressure was %5.2f bar'%pressure)
     N = {'mol%s'%mol: {box: N[mol][box] for box in N[mol].keys()} for mol in N.keys()} # get same notation
     bias_new = {mol: {box: 0 for box in N[mol].keys()} for mol in N.keys()}
@@ -124,25 +121,25 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
         for mol in sorbates:
 #           print(N[mol]['box2']['mean'],N[mol]['box3']['mean'])
 #           nSorbate_vapor.append( (N[mol]['box2']['mean'] + N[mol]['box3']['mean'])/2 )
-            print('average number of sorbate mol#{} in liquid was {}'.format(mol, N[mol]['box2']['mean']))
-            if (N[mol]['box2']['mean'] + N[mol]['box3']['mean']) < 4.:
+            print('average number of sorbate mol#{} in liquid was {}'.format(mol, N[mol][liqBox]['mean']))
+            if (N[mol][vaporBox]['mean'] + N[mol][liqBox]['mean']) < 4.:
                 nSorbate_vapor.append(
-                    (N[mol]['box2']['mean']
-                     +N[mol]['box3']['mean'])/2) # make number in vapor the same as that in liquid
-            elif ((N[mol]['box2']['mean'] > 10) and (N[mol]['box3']['mean'] > 2)
-                    and (N[mol]['box3']['mean'] < 10)):
+                    (N[mol][liqBox]['mean']
+                     +N[mol][liqBox]['mean'])/2) # make number in vapor the same as that in liquid
+            elif ((N[mol][liqBox]['mean'] > 10) and (N[mol][vaporBox]['mean'] > 2)
+                    and (N[mol][vaporBox]['mean'] < 10)):
                 # if more than 10 in liq phase and between 2 and 10 in vapor phase, keep old value
                 print('-/-/ More than 10 molecules in liq phase and between 2 and '
                       '10 in vapor phase--keeping old value')
-                nSorbate_vapor.append( N[mol]['box3']['mean'] )
+                nSorbate_vapor.append( N[mol][vaporBox]['mean'] )
             else:
                 nSorbate_vapor.append( numVapor )
 
     print('nSorbate_vapor is   ', nSorbate_vapor)
     boxlength_vapor_AA3, volume_vapor_AA3, least_volatile = getVaporVolume(sorbates, rho,
-                                                                           vaporBox=vaporBox, nVapor=nSorbate_vapor)
+                                                                           vaporBox=vaporBox, nVapor=nSorbate_vapor,liquidBox=liqBox)
     if changeVol:
-        boxlength_vapor_AA3 =  boxLengths['box3']['mean']
+        boxlength_vapor_AA3 =  boxLengths[vaporBox]['mean']
         volume_vapor_AA3 = math.pow( boxlength_vapor_AA3, 3)
     else:
         assert boxlength_vapor_AA3 < 10000., 'predicted boxlength not realistic'
@@ -151,27 +148,29 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
             volume_vapor_AA3 = pow(boxlength_vapor_AA3,3)
             least_volatile = -1
     nGhost = themGhosts(volume_vapor_AA3,T,pressure)
-    liquid_volume_AA3 = math.pow( boxLengths['box2']['mean'], 3)
+    liquid_volume_AA3 = math.pow( boxLengths[liqBox]['mean'], 3)
     for mol in impurities:
-        if (N[mol]['box2']['mean'] > 0.) and (N[mol]['box3']['mean'] > 0.):
+        if (N[mol][liqBox]['mean'] > 0.) and (N[mol][vaporBox]['mean'] > 0.):
             nchain_liquid = 0.5*nchain_impurity
             nchain_vapor = 0.5*nchain_impurity
             bias_new[mol][vaporBox] = getBiasImpurity(mol, nchain_liquid, nchain_vapor, liquid_volume_AA3,
-                                                  volume_vapor_AA3, rho, T)
+                                                  volume_vapor_AA3, rho, T, vaporBox=vaporBox, liquidBox=liqBox)
         elif (N[mol]['box1']['mean'] > 0.) and (N[mol]['box3']['mean'] > 0.):
             # impurity between vapor and zeolite
+            print('found impurity between vapor and zeolite... mol ',mol)
             zeo_volume_AA3 = math.pow( boxLengths['box2']['mean'], 3)
             nchain_zeo = 0.5*( N[mol]['box1']['mean'] + N[mol]['box3']['mean'] )
             nchain_vapor = nchain_zeo
             bias_new[mol][vaporBox] = getBiasImpurity(mol, nchain_zeo, nchain_vapor, zeo_volume_AA3,
                                                   volume_vapor_AA3, rho, T, liquidBox='box1')
         else:
+            print(N[mol][liqBox]['mean'], N[mol][vaporBox]['mean'])
             bias_new[mol][vaporBox] = 0.
         print('Bias for mol {} (impurity) changed from {} to {}'.format(mol, biasOld[mol][vaporBox],
                                                                         bias_new[mol][vaporBox] ))
     for mol in sorbates:
         if mol != least_volatile:
-            if N[mol]['box2']['mean'] == 0.:
+            if N[mol][liqBox]['mean'] == 0.:
                 bias_new[mol][vaporBox] = 0.
             else:
                 bias_new[mol][vaporBox] = getBiasMol(mol, nSorbate_vapor[sorbates.index(mol)],
@@ -198,10 +197,13 @@ if __name__ == '__main__':
     my_parser.parser.add_argument('-nv','--numVapor',help='for 3 box sim, desired number of sorbates in vapor',type=int,default=2)
     my_parser.parser.add_argument('-ms','--maxSorbate',help='max number of molecules considered sorbates',type=int,default=200)
     my_parser.parser.add_argument('-cv','--changeVol',help='whether or not to change volume and bias on sorbate',type=bool,default=False)
+    my_parser.parser.add_argument('-lb','--liqBox',help='liquid box number',type=str,default='box2')
+    my_parser.parser.add_argument('-vb','--vapBox',help='vapor box number',type=str,default='box3')
     args = vars(my_parser.parser.parse_args())
     feeds = args.pop('feeds')
 
-    vapor_box = 'box3' # default vapor box to box3
+    vapor_box = args['vapBox']
+    liquid_box = args['liqBox']
 
     for feed in feeds:
         args['feeds'] = [feed]
@@ -218,7 +220,7 @@ if __name__ == '__main__':
                                                   gen_data[feed]['temperature'],
                                                   data['P'].averages[feed],
                                                     args['numVapor'],args['maxSorbate'],args['changeVol'],
-                                            vaporBox=vapor_box)
+                                            liqBox=liquid_box, vaporBox=vapor_box)
         # change data
         vapor_box_dimens = '%8.2f %8.2f %8.2f'%(vapor_boxlx_AA3,vapor_boxlx_AA3, vapor_boxlx_AA3)
         input_data['SIMULATION_BOX'][vapor_box]['dimensions'] = vapor_box_dimens
@@ -239,7 +241,7 @@ if __name__ == '__main__':
             restart_data = reader.read_restart(args['path'] + '/' + feed +'/%i/fort.77'%sim,
                                             int(input_data['&mc_shared']['nmolty']),
                                             int(input_data['&mc_shared']['nbox']))
-            restart_data['box dimensions']['box3'] = vapor_box_dimens + '\n'
+            restart_data['box dimensions'][vapor_box] = vapor_box_dimens + '\n'
             my_path = '%s/%s/%i'%(args['path'],feed,sim)
             nextRun = findNextRun(my_path, args['type'])
             new_file = '%s/fort.4.%s%i'%(my_path, args['type'], nextRun)

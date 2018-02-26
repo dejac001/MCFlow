@@ -6,7 +6,8 @@ class FindRegion(Struc):
     def __init__(self,vectors,lmn):
         self.abc = vectors
         self.lmn = lmn
-        self.ABC = [i*j for i,j in zip(vectors, lmn)]
+        assert len(vectors) == len(lmn), '%i != %i'%(len(vectors), len(lmn))
+        self.ABC = [i*j for i,j in zip(self.abc, self.lmn)]
 
     def init_grids(self):
         unit_cells = []
@@ -41,9 +42,12 @@ class Channel(FindRegion):
         my_parser.parser.add_argument('-abc','--vectors', help='unit cell vectors. For folding coordinates into a unit cell',
                                       type = float, nargs = '+', default = [20.022,19.899,13.383])
         my_parser.parser.add_argument('-lmn','--replications', help='unit cell vectors. For folding coordinates into a unit cell',
-                                      type = int, nargs = '+', default=None)
+                                      type = int, nargs = '+')
         my_args = vars(my_parser.parse_args())
+        if args['verbosity'] > 0:
+            print(my_args)
         self.args = my_args
+        assert len(self.args['replications']) == 3, 'No replications provided: {}'.format(self.args['replications'])
         FindRegion.__init__(self, self.args['vectors'],self.args['replications'])
         self.numIndep = self.args['indep']
         self.checks()
@@ -112,6 +116,10 @@ class Channel(FindRegion):
                 N = {mol:{region:[0 for i in indepRange]
                                     for region in self.regionNames}
                                         for mol in FRAME_DATA[box].keys()}
+                N_frame =  {mol:{region:[   [0 for j in range(frame_seeds.count(i))] for i in indepRange]
+                                    for region in self.regionNames}
+                                        for mol in FRAME_DATA[box].keys()}
+
             total_frames += 1
             try:
                 if (iframe+1)%(len(frame_data)//4) == 0:
@@ -124,14 +132,27 @@ class Channel(FindRegion):
                 for each_molecule in FRAME_DATA[box][mol]:
                     beads = list(set(each_molecule.keys()) &
                                 set(self.args['bead']))
+                    print('beads are', beads)
                     assert len(beads) == 1, 'Ambiguous beads'
                     bead = beads[0]
-                    for each_coord in each_molecule[bead]:
-                        region = self.getRegion(each_coord)
-                        N[mol][region][seed_index] += 1
+                    for bead in beads:
+                        for each_coord in each_molecule[bead]:
+                            region = self.getRegion(each_coord)
+                            try:
+                                N[mol][region][seed_index] += 1
+                                N_frame[mol][region][seed_index][iframe] += 1
+                            except  KeyError:
+                                print(region)
+                                print(each_coord)
+                                raise KeyError
         self.N = N
         self.normalize(frame_seeds)
         self.avgIndep()
+        for mol in self.averages[self.feed].keys():
+            assert mol in N_frame.keys(), 'Inconsistent dict: {} not in {}'.format(mol, self.averages[self.feed].keys())
+            for region, vals in N_frame[mol].items():
+                assert region in self.averages[self.feed][mol].keys(), 'Inconsistent dict'
+                self.averages[self.feed][mol][region]['raw data'] = vals
         self.averages[self.feed]['total frames'] = total_frames
 
     def myCalcs(self, D ):

@@ -497,8 +497,10 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
                     N_mlcls.data[str(mol)]['box%i'%box].append( int(line.split()[offset+mol]) )
                 except:
                     print(path,'run=',j,'fort.12 is binary')
-            if (nline >= nbox*10+1):
+            try:
                 Pressure.data['box%i'%box].append(float(line.split()[4]))
+            except ValueError:
+                pass
             try:
                 InternalEnergy.data['box%i'%box].append( float(line.split()[3]))
                 boxlength.data['box%i'%box].append( float(line.split()[0]) )
@@ -588,6 +590,11 @@ def read_restart(file, nmolty, nbox):
             config_data['max displacement']['volume'] = {}
             for index, value in enumerate(line.split()):
                 config_data['max displacement']['volume']['box%i'%(index+1)] = value
+            if len(config_data['max displacement']['volume'].keys()) != nbox:
+                line = next(f)
+                cbox = len(config_data['max displacement']['volume'].keys())
+                for index, value in enumerate(line.split()):
+                    config_data['max displacement']['volume']['box%i'%(cbox + index+1)] = value
         elif 'box dimensions' not in config_data.keys():
             if (len(line.split()) == 9):
                 config_data['box dimensions']={'box1': next(f) }
