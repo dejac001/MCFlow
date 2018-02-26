@@ -107,7 +107,7 @@ class S(Struc):
 
     def checks(self):
         assert self.args['boxes'], 'box needed for structure factor'
-        assert self.args['box'] == None, 'Use multiple boxes argument'
+#       assert self.args['box'] == None, 'Use multiple boxes argument'
         self.analysis_class = S_k
 
     def myCalcs(self, D):

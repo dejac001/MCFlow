@@ -1,6 +1,8 @@
 from MCFlow.structure_analysis import Struc
 from MCFlow.file_formatting.reader import Movie
 from MCFlow.calc_tools import fold
+from MCFlow.file_formatting.reader import convertMovieCoordsXYZ
+from MCFlow.file_formatting import writer
 
 class FindRegion(Struc):
     def __init__(self,vectors,lmn):
@@ -27,6 +29,12 @@ class FindRegion(Struc):
         region = '%i%i%i'%(x_unit_cell,y_unit_cell,z_unit_cell)
         assert region in self.regionNames, 'region not found {}'.format(region)
         return region
+
+    def move_to_one_uc(self, xyz, region):
+        (x,y,z) = fold(xyz, self.ABC)
+        a,b,c = self.abc
+        xuc, yuc, zuc = map(int,region)
+        return [x-xuc*a, y-yuc*b, z-zuc*c]
 
     def getChannel(self, xyz):
         return self.getRegion(xyz)
@@ -129,12 +137,12 @@ class Channel(FindRegion):
             seed = frame_seeds[total_frames]
             seed_index = self.numIndep.index(seed)
             for mol in FRAME_DATA[box].keys():
-                for each_molecule in FRAME_DATA[box][mol]:
+                molecule_frame = {region:[] for region in self.regionNames}
+                for imol, each_molecule in enumerate(FRAME_DATA[box][mol]):
                     beads = list(set(each_molecule.keys()) &
                                 set(self.args['bead']))
                     print('beads are', beads)
                     assert len(beads) == 1, 'Ambiguous beads'
-                    bead = beads[0]
                     for bead in beads:
                         for each_coord in each_molecule[bead]:
                             region = self.getRegion(each_coord)

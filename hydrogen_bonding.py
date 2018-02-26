@@ -214,15 +214,15 @@ class HydrogenBond(Movie):
                     G.add_edge(I, I+nMol)
                     G.add_edge(I+nMol, I)
                 graphs = list(nx.connected_component_subgraphs(G))
-                path_lengths = []
-                for m in graphs:
-                    end_nodes = [i for i in m if m.degree(i)==1]
-                    for i, source in enumerate(end_nodes):
-                        for j in range(i+1,len(end_nodes)):
-                            my_path = nx.shortest_path(m,source=source,
-                                                       target=end_nodes[j])
-                            path_lengths.append(len(my_path))
-                self.HB[iframe][my_box][pair+' oxygen path length'] = path_lengths
+#               path_lengths = []
+#               for m in graphs:
+#                   end_nodes = [i for i in m if m.degree(i)==1]
+#                   for i, source in enumerate(end_nodes):
+#                       for j in range(i+1,len(end_nodes)):
+#                           my_path = nx.shortest_path(m,source=source,
+#                                                      target=end_nodes[j])
+#                           path_lengths.append(len(my_path))
+#               self.HB[iframe][my_box][pair+' oxygen path length'] = path_lengths
                 self.HB[iframe][my_box][pair+' cluster size'] = [len(m.nodes()) for
                                                                  m in graphs]
 

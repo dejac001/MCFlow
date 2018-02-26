@@ -1,4 +1,4 @@
-from MCFlow.writeXvY import LoadAds, MoleFrac
+from MCFlow.writeXvY import LoadAds, MoleFrac, LiqAds
 class HB:
     def __init__(self):
         pass
@@ -45,14 +45,29 @@ class HB:
         for pair in HB.keys():
             if HB[pair][self.box]['mean'] > 0.:
                 file_name = 'HB_%s_v_%s_%s.dat'%(pair.replace('->','-').replace(' ',''), self.mol, self.xlabel[0])
+                if '95conf' in X.keys():
+                    err = X['95conf']
+                    print(X)
+                else:
+                    err = calc95conf(X['stdev'],nIndep)
                 writeAGR([X['mean']], [HB[pair][self.box]['mean']],
-                         [calc95conf(X['stdev'],nIndep)], [calc95conf(HB[pair][self.box]['stdev'], nIndep)],
+                         [err], [calc95conf(HB[pair][self.box]['stdev'], nIndep)],
                          [self.feed], file_name, file_description)
 
 class HBvQ(LoadAds, HB):
     def __init__(self, **kwargs):
         LoadAds.__init__(self, **kwargs)
         assert self.units, 'Units needed for plot'
+        if kwargs['feeds']:
+            self.feeds = kwargs['feeds']
+        if kwargs['angle']:
+            self.angle = kwargs['angle']
+        if kwargs['dist']:
+            self.dist = kwargs['dist']
+
+class HBvC(LiqAds, HB):
+    def __init__(self, **kwargs):
+        LiqAds.__init__(self, **kwargs)
         if kwargs['feeds']:
             self.feeds = kwargs['feeds']
         if kwargs['angle']:
@@ -95,6 +110,8 @@ if __name__ == '__main__':
         my_plotter = HBvQ(**args)
     elif args['xaxis'] == 'x':
         my_plotter = HBvX(**args)
+    elif args['xaxis'] == 'C':
+        my_plotter = HBvC(**args)
     my_plotter.readDBs()
     my_plotter.readHB()
 

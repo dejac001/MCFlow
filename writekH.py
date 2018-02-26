@@ -1,12 +1,20 @@
 from MCFlow.writeXvY import IdealGasAds
+from MCFlow.writeHB import HBvC
 
-class kH(IdealGasAds):
+class kH(HBvC,IdealGasAds):
     def __init__(self, **kwargs):
-        self.N={};self.P={};self.rho={};self.gen_data={};self.K={}; self.X={};
-        self.files = ['N-data.db','P-data.db', 'rho-data.db','general-data.db','K-data.db','X-data.db']
-        self.variables = [self.N, self.P, self.rho, self.gen_data,self.K, self.X]
+        self.N={};self.P={};self.rho={};self.gen_data={};self.K={}; self.X={}; self.dG={}
+        self.files = ['N-data.db','P-data.db', 'rho-data.db','general-data.db','K-data.db','X-data.db','dG-data.db']
+        self.variables = [self.N, self.P, self.rho, self.gen_data,self.K, self.X,self.dG]
         self.xlabel = ['kH', 'dkH']
+        if kwargs['feeds']:
+            self.feeds = kwargs['feeds']
+        if kwargs['angle']:
+            self.angle = kwargs['angle']
+        if kwargs['dist']:
+            self.dist = kwargs['dist']
         if kwargs:
+            self.boxes = kwargs['boxes']
             self.units = kwargs['units']
             assert kwargs['box'], 'Box needed for number density in kH isotherm'
             if 'box' in kwargs['box']:
@@ -34,23 +42,23 @@ class kH(IdealGasAds):
     def getX(self):
         # pressure info ----------------------
         numIndep = self.gen_data[self.feed][self.run]['numIndep']
-        try:
+#       try:
             # convert number density to pressure [kPa]
             # (molec/nm**3)*(mol/molec)*(nm**3*kPa/(mol*K))*K = kPa
-            rho = self.rho[self.feed][self.run][self.mol][self.box]
-            p_mean = rho['mean']/N_av*R['nm**3*kPa/(mol*K)']*self.T
-            p_stdev = rho['stdev']/N_av*R['nm**3*kPa/(mol*K)']*self.T
-            p_raw = [i/N_av*R['nm**3*kPa/(mol*K)']*self.T for i in rho['raw']]
-        except KeyError:
-            pressure = self.P[self.feed][self.run][self.box]
-            print('No num dens. data for feed {}, using box pressure'.format(feed))
-            print(' - This assumes box is unary')
-            p_mean, p_stdev = pressure['mean'], pressure['stdev']
+        rho = self.rho[self.feed][self.run][self.mol]['box3']
+        p_mean = rho['mean']/N_av*R['nm**3*kPa/(mol*K)']*self.T
+        p_stdev = rho['stdev']/N_av*R['nm**3*kPa/(mol*K)']*self.T
+        p_raw = [i/N_av*R['nm**3*kPa/(mol*K)']*self.T for i in rho['raw']]
+#       except :
+#           pressure = self.P[self.feed][self.run][self.box]
+#           print('No num dens. data for feed {}, using box pressure'.format(feed))
+#           print(' - This assumes box is unary')
+#           p_mean, p_stdev = pressure['mean'], pressure['stdev']
         p_95conf = calc95conf(p_stdev,numIndep)
         C_95conf = p_mean * self.kH_mean * math.pow(
             math.pow(self.kH_95conf / self.kH_mean, 2) +
             math.pow(p_95conf / p_mean, 2), 0.5)
-        return {'mean':p_mean*self.kH_mean,'95conf':C_95conf, 
+        return {'mean':p_mean*self.kH_mean,'95conf':C_95conf,
                 'raw':[i*self.kH_mean for i in p_raw]}
 
 '''
@@ -66,6 +74,8 @@ if __name__ == '__main__':
     my_parser = Plot()
     my_parser.isotherm()
     my_parser.kH()
+    my_parser.parser.add_argument('-a','--angle',help='angle for db criteria',type=str)
+    my_parser.parser.add_argument('-d','--dist',help='distance for db criteria',type=str)
 
     args = vars(my_parser.parse_args())
     assert args['yaxis'], 'No y axis chosen for plot'
@@ -83,3 +93,8 @@ if __name__ == '__main__':
             my_plotter.SvX()
         elif args['yaxis'] == 'X':
             my_plotter.XvX()
+        elif args['yaxis'] == 'dG':
+            my_plotter.dGvX()
+        elif args['yaxis'] == 'HB':
+            my_plotter.readHB()
+            my_plotter.HB_write()

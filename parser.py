@@ -47,7 +47,7 @@ class Plot(Main):
         self.parser.add_argument('-y','--yaxis',help='y axis of plot',
                                  choices = ['Q','dG','S','R',
                                             'X','dH','dU','dHig',
-                                            'Pigxy','Txy','dens'])
+                                            'Pigxy','Txy','dens','rho'])
         self.parser.add_argument('-B','--boxes',help='box numbers to use',
                                  type=str,nargs='+',default=['box3','box2'])
     def isotherm(self):
@@ -61,13 +61,15 @@ class Plot(Main):
                                  type = float, default = 40.044*39.798*40.149 )
     def kH(self):
         self.parser.add_argument('-y', '--yaxis', help='y axis of plot',
-                                 choices=['Q','S','X'])
-        self.parser.add_argument('-d','--density',help='infinite dilution density',type=float,
+                                 choices=['Q','S','X','dG','HB'])
+        self.parser.add_argument('-de','--density',help='infinite dilution density',type=float,
                                  nargs='+',default=[0.981,0.006]
                                  # Jorgensen and Jenson, J. Comput. Chem.
                                  )
         self.parser.add_argument('-MW','--molecWeight',help='molecular weight of solvent',
                                  type=float, default=18.02)
+        self.parser.add_argument('-B','--boxes',help='box numbers to use',
+                                 type=str,nargs='+',default=['box3','box2'])
 
 class MultMols(Plot):
     def __init__(self):

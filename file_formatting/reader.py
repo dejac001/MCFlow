@@ -1,8 +1,9 @@
 def convertMovieCoordsXYZ(each_molecule):
+    conv = {'61':'H','62':'O','64':'C','5':'C','COM':'F'}
     data = {'atoms':[], 'coords':[]}
     for beadType, beads in each_molecule.items():
         for bead_xyz in beads:
-            data['atoms'].append( beadType )
+            data['atoms'].append( conv[beadType] )
             data['coords'].append( [float(i) for i in bead_xyz] )
     return data
 
