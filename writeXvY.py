@@ -414,7 +414,8 @@ class GasBoxAds(IdealGasAds):
             self.film = kwargs['film']
 
     def getX(self):
-        return self.P[self.feed][self.run]['box%s'%self.vapor_box]
+        if 'box' not in self.vapor_box: self.vapor_box = 'box' + self.vapor_box
+        return self.P[self.feed][self.run][self.vapor_box]
 
 class LoadAds(IdealGasAds):
     def __init__(self, **kwargs):

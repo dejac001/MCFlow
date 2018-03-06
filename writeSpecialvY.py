@@ -52,10 +52,13 @@ class mykH(kH):
                              [dX], [calc95conf(Q_stdev, nIndep)],
                              [self.feed], file_name, file_description)
 
-class myLiqAds(LiqAds, mykH):
+class myLiqAds(mykH, LiqAds):
 
     def __init__(self, **kwargs):
         LiqAds.__init__(self, **kwargs)
+
+    def getX(self):
+        return LiqAds.getX(self)
 
     
 

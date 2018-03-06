@@ -9,9 +9,9 @@ class kH(HBvC,IdealGasAds):
         self.xlabel = ['kH', 'dkH']
         if kwargs['feeds']:
             self.feeds = kwargs['feeds']
-        if kwargs['angle']:
+        if 'angle' in kwargs.keys() and kwargs['angle']:
             self.angle = kwargs['angle']
-        if kwargs['dist']:
+        if 'dist' in kwargs.keys() and kwargs['dist']:
             self.dist = kwargs['dist']
         if kwargs:
             self.boxes = kwargs['boxes']
