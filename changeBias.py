@@ -199,9 +199,13 @@ if __name__ == '__main__':
     my_parser.parser.add_argument('-cv','--changeVol',help='whether or not to change volume and bias on sorbate',type=bool,default=False)
     my_parser.parser.add_argument('-lb','--liqBox',help='liquid box number',type=str,default='box2')
     my_parser.parser.add_argument('-vb','--vapBox',help='vapor box number',type=str,default='box3')
+    my_parser.parser.add_argument('-P','--pressure',help='vapor box pressure',type=float,default=101.325)
     args = vars(my_parser.parser.parse_args())
     feeds = args.pop('feeds')
 
+    for key in 'vapBox','liqBox':
+        if 'box' not in args[key]:
+            args[key] = 'box' + args[key]
     vapor_box = args['vapBox']
     liquid_box = args['liqBox']
 
@@ -213,6 +217,8 @@ if __name__ == '__main__':
             input_data = reader.read_fort4(args['path']+'/' + feed + '/1/fort.4')
         except FileNotFoundError:
             input_data = reader.read_fort4(args['path']+'/' + feed + '/1/old-fort4')
+        if not (data['P'].averages[feed][vapor_box]['mean']  > 0):
+            data['P'].averages[feed][vapor_box]['mean'] = args['pressure']
         (vapor_boxlx_AA3, bias, nGhost) = newBias(data['rho'].averages[feed],
                                                             data['boxlx'].averages[feed],
                                                             data['N'].averages[feed],

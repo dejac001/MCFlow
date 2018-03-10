@@ -1,17 +1,24 @@
+def addBias(n_des, vals):
+    mean, std = np.mean(vals), np.std(vals)
+    dG = T*np.log(mean/n_des)
+    ddG = np.sqrt(pow(T*std/mean,2))
+    return dG, ddG
+
 a = '''
-7.672 11.690 0.638
-9.783 10.109 0.108
-9.000 10.996 0.004
-7.999 11.726 0.275
-7.828 11.399 0.772
-7.471 12.030 0.499
-7.366 9.084 3.550
-9.830 10.000 0.170
+1.688 0.264 0.048
+1.441 0.558 0.001
+1.088 0.845 0.067
+1.582 0.183 0.235
+1.162 0.837 0.001
+1.866 0.132 0.002
+1.921 0.077 0.002
+1.627 0.295 0.079
 '''
+T = 348.
+import numpy as np
 
 
 if __name__ == '__main__':
-    import numpy as np
 
     x = []
     for i in a.split('\n'):
@@ -20,5 +27,6 @@ if __name__ == '__main__':
 
     x = np.matrix(x)
     for box in [0,1,2]:
-        dG = -323.*np.log(1/np.mean(x[:,box]))
-        print('add %f to bias in box%i'%(dG,box+1))
+        n_desired = np.sum(x[0,:])/3
+        dG, ddG = addBias(n_desired, x[:,box])
+        print('add %f +/- %f to bias in box%i'%(dG,ddG,box+1))

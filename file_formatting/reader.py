@@ -498,13 +498,12 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
                     N_mlcls.data[str(mol)]['box%i'%box].append( int(line.split()[offset+mol]) )
                 except:
                     print(path,'run=',j,'fort.12 is binary')
+            my_split = line.split()
+            if 'E' in my_split[4]:
+                Pressure.data['box%i'%box].append(float(my_split[4]))
             try:
-                Pressure.data['box%i'%box].append(float(line.split()[4]))
-            except ValueError:
-                pass
-            try:
-                InternalEnergy.data['box%i'%box].append( float(line.split()[3]))
-                boxlength.data['box%i'%box].append( float(line.split()[0]) )
+                InternalEnergy.data['box%i'%box].append( float(my_split[3]))
+                boxlength.data['box%i'%box].append( float(my_split[0]) )
             except:
                 print(path,'run=',j,'fort.12 is binary')
     return N_mlcls.data, Pressure.data, boxlength.data, ncycles, molWeights, InternalEnergy.data

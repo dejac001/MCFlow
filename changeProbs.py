@@ -400,7 +400,6 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
     for mol in swapInfo.keys():
         if len(swapInfo[mol].keys()) > 1:
             for dirn in swapInfo[mol].keys():
-                print(mol,dirn)
                 denominator += newSwaps[mol]['total']*newSwaps[mol][dirn]*pctAct[mol][dirn]
         else:
             dirn = list(swapInfo[mol].keys())[0]
@@ -465,7 +464,6 @@ if __name__ == '__main__':
         pmvol, pswatch_norm, pswap_norm) = analyzeTransfers(data['SWAP'].averages[feed],
                                                             gen_data[feed]['ncycle'],
                                                             gen_data[feed]['compositions'])
-        print(newSwaps)
         # read and write
         for sim in args['indep']:
             my_path = '%s/%s/%i/'%(args['path'],feed,sim)

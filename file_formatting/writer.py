@@ -397,20 +397,21 @@ def write_fort4(data, newfile):
         print('amount of namelists not provided correctly')
         quit()
     elif len(sections) != len(section_order):
-        print('Not enough sections provided')
-        print('- missing sections: ',[i for i in section_order if i not in sections])
-        print('- proceeding without this section')
+#       print('Not enough sections provided')
+#       print('- missing sections: ',[i for i in section_order if i not in sections])
+#       print('- proceeding without this section')
         section_order = [i for i in section_order if i in sections]
     for NL in namelist_order:
         f.write(NL + '\n')
         my_vars = [i for i in variable_order[NL] if i in data[NL].keys()]
         if len(variable_order[NL]) > len(data[NL].keys()):
-            print('Expected more variables for namelist: {} '
-                  'including {}'.format(NL, [i for i in variable_order[NL] if i not in data[NL].keys()]))
+            pass
+#           print('Expected more variables for namelist: {} '
+#                 'including {}'.format(NL, [i for i in variable_order[NL] if i not in data[NL].keys()]))
         elif len(variable_order[NL]) < len(data[NL].keys()):
-            print('More variables from previous input than expected for namelist {} '
-                  'including {}'.format(NL, [i for i in data[NL].keys() if i not in variable_order[NL]]))
-            print(' - using variables anyway')
+#           print('More variables from previous input than expected for namelist {} '
+#                 'including {}'.format(NL, [i for i in data[NL].keys() if i not in variable_order[NL]]))
+#           print(' - using variables anyway')
             my_vars = data[NL].keys()
 
         for variable in my_vars:
@@ -429,6 +430,7 @@ def write_fort4(data, newfile):
             for box in sort_keys(data[SEC].keys()):
                 f.write('! boxlx   boxly   boxlz   rcut  kalp   rcutnn numDimensionIsIstropic lsolid lrect lideal ltwice temperature pressure(MPa)\n')
                 for var in ['dimensions', 'rcut', 'defaults', 'temperature', 'pressure']:
+                    print(data[SEC][box].keys())
                     f.write(data[SEC][box][var] + ' ')
                 f.write('\n')
                 f.write('! nchain_1 ... nchain_nmolty ghost_particles\n')
