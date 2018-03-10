@@ -430,7 +430,6 @@ def write_fort4(data, newfile):
             for box in sort_keys(data[SEC].keys()):
                 f.write('! boxlx   boxly   boxlz   rcut  kalp   rcutnn numDimensionIsIstropic lsolid lrect lideal ltwice temperature pressure(MPa)\n')
                 for var in ['dimensions', 'rcut', 'defaults', 'temperature', 'pressure']:
-                    print(data[SEC][box].keys())
                     f.write(data[SEC][box][var] + ' ')
                 f.write('\n')
                 f.write('! nchain_1 ... nchain_nmolty ghost_particles\n')
