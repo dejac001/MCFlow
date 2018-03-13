@@ -125,7 +125,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
             if (N[mol][vaporBox]['mean'] + N[mol][liqBox]['mean']) < 4.:
                 nSorbate_vapor.append(
                     (N[mol][liqBox]['mean']
-                     +N[mol][liqBox]['mean'])/2) # make number in vapor the same as that in liquid
+                     +N[mol][vaporBox]['mean'])/2) # make number in vapor the same as that in liquid
             elif ((N[mol][liqBox]['mean'] > 10) and (N[mol][vaporBox]['mean'] > 2)
                     and (N[mol][vaporBox]['mean'] < 10)):
                 # if more than 10 in liq phase and between 2 and 10 in vapor phase, keep old value
