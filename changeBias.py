@@ -142,11 +142,11 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
         boxlength_vapor_AA3 =  boxLengths[vaporBox]['mean']
         volume_vapor_AA3 = math.pow( boxlength_vapor_AA3, 3)
     else:
-        assert boxlength_vapor_AA3 < 10000., 'predicted boxlength not realistic'
+        assert boxlength_vapor_AA3 < 10000., 'predicted boxlength is very high--sure this is correct?'
         if (boxlength_vapor_AA3 > 10000.):
             boxlength_vapor_AA3 =  10000.
             volume_vapor_AA3 = pow(boxlength_vapor_AA3,3)
-            least_volatile = -1
+#           least_volatile = -1
     nGhost = themGhosts(volume_vapor_AA3,T,pressure)
     liquid_volume_AA3 = math.pow( boxLengths[liqBox]['mean'], 3)
     for mol in impurities:
