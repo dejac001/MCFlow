@@ -476,7 +476,7 @@ if __name__ == '__main__':
                 input_data['&mc_swap']['pmswap'] = input_data['&mc_swap']['pmswap'][:-2]
             pswap_old = float(input_data['&mc_swap']['pmswap'])
             input_data['&mc_swap']['pmswap'] = '%e'%pswap_norm
-            input_data['&mc_simple']['seed'] = '%i'%sim
+            input_data['&mc_shared']['seed'] = '%i'%sim
             nmolty = int(input_data['&mc_shared']['nmolty'])
             assert len(newSwaps) == nmolty, 'Incorrect swaps: too many'
             total_pswap = 0.
