@@ -52,7 +52,7 @@ class Channel(FindRegion):
         my_parser.parser.add_argument('-lmn','--replications', help='unit cell vectors. For folding coordinates into a unit cell',
                                       type = int, nargs = '+')
         my_args = vars(my_parser.parse_args())
-        if args['verbosity'] > 0:
+        if my_args['verbosity'] > 0:
             print(my_args)
         self.args = my_args
         assert len(self.args['replications']) == 3, 'No replications provided: {}'.format(self.args['replications'])
