@@ -135,7 +135,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
             else:
                 nSorbate_vapor.append( numVapor )
 
-    print('nSorbate_vapor is   ', nSorbate_vapor)
+    print('nSorbate_vapor(desired) is   ', nSorbate_vapor)
     boxlength_vapor_AA3, volume_vapor_AA3, least_volatile = getVaporVolume(sorbates, rho,
                                                                            vaporBox=vaporBox, nVapor=nSorbate_vapor,liquidBox=liqBox)
     if changeVol:

@@ -124,6 +124,7 @@ class ChangeInput(Main):
         self.parser.add_argument('-bR','--boxRemove',help='number of box to remove molecules from',type=str)
         self.parser.add_argument('-bA','--boxAdd',help='number of box to add molecules to')
         self.parser.add_argument('-n','--nAdd',help='number of molecules to add. If ==all, all molecules in box',type=int)
+        self.parser.add_argument('-ctr','--chainsToRemove',help='molecule numbers to remove',type=int,nargs='+',default=[])
 
 class Structure:
     def __init__(self):

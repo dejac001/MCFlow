@@ -5,20 +5,13 @@ def addBias(n_des, vals):
     return dG, ddG
 
 a = '''
-1.688 0.264 0.048
-1.441 0.558 0.001
-1.088 0.845 0.067
-1.582 0.183 0.235
-1.162 0.837 0.001
-1.866 0.132 0.002
-1.921 0.077 0.002
-1.627 0.295 0.079
 '''
-T = 348.
+T = 323.
 import numpy as np
 
 
 if __name__ == '__main__':
+    print('Temperature is',T)
 
     x = []
     for i in a.split('\n'):
