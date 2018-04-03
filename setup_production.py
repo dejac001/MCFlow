@@ -31,14 +31,13 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
     nbox = int(input_data['&mc_shared']['nbox'])
     nmolty = int(input_data['&mc_shared']['nmolty'])
     new_input_data = copy.deepcopy(input_data)
-    new_input_data['&analysis']['iratp'] = ' 5'
+    new_input_data['&analysis']['iratp'] = ' %i'%(nstep+100)
     new_input_data['&mc_shared']['iratio'] = ' %i'%(nstep+100)
     new_input_data['&mc_volume']['iratv'] = ' %i'%(nstep+100)
     new_input_data['&mc_cbmc']['iupdatefix'] = ' %i'%(nstep+100)
     new_input_data['&mc_shared']['nstep'] = ' %i'%nstep
     new_input_data['&analysis']['imv'] = ' %i'%imv
-    if 'time_limit' in new_input_data['&mc_shared'].keys():
-        new_input_data['&mc_shared'].pop('time_limit')
+    new_input_data['&mc_shared']['time_limit'] = '%i'%int(total_time)
     iprint, iblock = iaverage(nstep)
     new_input_data['&analysis']['iprint'] = ' %i'%iprint
     new_input_data['&analysis']['iblock'] = ' %i'%iblock
@@ -69,7 +68,7 @@ if __name__ == '__main__':
 
     my_parser = Change()
     my_parser.parser.add_argument('-imv','--imovie', help='Movie output frequency',
-                                 type=int, default=1000)
+                                 type=int, default=100000)
 
     args = vars(my_parser.parse_args())
 

@@ -43,7 +43,7 @@ def keep_zeo(path, fort4, restart_file, temp, boxlx_vapor):
                 nmolty_present = [0 for i in range(nmolty_old)]
 
 
-    f77new = open(path + '/fort.77.new','w')
+    f77new = open(path + '/fort.77','w')
     nline = 0
     mol_num_in_beads = 0 
     fluc_charge = False
@@ -129,10 +129,11 @@ def keep_zeo(path, fort4, restart_file, temp, boxlx_vapor):
             if number_of_coordinates in coordinate_numbers:
                 f77new.write(line)
     f77new.close()
-    with open(path + '/fort.77.new') as f:
+    print(nchain_molty)
+    with open(path + '/fort.77') as f:
         file_str = f.read()
         file_str = file_str.replace('NCHAIN', '%i'%sum(nchain_molty))
-    with open(path + '/fort.77.new','w') as f:
+    with open(path + '/fort.77','w') as f:
         f.write(file_str)
 
 
@@ -149,7 +150,7 @@ def keep_zeo(path, fort4, restart_file, temp, boxlx_vapor):
     for k in range(len(beads_for_calc)):
         cbmc_dof += beads_for_calc[k]*nchain_molty[k]
     cbmc_molty_frac = [l*u/cbmc_dof for (l,u) in zip(beads_for_calc, nchain_molty)]
-    f4new = open(path + '/fort.4.new','w')
+    f4new = open(path + '/fort.4','w')
     ibox = 0
     sim_box_end = False
     bp_section, swap_section = False, False
@@ -159,6 +160,8 @@ def keep_zeo(path, fort4, restart_file, temp, boxlx_vapor):
                 f4new.write(makeNewLine(indent, 'nbox','2'))
             elif 'nchain' in line:
                 f4new.write(makeNewLine(indent,'nchain','%i'%nchain_new))
+            elif 'time_limit' in line:
+                f4new.write(makeNewLine(indent,'time_limit','6000'))
             elif 'pmvlmt' in line:
                 f4new.write(makeNewLine(indent, 'pmvlmt','0.0d0 0.0d0'))
             elif ('pmvol' in line) or (' pmswat ' in line):
@@ -194,7 +197,7 @@ def keep_zeo(path, fort4, restart_file, temp, boxlx_vapor):
                                                 '%f'%(boxlx_vapor/2)]
                 f4new.write(' '.join(L) + '\n')
         elif (ibox == 1) or (ibox == 2):
-            if (len(line.split()) == nmolty_old +1) and line.split()[0].isdigit():
+            if (len(line.split()) == nmolty_old +1) and (line.split()[0][0] != '!'):
                 if ibox == 1:
                     f4new.write(' '.join(['%i'%k for k in nchain_molty] + ['0']) + '\n')
                 else:
@@ -236,13 +239,25 @@ import math
 if __name__ == '__main__':
     import os
     main_dir = os.getcwd()
-    old_configs = '/panfs/roc/scratch/dejacor/binaryLiqAds/323.0K/128mol-8/'
-    for T in [513, 533]:
-        for L in [50, 100, 200, 400, 600, 800, 1200]:
-            for i in range(1, 9):
-                path = '%iK/%i/%i'%(T, int(L), i)
-                if not os.path.exists(path):
-                    os.makedirs(path)
-                keep_zeo(main_dir + '/' + path,
-                            old_configs + '%i/fort.4.equil-11'%i,
-                            old_configs + '%i/prod-2/config.prod-2'%i, T, L)
+    if not os.path.exists(main_dir + '/jobs'):
+        os.makedirs(main_dir + '/jobs')
+    njobs = 0
+    nfiles = 1
+    f = open('jobs/run1.txt','w')
+    for mol in ['192mol','128mol','96mol','64mol']:
+        for T in [343,353,363,373,383,393,403,413,423,433,443,453,463,473,483,493]:
+            for L in [24, 48, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384,
+                        32768,65536,131072,262144,524288]:
+                for i in range(1, 33):
+                    njobs += 1
+                    if njobs%512 == 0:
+                        f.close()
+                        nfiles += 1
+                        f = open('jobs/run%i.txt'%nfiles,'w')
+                    path = '%s/%iK/%i/%i'%(mol,T, int(L), i)
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+                    f.write(path + '\n')
+                    keep_zeo(main_dir + '/' + path,
+                            'fort.4.%s'%mol,
+                            'fort.77.%s'%mol, T, L)

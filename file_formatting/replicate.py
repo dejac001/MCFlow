@@ -1,3 +1,8 @@
+def get_H_matrix(a,b,c,alpha,beta,gamma):
+    return np.matrix([[a*np.sin(beta), b*np.sin(alpha)*np.cos(gamma),0.],
+                    [0., b*np.sin(alpha)*np.sin(gamma), 0.],
+                    [a*np.cos(beta), b*np.cos(alpha), c]])
+
 def replicate(coordinates, abc, lmn, alpha=90.,gamma=90.,beta=90.):
     '''
 
@@ -6,16 +11,14 @@ def replicate(coordinates, abc, lmn, alpha=90.,gamma=90.,beta=90.):
     :param lmn: integer number of cells in each dimension
     :return:
     '''
-    import numpy as np
     a, b, c = abc
+    replicated = {'atoms':[], 'coords':[]}
+    replicated['box info'] = {'a':a*lmn[0],'b':b*lmn[1],'c':c*lmn[2],
+                                'alpha':alpha,'gamma':gamma,'beta':beta}
     alpha = alpha/180.*np.pi
     beta = beta/180.*np.pi
     gamma = gamma/180.*np.pi
-    H = np.matrix([[a*np.sin(beta), b*np.sin(alpha)*np.cos(gamma),0.],
-                    [0., b*np.sin(alpha)*np.sin(gamma), 0.],
-                    [a*np.cos(beta), b*np.cos(alpha), c]])
-    print(H)
-    replicated = {'atoms':[], 'coords':[]}
+    H = get_H_matrix(a,b,c,alpha,beta,gamma)
     for xcell in range(lmn[0]):
         for ycell in range(lmn[1]):
             for zcell in range(lmn[2]):
@@ -135,6 +138,7 @@ def replicate_box(parent_parser):
 from MCFlow.file_formatting import reader
 from MCFlow.file_formatting import writer
 import os, argparse
+import numpy as np
 
 if __name__ == '__main__':
     parent_parser = argparse.ArgumentParser(add_help=False)

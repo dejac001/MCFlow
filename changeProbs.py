@@ -1,3 +1,7 @@
+class NoSwapsAccepted(BaseException):
+    pass
+
+
 def calculateProbs(nMol, nBeadMolty):
     '''
     currently only works for binary butanol/water. Assumes that molecules are not perfectly
@@ -74,6 +78,7 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
     swapInfo = {}
     swatchInfo = {}
     pmvol = nActPerCycle / (nchain*tavol) # desired pmvol
+    pmvol = 0.0167
     newSwaps = {}
     newSwatches = {}
     pctAct = {}
@@ -119,6 +124,7 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
                 elif (numMolType[moveType] != 0) and (attempted > 0):
                     print('no swap moves accepted for type {} between {}; path is {}'.format(moveType,boxpair,
                                                                                                 os.getcwd()))
+                    raise NoSwapsAccepted
 #                   quit()
             elif boxpair[0] == boxpair[1]:
                 print('Take out same box swatch from fort.4 file for {} between {}'.format(moveType,boxpair))
@@ -131,6 +137,9 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
             if accepted > 0.: numberSwapType +=1
             # ^ keep all moveTypes for swatch, but not for swap
     print('number of accepted transfer moves was {}'.format(nActCycle))
+    if numberSwatchtype == 0 and swatchInfo.keys():
+        print('-we accidentally did a swatch')
+        swatchInfo = {}
 
     # determine if there are extraneous moves which can be taken out
     # (1)
@@ -440,13 +449,12 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
     return (newSwaps, newSwatches, pctAct, nActCycle, normSwaps, normSwatches,
             pmvol, pmvol+pSwapTot*alpha, pmvol+pSwapTot*alpha+pSwapTot)
 
-from runAnalyzer import getFileData
-from file_formatting import writer, reader
-from getData import outputDB, outputGenDB
-from runAnalyzer import findNextRun
+from MCFlow.runAnalyzer import getFileData, findNextRun
+from MCFlow.file_formatting import writer, reader
+from MCFlow.getData import outputDB, outputGenDB
 import numpy as np
 import os, shutil
-from dataUtil import sortMolKeys
+from MCFlow.dataUtil import sortMolKeys
 
 if __name__ == '__main__':
     from parser import Change
@@ -457,13 +465,21 @@ if __name__ == '__main__':
     for feed in feeds:
         args['feeds'] = [feed]
         data, gen_data = getFileData(**args)
+        outputDB(args['path'], args['feeds'],args['type'], data )
+        outputGenDB(args['path'], args['feeds'],args['type'], gen_data )
         nbox = len(data['rho'].averages[feed].keys())
         # TODO: format return from analyzeTransfers to fit well with fort4 data dict
-        (newSwaps, newSwatches, pctAct,
-        nActCycle, normSwaps, normSwatches,
-        pmvol, pswatch_norm, pswap_norm) = analyzeTransfers(data['SWAP'].averages[feed],
+        try:
+            (newSwaps, newSwatches, pctAct,
+            nActCycle, normSwaps, normSwatches,
+            pmvol, pswatch_norm, pswap_norm) = analyzeTransfers(data['SWAP'].averages[feed],
                                                             gen_data[feed]['ncycle'],
+#                                                       nActPerCycle=3656/200, tavol=0.3,
                                                             gen_data[feed]['compositions'])
+        except NoSwapsAccepted:
+            print('no swaps accepted for {}'.format(feed))
+            continue
+        print(newSwaps)
         # read and write
         for sim in args['indep']:
             my_path = '%s/%s/%i/'%(args['path'],feed,sim)
@@ -527,7 +543,10 @@ if __name__ == '__main__':
             # add in swatches
             input_data['MC_SWATCH'] = {}
             input_data['&mc_swatch'] = {'pmsatc':{},'nswaty':'0','pmswat':'0'}
-            input_data['&mc_swatch']['pmswat'] = '%e'%pswatch_norm
+            if pswatch_norm - pmvol < 1e-8:
+                input_data['&mc_swatch']['pmswat'] = '-1.0'
+            else:
+                input_data['&mc_swatch']['pmswat'] = '%e'%pswatch_norm
             nSwatch = 0
             pmswatch_total = 0.
             for key, value in newSwatches.items():
@@ -557,8 +576,8 @@ if __name__ == '__main__':
             #   general info
             input_data['&mc_shared']['time_limit'] = '%i'%args['time']
             input_data['&mc_shared']['nstep'] = '%i'%args['nstep']
-            input_data['&mc_shared']['iratio'] = '500'
-            input_data['&mc_shared']['rmin'] = '1.0'
+#           input_data['&mc_shared']['iratio'] = '500'
+#           input_data['&mc_shared']['rmin'] = '1.0'
             iblock = int(args['nstep']/10)
             if iblock > 1000: iblock = 1000
             input_data['&analysis']['iblock'] = '%i'%iblock
@@ -603,5 +622,3 @@ if __name__ == '__main__':
             nextRun = 'fort.4.%s%i'%(args['type'],findNextRun(my_path,args['type']))
             writer.write_fort4(input_data, my_path + nextRun)
             input_data = None
-        outputDB(args['path'], args['feeds'],args['type'], data )
-        outputGenDB(args['path'], args['feeds'],args['type'], gen_data )

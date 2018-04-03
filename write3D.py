@@ -1,5 +1,5 @@
 __author__ = 'dejacor'
-def writeAGR(data, file, nIndep):
+def write(data, file, nIndep):
     with open(file,'w') as f:
         for feed in data['x'].keys():
             x, dx = data['x'][feed]['mean'], calc95conf(data['x'][feed]['stdev'], nIndep)
@@ -44,9 +44,10 @@ class Plotter:
         self.files = ['N-data.db','rho-data.db','general-data.db','dG-data.db','K-data.db','P-data.db','X-data.db',
                       'U-data.db','boxlx-data.db','Conc-data.db']
         self.variables = [self.N, self.rho, self.gen_data, self.dG, self.K, self.P, self.X,
-                          self.U, self.X, self.C]
+                          self.U, self.boxlx, self.C]
 
         self.path = kwargs['path']
+        self.feeds = kwargs['feeds']
         if 'units' in kwargs.keys():
 #            assert kwargs['mol'], 'Mol needed for number density to calculate P assuming I.G.'
 #            assert kwargs['Temp'], 'Temperature needed for number density to calculate P assuming I.G.'
@@ -56,35 +57,38 @@ class Plotter:
 #             self.indep = kwargs['indep']
             self.units = kwargs['units']
             # self.zeoVolume = kwargs['ZeoVolume']
-            # self.feeds = kwargs['feeds']
             # self.box = kwargs['box']
             # self.boxes = kwargs['boxes']
             # self.film = kwargs['film']
 
     def readDBs(self):
+        files_to_remove = []
         for file, var in zip(self.files, self.variables):
             with shelve.open('%s/%s'%(self.path, file)) as db:
                 for feed in self.feeds:
                     if feed not in db.keys():
                         print('Feed {} not in {}'.format(feed, file))
+                        files_to_remove.append( self.files.index(file))
                     else:
                         var[feed] = db[feed]
+        self.files = [self.files[i] for i in range(len(self.files)) if i not in files_to_remove]
+        self.variables = [self.variables[i] for i in range(len(self.variables)) if i not in files_to_remove]
 
-    def rho(self, mol, box):
+    def number_density(self, mol, box):
         num_dens = self.rho[self.feed][self.run]
 
         return {
             key:num_dens[mol][box][key] for key in ('mean','stdev','raw')
         }
 
-    def dG(self, mol, boxFrom, boxTo):
+    def deltaG(self, mol, boxFrom, boxTo):
         deltaG = self.dG[self.feed][self.run]
         boxPair = boxFrom+'--'+boxTo
         data = {key:deltaG[mol][boxPair][key] for key in ('mean','stdev','raw')}
         return data
 
     def Pig(self, mol, box):
-        rho = self.rho(self, mol, box)
+        rho = self.number_density(self, mol, box)
         factor = 1/N_av*R['nm**3*kPa/(mol*K)']*self.T
         return {
             key:rho[key]*factor for key in ('mean','stdev','raw')
@@ -101,24 +105,41 @@ class Plotter:
                         zeolite_mass_g )
         elif self.units == 'mol/kg':
             qfactor = gen_data['zeolite'][' mol/kg / 1 mlcl adsorbed']
-        data = {key:N[mol]['box1'][key]*qfactor for key in ('raw','mean','stdev')}
+        data = {key:N[mol]['box1'][key]*qfactor for key in ('mean','stdev')}
+        data['raw'] = [i*qfactor for i in N[mol]['box1']['raw']]
         return data
 
-    def X(self,mol,box):
+    def R(self,mol,box):
+        N = self.N[self.feed][self.run]
+        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        N_tot_raw = [0 for i in range(nIndep)]
+        for box, vals in N[mol].items():
+            for j in range(len(vals['raw'])):
+                N_tot_raw += vals['raw'][j]
+        N_tot_raw = [i/nIndep for i in N_tot_raw]
+        R_raw = [N[mol][box]['raw'][i]/N_tot_raw[i]*100 for i in range(len(N_tot_raw))]
+        return {'mean':np.mean(R_raw), 'stdev':np.std(R_raw), 'raw':R_raw}
+
+    def moleFrac(self,mol,box):
         mol_frac = self.X[self.feed][self.run]
-        data = {key:mol_frac[box][mol][key] for key in ('raw','mean','stdev')}
+        try:
+            data = {key:mol_frac[box][mol][key] for key in ('raw','mean','stdev')}
+        except KeyError:
+            print('Molecules in feed {} only {}'.format(self.feed, mol_frac[box].keys()))
+            data = {key:1e-10 for key in ('raw','mean','stdev')}
+            data['raw'] = [1e-15]
         return data
 
-    def K(self, box, mol1, mol2):
+    def Kratio(self, box, mol1, mol2):
         Kfrac = self.K[self.feed][self.run]
         mol_pair = '%s/%s'%(mol1,mol2)
         return {
             key:Kfrac[box][mol_pair][key] for key in ('raw','mean','stdev')
         }
 
-    def S(self, boxFrom, boxTo, mol1, mol2):
-        K_from = self.K(boxFrom, mol1, mol2)
-        K_to = self.K(boxTo, mol1, mol2)
+    def Selec(self, boxFrom, boxTo, mol1, mol2):
+        K_from = self.Kratio(boxFrom, mol1, mol2)
+        K_to = self.Kratio(boxTo, mol1, mol2)
         S_mean = K_to['mean'] / K_from['mean']
         S_stdev = eProp_division(K_to['mean'], K_to['stdev'],
                                       K_from['mean'], K_from['stdev'])
@@ -144,13 +165,13 @@ class Plotter:
             dU_raw.append(du)
         return {
             'mean':np.mean(dU_raw),
-            'stdev':np.stdev(dU_raw),
+            'stdev':np.st(dU_raw),
             'raw':dU_raw
         }
 
     def Pi(self, mol, box):
         P = self.Pbox(box)
-        y = self.X(self, mol, box)
+        y = self.moleFrac(mol, box)
         mean = P['mean']*y['mean']
         raw = [Pbox*yi for Pbox,yi in zip(P['raw'],y['raw'])]
         stdev = mean*np.sqrt(
@@ -164,7 +185,7 @@ class Plotter:
         return {'mean':T,'stdev':0.,
                 'raw':[T for i in range(nIndep)]}
 
-    def C(self):
+    def Conc(self):
         def getC(c_data, mol='', box=''):
             for key, value in sorted(c_data.items()):
                 if (len(key) == 1) or (len(key) == 2):
@@ -180,20 +201,23 @@ class Plotter:
 
     def convertChoice(self, choice, mol='',box='',boxFrom='',
                       boxTo='', mol1='',mol2=''):
+        if 'box' not in box: box = 'box' + box
         if choice == 'rho':
-            return self.rho(mol, box)
+            return self.number_density(mol, box)
         elif choice == 'dG':
-            return self.dG(mol, boxFrom, boxTo)
+            return self.deltaG(mol, boxFrom, boxTo)
         elif choice == 'Pig':
             return self.Pig(mol, box)
         elif choice == 'Q':
             return self.Q(mol)
         elif choice == 'X':
-            return self.X(mol, box)
+            return self.moleFrac(mol, box)
         elif choice == 'K':
-            return self.K(box, mol1, mol2)
+            return self.Kratio(box, mol1, mol2)
+        elif choice == 'R':
+            return self.R(mol, box)
         elif choice == 'S':
-            return self.S(boxFrom, boxTo, mol1, mol2)
+            return self.Selec(boxFrom, boxTo, mol1, mol2)
         elif choice == 'Pbox':
             return self.Pbox(box)
         elif choice == 'dU':
@@ -203,7 +227,7 @@ class Plotter:
         elif choice == 'T':
             return self.T()
         elif choice == 'C':
-            return self.C()
+            return self.Conc()
 
 from MCFlow.runAnalyzer import checkRun, calc95conf
 from MCFlow.chem_constants import N_av, R
@@ -217,7 +241,7 @@ from MCFlow.parser import Plot, Main
 class Plot3D(Plot):
     def __init__(self):
         Main.__init__(self)
-        choices = ['rho','dG','Pig','Q','X','K','S','Pbox','dU','Pi','T','C','']
+        choices = ['rho','dG','Pig','Q','X','K','S','Pbox','dU','Pi','T','C','','R']
         self.parser.description = 'Plot results in 3D'
         self.parser.add_argument('-mx','--molx',help='Molecule associated with x axis', type=str)
         self.parser.add_argument('-my','--moly',help='Molec w/ y axis',type=str)
@@ -271,10 +295,13 @@ if __name__ == '__main__':
 
     data = {'x':{},'y':{},'z':{}}
     for feed in args['feeds']:
+        file_name = ''
         # determine if run has been completed
         my_plotter.run = checkRun(args['type'], my_plotter.variables, feed)
         my_plotter.feed = feed
         for axis in ['x','y','z']:
             kwargs['mol'] = args['mol%s'%axis]
             kwargs['box'] = args['box%s'%axis]
+            file_name += 'mol%s-box%s-%s_'%(kwargs['mol'],kwargs['box'],args['%saxis'%axis])
             data[axis][feed] = my_plotter.convertChoice(args['%saxis'%axis], **kwargs)
+    write(data,file_name + '.dat', my_plotter.gen_data[my_plotter.feed][my_plotter.run]['numIndep'])

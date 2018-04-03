@@ -154,7 +154,7 @@ def removeMolecules(input_dat, restart_dat, nAdd, box, molID):
                 keepMol()
         else:
             keepMol()
-    assert taken_out == nAdd, 'Not enough mols of type {} taken out'.format(mol_num)
+    assert taken_out == nAdd, 'Not enough mols of type {} taken out; only {}'.format(mol_num, taken_out)
 
     new_restart_data['nchain']  = restart_dat['nchain'].replace(
                 restart_dat['nchain'].split()[0], '%i'%(int(restart_dat['nchain'].split()[0])+taken_out)
@@ -190,9 +190,9 @@ def removeChains(input_dat, restart_dat, chains_to_remove):
     input_dat['&mc_shared']['nchain'] = new_restart_data['nchain'].split()[0]
     return copy.deepcopy(input_dat), copy.deepcopy(new_restart_data)
 
-from file_formatting import reader, writer
-from calc_tools import fold, calculate_distance
-from chem_constants import N_av, R
+from MCFlow.file_formatting import reader, writer
+from MCFlow.calc_tools import fold, calculate_distance
+from MCFlow.chem_constants import N_av, R
 import random, copy
 import numpy as np
 

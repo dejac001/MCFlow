@@ -736,6 +736,12 @@ def read_fort4(file):
                         for i in range(1,len(nmols)+1):
                             input_data[section]['box%i'%(itype+1)]['mol%i'%i] = nmols[i-1]
                         input_data[section]['box%i'%(itype+1)]['nghost'] = nghost
+                    elif len(line.split()) == nmolty + 2:
+                        nmols = line.split()[:-2]
+                        nghost = line.split()[-2]
+                        for i in range(1,len(nmols)+1):
+                            input_data[section]['box%i'%(itype+1)]['mol%i'%i] = nmols[i-1]
+                        input_data[section]['box%i'%(itype+1)]['nghost'] = nghost
         elif section == 'MOLECULE_TYPE':
             if 'nunit' in line:
                 itype += 1
