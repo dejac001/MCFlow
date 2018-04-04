@@ -14,21 +14,40 @@ class AnyProperty():
         '''
         self.averaging = False
         self.data = initializeData(values, {})
+        self.nblocks = 5
+        self.block_mean = initializeData(values, {})
+        self.block_std = initializeData(values, {})
 
     def addVals(self, newData):
         '''
         self.data is a nested dictionary ending in a list containing a value for each independent simulation.
         The mean of this simulation is the data point for the simulation.
         '''
-        def appendValues(newRunData, storageData):
+        def appendValues(newRunData, storageData, blockMean, blockStdev):
             for key, value in newRunData.items():
                 if isinstance(value, dict):
-                    if key not in storageData.keys(): storageData[key] = {}
-                    appendValues(newRunData[key], storageData[key])
+                    if key not in storageData.keys():
+                        storageData[key] = {}
+                        blockMean[key] = {}
+                        blockStdev[key] = {}
+                    appendValues(newRunData[key], storageData[key], blockMean[key], blockStdev[key])
                 elif isinstance(value, list):
-                    if key not in storageData.keys(): storageData[key] = []
-                    if value: # if non-empty
+                    if key not in storageData.keys():
+                        storageData[key] = []
+                        blockMean[key] = []
+                        blockStdev[key] = []
+                    if len(value) > 0: # if non-empty
                         storageData[key].append(np.mean(value))
+                        means, stdevs = [], []
+                        block_length = math.floor(len(value)/self.nblocks)
+                        for iblock in range(1,self.nblocks + 1):
+                            start = int((iblock-1)*block_length)
+                            stop = int(iblock*block_length)
+                            block_data = value[start:stop]
+                            means.append(np.mean(block_data))
+                            stdevs.append(np.std(block_data))
+                        blockMean[key].append(means)
+                        blockStdev[key].append(stdevs)
                     else:
                         print('tried to take mean of empty slice; ignoring')
                 elif isinstance(value, int) or isinstance(value, float):
@@ -37,7 +56,7 @@ class AnyProperty():
                 else:
                     print('Data type not accounted for in AnyProperty.addVals')
                     print(value)
-        appendValues(newData, self.data)
+        appendValues(newData, self.data, self.block_mean, self.block_std)
 
 #    def getRunAvg(self, newData, newKey):
 #        '''
@@ -66,21 +85,22 @@ class AnyProperty():
         self.averages contains the average values for each data point with stdevs.
         all of these averages then could make a plot
         '''
-        def averageValues(dataToAverage, allAverages):
+        def averageValues(dataToAverage, allAverages, blockMean, blockStd):
             for key, value in dataToAverage.items():
                 if isinstance(value, dict):
                     allAverages[key] = {}
-                    averageValues(dataToAverage[key], allAverages[key])
+                    averageValues(dataToAverage[key], allAverages[key], blockMean[key], blockStd[key])
                 elif isinstance(value, list):
                     mean = np.mean(value)
                     stdev = np.std(value)
-                    allAverages[key] = {'mean':mean, 'stdev':stdev, 'raw':value[:]}
+                    allAverages[key] = {'mean':mean, 'stdev':stdev, 'raw':value[:],
+                                        'block means':blockMean[key], 'block std':blockStd[key]}
                     dataToAverage[key].clear()
         if not self.averaging: # if havent started averaging need to make new dict
             self.averages = {}
             self.averaging = True
         self.averages[newKey] = {}
-        averageValues(self.data, self.averages[newKey])
+        averageValues(self.data, self.averages[newKey], self.block_mean, self.block_std)
 
     def __str__(self):
         def printValues(data, keysList = [], representation=''):
@@ -180,3 +200,4 @@ class MolTransProperty(MolProperty):
 
 
 import numpy as np
+import math
