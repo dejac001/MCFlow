@@ -194,7 +194,7 @@ def calcdH_mixt(U, P, rhomol, Ntot):
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
                 verbosity, liq=False, mol='-1', **kwargs):
-    from file_formatting import reader
+    from MCFlow.file_formatting import reader
     general_data = {key:{} for key in feeds}
     # TODO: add molec name (i.e. 15PDO or WATER) into general_data
     for feed in feeds:

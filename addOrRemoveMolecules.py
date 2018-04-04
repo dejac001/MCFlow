@@ -87,6 +87,7 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID, changeVol):
         restart_dat['box dimensions']['box%s'%box] = '{} {} {}\n'.format(boxlx, boxlx, boxlx)
         input_dat['SIMULATION_BOX']['box%s'%box]['rcut'] = '%e'%(boxlx/2*0.99)
     input_dat['&mc_shared']['iratio'] = '500'
+    input_dat['&mc_shared']['time_limit'] = '1'
     input_dat['&analysis']['imv'] = '%i'%(int(input_dat['&mc_shared']['nstep']) + 10)
     input_dat['&mc_volume']['iratv'] = '500'
     if float(restart_dat['max displacement']['volume']['box%s'%box]) < 100000.0:
