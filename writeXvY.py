@@ -400,7 +400,11 @@ class RhoBoxAds(IdealGasAds):
             self.box = kwargs['box']
             self.film = kwargs['film']
     def getX(self):
-        return self.rho[self.feed][self.run][self.mol]['box%s'%self.box]
+        if 'box' not in self.box:
+            box = 'box%s'%self.box
+        else:
+            box = self.box
+        return self.rho[self.feed][self.run][self.mol][box]
 
 class GasBoxAds(IdealGasAds):
     def __init__(self, **kwargs):

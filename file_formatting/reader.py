@@ -199,6 +199,7 @@ class Movie:
                     else:
                         num_molec_data.pop(mol_num)
         self.averages[feed] = num_molec_data
+        self.averages[feed]['number of frames'] = self.nframes
 
     def foldMovieToUC(self, uc_vectors):
         '''

@@ -22,6 +22,7 @@ class RDF(Movie):
         self.num_bins = len(self.edges) - 1
         self.numInt = []
         self.unit_cells = [2,2,3] # MFI
+        self.sameMol = False
 
     def getAllBoxlx(self):
         tolerance = 1e-8
@@ -85,7 +86,10 @@ class RDF(Movie):
         volume = 1.
         for i in self.dimension_indices:
             volume = volume*boxLengths[i]
-        constant = n_coords1/volume
+        n_tot = (n_coords1+n_coords2)
+        constant = n_tot/volume
+        if self.sameMol:
+            constant /= 2
 
         for index in range(n_coords1):
             if len(self.dimension_indices) > 1:
@@ -115,6 +119,8 @@ class RDF(Movie):
     def calculateRDF(self, m1, b1, m2, b2, sbox):
         self.box = 'box%s'%sbox
         mol1, mol2 = ['mol%s'%m1,'mol%s'%m2]
+        if mol1 == mol2:
+            self.sameMol = True
         self.ignored_frames = 0
         for iframe, FRAME_DATA in enumerate(self.frame_data):
             try:
@@ -144,7 +150,7 @@ class RDF(Movie):
             self.g_frame( c1_xyz, c2_xyz, frame_boxlengths)
         if self.ignored_frames > 0:
             print('Out of %i total frames, %i were ignored b/c of lack of mlcl'%(
-                    self.nframes,self.ignored_frames))
+                    len(self.frame_data),self.ignored_frames))
         self.averageG()
 
 class G(Struc):
@@ -173,7 +179,6 @@ class G(Struc):
         assert (self.args['bead1'] and self.args['bead2'] and self.args['mol1']
                  and self.args['mol2'] and self.args['bins'] and self.args['rmax']), 'Necessary input missing'
         assert self.args['boxes'], 'box needed for rdf'
-        assert self.args['box'] == None, 'Use multiple boxes argument'
         self.analysis_class = RDF
 
     def myCalcs(self, D, m1, b1, m2, b2):
