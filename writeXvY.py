@@ -78,9 +78,10 @@ class IdealGasAds:
     def __init__(self, **kwargs):
 
         # TODO: make general db reader that all files can do
-        self.N = {}; self.rho = {}; self.gen_data = {}; self.dG = {}; self.K = {}; self.P = {}; self.X = {}
-        self.files = ['N-data.db','rho-data.db','general-data.db','dG-data.db','K-data.db','P-data.db','X-data.db']
-        self.variables = [self.N, self.rho, self.gen_data, self.dG, self.K, self.P, self.X]
+        self.N = {}; self.rho = {}; self.gen_data = {}; self.dG = {}; self.K = {}; self.P = {}; self.X = {}; self.dHmixt = {}
+        self.U = {}
+        self.files = ['N-data.db','rho-data.db','general-data.db','dG-data.db','K-data.db','P-data.db','X-data.db','dH-mixt-data.db','U-data.db']
+        self.variables = [self.N, self.rho, self.gen_data, self.dG, self.K, self.P, self.X,self.dHmixt, self.U]
         if kwargs:
             assert kwargs['mol'], 'Mol needed for number density to calculate P assuming I.G.'
             assert kwargs['Temp'], 'Temperature needed for number density to calculate P assuming I.G.'
@@ -94,6 +95,86 @@ class IdealGasAds:
             self.box = kwargs['box']
             self.boxes = kwargs['boxes']
             self.film = kwargs['film']
+
+    def dUvX(self):
+        U = self.U[self.feed][self.run]
+        N = self.N[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run]
+        file_description = 'Q(%s)     %s    dQ     %s'%(self.units, self.xlabel[0],
+                                                       self.xlabel[1])
+        file_name = 'dU_%s_mixture.dat'%self.box
+        X = self.getX()
+        N1_tot = sum(N[i]['box1']['mean'] for i in N.keys())
+        N1 = {'mean':N1_tot,
+              'stdev':math.pow( sum(N[i]['box1']['stdev']**2 for i in N.keys()), 0.5)} # mol
+        N2_tot = sum(N[i][self.box]['mean'] for i in N.keys())
+        N2 = {'mean':N2_tot,
+              'stdev':math.pow( sum(N[i][self.box]['stdev']**2 for i in N.keys()), 0.5)} # mol
+        nIndep = gen_data['numIndep']
+        dU = (U['box1']['mean']/N1_tot - U[self.box]['mean']/N2_tot)*8.314/1000
+        ddU = math.pow(
+            (1/N1_tot)**2*U['box1']['stdev']**2 +
+            (-1*U['box1']['mean']/N1['mean']**2)**2*N1['stdev']**2 +
+            (1/N2_tot)**2*U[self.box]['stdev']**2 +
+            (-1*U[self.box]['mean']/N2['mean']**2)**2*N2['stdev']**2
+            ,0.5)*8.314/1000
+        dU_mean, dU_stdev = dU, ddU
+        writeAGR([X['mean']],[dU_mean],
+                [calc95conf(X['stdev'], nIndep)], [calc95conf(dU_stdev, nIndep)],
+                [self.feed], file_name, file_description)
+
+    def dHigvX(self):
+        U = self.U[self.feed][self.run]
+        N = self.N[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run]
+        file_name = 'dHig_vapor_to_%s.dat'%self.box
+        X = self.getX()
+        N1_tot = sum(N[i][self.box]['mean'] for i in N.keys())
+        N1 = {'mean':N1_tot,
+              'stdev':math.pow( sum(N[i][self.box]['stdev']**2 for i in N.keys()), 0.5)} # mol
+        vapor_box = 'box3'
+        N2_tot = sum(N[i][vapor_box]['mean'] for i in N.keys())
+        N2 = {'mean':N2_tot,
+              'stdev':math.pow( sum(N[i][vapor_box]['stdev']**2 for i in N.keys()), 0.5)} # mol
+        nIndep = gen_data['numIndep']
+        dH = (U[self.box]['mean']/N1_tot - U[vapor_box]['mean']/N2_tot)*8.314/1000 - 8.314/1000*self.T
+        ddH = math.pow(
+            (1/N1_tot)**2*U['box1']['stdev']**2 +
+            (-1*U['box1']['mean']/N1['mean']**2)**2*N1['stdev']**2  +
+            (1/N2_tot)**2*U[vapor_box]['stdev']**2 +
+            (-1*U[vapor_box]['mean']/N2['mean']**2)**2*N2['stdev']**2
+            ,0.5)*8.314/1000
+        dH_mean, dH_stdev = dH, ddH
+        file_description = 'dHig     %s    ddHig     %s'%(self.xlabel[0],
+                                                       self.xlabel[1])
+        if '95conf' not in X.keys():
+            X['95conf'] = calc95conf(X['stdev'], nIndep)
+        writeAGR([X['mean']],[dH_mean],
+                [X['95conf']], [calc95conf(dH_stdev, nIndep)],
+                [self.feed], file_name, file_description)
+
+    def dHvX(self):
+        dH = self.dHmixt[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run]
+        file_description = 'Q(%s)     %s    dQ     %s'%(self.units, self.xlabel[0],
+                                                       self.xlabel[1])
+        if self.boxes:
+            boxFrom, boxTo = self.boxes
+#       else:
+#           boxFrom = self.box
+#           boxTo = 'box1'
+        file_name = 'dH_%s_mixture.dat'%boxTo
+        assert 'box' in boxFrom, 'Wrong notation for box'
+        transfer = boxFrom + '-->' + boxTo
+        X = self.getX()
+        nIndep = gen_data['numIndep']
+        dH_mean, dH_stdev = dH[transfer]['mean'], dH[transfer]['stdev']
+        if '95conf' not in X.keys():
+            X['95conf'] = calc95conf(X['stdev'], nIndep)
+        writeAGR([X['mean']],[dH_mean],
+                [X['95conf']], [calc95conf(dH_stdev, nIndep)],
+                [self.feed], file_name, file_description)
+
 
     def rho_vapor(self):
         nIndep = self.gen_data[self.feed][self.run]['numIndep']
@@ -118,18 +199,21 @@ class IdealGasAds:
             [self.feed], file_name, file_description)
 
     def readDBs(self):
+#       if 'dH-mixt-data.db' in self.files:
+#           index = self.files.index('dH-mixt-data.db')
+#           self.files.pop(index)
+#           self.variables.pop(index)
         for file, var in zip(self.files, self.variables):
             with shelve.open('%s/%s'%(self.path, file)) as db:
                 for feed in self.feeds:
                     assert feed in db.keys(), 'Feed {} not in database for file {}'.format(feed, file)
-                    print(feed, file)
                     var[feed] = db[feed]
 
     def getMolAds(self, num_molec):
         mols_adsorbed = []
         for mol in map(str,sorted(map(int,num_molec.keys()))):
             mean, stdev = (num_molec[mol]['box1']['mean'], num_molec[mol]['box1']['stdev'])
-            ntotal = sum(num_molec[mol][box]['mean'] for box in num_molec[mol].keys())
+            ntotal = sum(num_molec[mol][box]['mean'] for box in num_molec[mol].keys() if 'box' in box)
             if (mean > 0.) and (mean < ntotal):
                 mols_adsorbed.append(mol)
         assert mols_adsorbed, 'No molecules adsorbed. Mean: %3.2e, stdev: %3.2e'%(mean, stdev)
@@ -377,6 +461,33 @@ class IdealGasAds:
                     writeAGR([X['mean']], [S_mean],
                              [X['95conf']], [S_95conf],
                              [self.feed], file_name, file_description)
+                elif self.mol == '1':
+                    K = 1/K_to['mean']
+                    dK = K*K_to['stdev']/K_to['mean']
+                    K_to = {'stdev':dK, 'mean':K}
+                    K_to['95conf'] = calc95conf(K_to['stdev'],nIndep)
+                    MW_W = gen_data['molecular weight']['2']
+                    MW_D = gen_data['molecular weight'][self.mol]
+                    S_mean = (
+        K_to['mean']*(self.density[0]/X['mean'] - 1)*MW_D/MW_W
+                    )
+                    w = X['mean']/self.density[0]
+                    S_long = K_to['mean']/(
+                    (w/MW_D)/((1-w)/MW_W )
+                    )
+                    dS_dKto = (self.density[0]/X['mean'] - 1)*MW_D/MW_W
+                    dS_drho = K_to['mean']/X['mean']*MW_D/MW_W
+                    dS_dC = -K_to['mean']*self.density[0]/math.pow(X['mean'],2)*MW_D/MW_W
+                    S_95conf = math.sqrt(
+                        math.pow(dS_dKto*K_to['95conf'],2) +
+                        math.pow(dS_drho*self.density[1],2) +
+                        math.pow(dS_dC*X['95conf'],2)
+                    )
+                    writeAGR([X['mean']], [S_mean],
+                             [X['95conf']], [S_95conf],
+                             [self.feed], file_name, file_description)
+                else:
+                    print('mol pair', mol_pair, 'will not be considered for selectivity')
             else:
                 print(self.xlabel, 'not considered')
 
@@ -416,6 +527,32 @@ class GasBoxAds(IdealGasAds):
         if kwargs:
             assert self.vapor_box, 'Box needed to calculate pressure (box)'
             self.film = kwargs['film']
+    def Txy(self):
+        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        rho, N = self.rho[self.feed][self.run], self.N[self.feed][self.run]
+        try:
+            vapor_box = self.findVapBox( rho, self.mol)
+        except KeyError:
+            vapor_box = 'box2'
+        mol = list(rho.keys())[0]
+        num_box = len(rho[mol].keys())
+        if num_box == 3:
+            liquid_box = 'box2'
+        else:
+            liquid_box = 'box1'
+        T = self.gen_data[self.feed][self.run]['temperature']
+        file_description = '%s     T    %s '%(self.xlabel[0],
+                                                       self.xlabel[1])
+        file_name = 'Tx_mol%s'%self.mol
+        X = self.getX(box=liquid_box)
+        writeAGR([X['mean']],[T],
+        [calc95conf(X['stdev'], nIndep)], [0.],
+        [self.feed], file_name, file_description)
+        file_name = 'Ty_mol%s'%self.mol
+        X = self.getX(box=vapor_box)
+        writeAGR([X['mean']],[T],
+        [calc95conf(X['stdev'], nIndep)], [0.],
+        [self.feed], file_name, file_description)
 
     def getX(self):
         if 'box' not in self.vapor_box: self.vapor_box = 'box' + self.vapor_box
@@ -464,52 +601,6 @@ class LoadAds(IdealGasAds):
                            math.pow( sum(N[i]['box1']['stdev']**2 for i in N.keys()), 0.5)*qfactor)
             return {'mean':Q_mean, 'stdev':Q_stdev}
 
-    def dUvX(self):
-        U = self.U[self.feed][self.run]
-        N = self.N[self.feed][self.run]
-        gen_data = self.gen_data[self.feed][self.run]
-        file_description = 'Q(%s)     %s    dQ     %s'%(self.units, self.xlabel[0],
-                                                       self.xlabel[1])
-        file_name = 'dU_%s_mixture.dat'%self.box
-        X = self.getX()
-        N1_tot = sum(N[i]['box1']['mean'] for i in N.keys())
-        N1 = {'mean':N1_tot,
-              'stdev':math.pow( sum(N[i]['box1']['stdev']**2 for i in N.keys()), 0.5)} # mol
-        N2_tot = sum(N[i][self.box]['mean'] for i in N.keys())
-        N2 = {'mean':N2_tot,
-              'stdev':math.pow( sum(N[i][self.box]['stdev']**2 for i in N.keys()), 0.5)} # mol
-        nIndep = gen_data['numIndep']
-        dU = (U['box1']['mean']/N1_tot - U[self.box]['mean']/N2_tot)*8.314/1000
-        ddU = math.pow(
-            (1/N1_tot)**2*U['box1']['stdev']**2 +
-            (-1*U['box1']['mean']/N1['mean']**2)**2*N1['stdev']**2 +
-            (1/N2_tot)**2*U[self.box]['stdev']**2 +
-            (-1*U[self.box]['mean']/N2['mean']**2)**2*N2['stdev']**2
-            ,0.5)*8.314/1000
-        dU_mean, dU_stdev = dU, ddU
-        writeAGR([X['mean']],[dU_mean],
-                [calc95conf(X['stdev'], nIndep)], [calc95conf(dU_stdev, nIndep)],
-                [self.feed], file_name, file_description)
-
-    def dHvX(self):
-        dH = self.dHmixt[self.feed][self.run]
-        gen_data = self.gen_data[self.feed][self.run]
-        file_description = 'Q(%s)     %s    dQ     %s'%(self.units, self.xlabel[0],
-                                                       self.xlabel[1])
-        file_name = 'dH_%s_mixture.dat'%self.box
-        if self.boxes:
-            boxFrom, boxTo = self.boxes
-        else:
-            boxFrom = self.box
-            boxTo = 'box1'
-        assert 'box' in boxFrom, 'Wrong notation for box'
-        transfer = boxFrom + '-->' + boxTo
-        X = self.getX()
-        nIndep = gen_data['numIndep']
-        dH_mean, dH_stdev = dH[transfer]['mean'], dH[transfer]['stdev']
-        writeAGR([X['mean']],[dH_mean],
-                [calc95conf(X['stdev'], nIndep)], [calc95conf(dH_stdev, nIndep)],
-                [self.feed], file_name, file_description)
 
 
 class GasMolAds(IdealGasAds):
@@ -554,13 +645,15 @@ class GasMolAds(IdealGasAds):
 
 class LiqAds(IdealGasAds):
     def __init__(self, **kwargs):
-        self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}; self.K = {}; self.X = {}
-        self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db','K-data.db','X-data.db']
-        self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data,self.K, self.X]
+        self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}; self.K = {}; self.X = {}; self.dHmixt={}
+        self.U = {}
+        self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db','K-data.db','X-data.db','dH-mixt-data.db','U-data.db']
+        self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data,self.K, self.X, self.dHmixt, self.U]
         if kwargs:
             self.xlabel = ['C(g/mL)','dC']
             self.mol = kwargs['mol']
             self.units = kwargs['units']
+            self.T = kwargs['Temp']
             self.indep = kwargs['indep']
             self.feeds = kwargs['feeds']
             self.path = kwargs['path']
@@ -736,6 +829,7 @@ if __name__ == '__main__':
     my_plotter.readDBs()
 
     for feed in args['feeds']:
+        print(feed)
         # determine if run has been completed
         my_plotter.run = checkRun(args['type'], my_plotter.variables, feed)
         my_plotter.feed = feed
@@ -761,3 +855,7 @@ if __name__ == '__main__':
             my_plotter.DensvX()
         elif args['yaxis'] == 'rho':
             my_plotter.rho_vapor()
+        elif args['yaxis'] == 'dHig':
+            my_plotter.dHigvX()
+        else:
+            print('yaxis type not accounted for')

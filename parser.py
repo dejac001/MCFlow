@@ -4,8 +4,8 @@ class Main:
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument("-v", "--verbosity", action="count", default=0)
         self.parser.add_argument('-t','--type',
-                             help='type of run (equil- or prod-)',
-                             type = str, default='equil-',choices = ['equil-','prod-'])
+                             help='type of run (equilibration or production)',
+                             type = str, default=equilName,choices = [equilName, prodName])
         self.parser.add_argument('-p','--path',
                                  help='main path to feeds (see --feeds)',
                                  type=str,default=os.getcwd())
@@ -31,6 +31,7 @@ class Main:
             self.args.indep = ['.']
         return self.args
 
+
 class Plot(Main):
     def __init__(self):
         Main.__init__(self)
@@ -39,7 +40,7 @@ class Plot(Main):
         self.parser.add_argument('-m','--mol',help='Molecule to analyze', type=str)
         self.parser.add_argument('-TK','--Temp',help='Temperature in Kelvin',
                                   type=float)
-        self.parser.add_argument('-b','--box',help='box number to analyze', type=str,default='box2')
+        self.parser.add_argument('-b','--box',help='box number to analyze', type=str)
 
     def axes(self):
         self.parser.add_argument('-x','--xaxis', help='x axis of plot',
@@ -49,7 +50,7 @@ class Plot(Main):
                                             'X','dH','dU','dHig',
                                             'Pigxy','Txy','dens','rho'])
         self.parser.add_argument('-B','--boxes',help='box numbers to use',
-                                 type=str,nargs='+',default=['box3','box2'])
+                                 type=str,nargs='+')
     def isotherm(self):
         self.parser.add_argument('-kH','--henry',help='Henry constant (g/mL/kPa) '
                                                        'fmt: (mean, 95%%conf.) ',
@@ -61,7 +62,7 @@ class Plot(Main):
                                  type = float, default = 40.044*39.798*40.149 )
     def kH(self):
         self.parser.add_argument('-y', '--yaxis', help='y axis of plot',
-                                 choices=['Q','S','X','dG','HB'])
+                                 choices=['Q','S','X','dG','HB','dH','dHig'])
         self.parser.add_argument('-de','--density',help='infinite dilution density',type=float,
                                  nargs='+',default=[0.981,0.006]
                                  # Jorgensen and Jenson, J. Comput. Chem.
@@ -69,7 +70,7 @@ class Plot(Main):
         self.parser.add_argument('-MW','--molecWeight',help='molecular weight of solvent',
                                  type=float, default=18.02)
         self.parser.add_argument('-B','--boxes',help='box numbers to use',
-                                 type=str,nargs='+',default=['box3','box2'])
+                                 type=str,nargs='+')
 
 class MultMols(Plot):
     def __init__(self):
@@ -93,7 +94,7 @@ class Results(Plot):
         self.parser.add_argument('-M','--molecules',help='Molecules to analyze for trajectory',
                                   type = str, nargs = '+')
         self.parser.add_argument('-B','--boxes',help='box numbers to use',
-                                 type=str,nargs='+',default=['box2'])
+                                 type=str,nargs='+')
         
 
 class Change(Results):
@@ -151,3 +152,4 @@ class Structure:
         return self.parser.parse_args()
 
 import argparse, os
+from MCFlow.file_organization import equilName, prodName

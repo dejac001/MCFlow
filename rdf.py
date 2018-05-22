@@ -86,10 +86,12 @@ class RDF(Movie):
         volume = 1.
         for i in self.dimension_indices:
             volume = volume*boxLengths[i]
-        n_tot = (n_coords1+n_coords2)
-        constant = n_tot/volume
         if self.sameMol:
-            constant /= 2
+            assert n_coords1 == n_coords2, 'Inconsistency in number of atoms'
+            n_tot = (n_coords1*(n_coords2-1))/2
+        else:
+            n_tot = (n_coords1*n_coords2)
+        constant = n_tot/volume
 
         for index in range(n_coords1):
             if len(self.dimension_indices) > 1:

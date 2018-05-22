@@ -1,4 +1,4 @@
-def checkYoSelf(path, feeds, nindep, count_start, tag='equil-'):
+def checkYoSelf(path, feeds, nindep, count_start, tag=equilName):
 
     for feed in feeds:
         error = False
@@ -39,6 +39,7 @@ def checkYoSelf(path, feeds, nindep, count_start, tag='equil-'):
             print('all runs for ',feed,'finished up through', tag, count)
 
 import os
+from MCFlow.file_organization import equilName, prodName
 
 if __name__ == '__main__':
 

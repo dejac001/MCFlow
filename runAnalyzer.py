@@ -21,12 +21,14 @@ def findNextRun(path, tag):
         if os.path.isfile(path +'/%s%i/run.%s%i'%(tag, runNum, tag, runNum)):
             return runNum+1
 
+import MCFlow.file_organization as fo
+
 def findFinalSimIntvl(path, fileNumStart, numIntvl, tag='equil-'):
     '''
     nIntvl is integer interval of number of files at end of finished runs
     '''
     fileNum = fileNumStart
-    while os.path.isfile('%s/%s%i/run.%s%i'%(path, tag, fileNum, tag, fileNum)):
+    while os.path.isfile(fo.read(path,'run.',tag, fileNum)):
         fileNum += 1
     if fileNum <= numIntvl:
         print('interval for analysis too long, just going to analyze all runs')
@@ -43,7 +45,7 @@ def what2Analyze(path, oldTagName, fileNumStart, numIntvl):
             old_begin = fileNumStart
             nfiles = findFinalSimRun(path, TAG)
         else:
-            old_begin = findFinalSimIntvl(path, fileNumStart, numIntvl, TAG)
+            old_begin = fileNumStart #findFinalSimIntvl(path, fileNumStart, numIntvl, TAG)
             nfiles = numIntvl
     elif 'equil' in oldTagName:
         if numIntvl == 0: numIntvl = 1
@@ -58,7 +60,10 @@ def getRealRho(rhoBias, bias, T):
     rhoReal = {}
     for mol in rhoBias.keys():
         for box in rhoBias[mol].keys():
-            if rhoBias[mol][box] > 0.:
+            if type(rhoBias[mol][box]) == type(list()):
+                if mol not in rhoReal.keys(): rhoReal[mol] = {}
+                rhoReal[mol][box] = [i*math.exp(bias[mol][box]/T) for i in rhoBias[mol][box]]
+            elif rhoBias[mol][box] > 0.:
                 if mol not in rhoReal.keys(): rhoReal[mol] = {}
                 rhoReal[mol][box] = rhoBias[mol][box] * math.exp(  bias[mol][box]/T )
     assert rhoReal, ('All number densities = 0.0. It is likely that ' +
@@ -69,7 +74,7 @@ def getRealRho(rhoBias, bias, T):
 
 def calc95conf(stdev, numIndep):
     T_values = {'8':2.365,'4':3.182, '16':2.131, '32':2.04,'2':4.303,
-                    '6':2.571,'7':2.447,'1':1.0}
+                    '6':2.571,'7':2.447,'1':1.0, '5':2.776}
     assert '%i'%numIndep in T_values.keys(), 'No T-value stored for %i indep'%numIndep
     return stdev/math.pow(numIndep, 0.5)*T_values['%i'%numIndep]
 
@@ -162,8 +167,37 @@ def getRhoTotal(dens):
     for mol, vals in dens.items():
         for box, value in vals.items():
             if box not in rho.keys(): rho[box] = 0.
-            rho[box] += value
+            if type(value) == type(dict()):
+                rho[box] += value['mean']
+            else:
+                rho[box] += value
     return rho
+
+def calcdHig_mixt(U, T, rhomol, Ntot):
+    if 'box3' not in U.keys():
+        p_box = 'box%i'%(len(U.keys()))
+    else:
+        p_box = 'box3'
+    rho_total = getRhoTotal(rhomol)
+    p = rho_total[p_box]/N_av*R['nm**3*kPa/(mol*K)']*T
+    dH = {}
+    boxes = sorted(list(U.keys()))
+    boxes.reverse()
+    for i, boxFrom in enumerate(boxes):
+        for boxTo in [j for j in boxes[i:] if j != boxFrom]:
+            key = boxFrom + '-->' + boxTo
+            dH[key] = []
+            for u_from, u_to, N_from, N_to in zip(
+                U[boxFrom], U[boxTo],
+                Ntot[boxFrom], Ntot[boxTo]
+            ):
+                if (N_to > 0) and (N_from > 0) and boxFrom in rho_total.keys() and boxTo in rho_total.keys():
+                    v_from = 1000./rho_total[boxFrom]*N_av
+                    v_to = 1000./rho_total[boxTo]*N_av
+                    delta_H =( (u_to/N_to - u_from/N_from)*R['kJ/(mol*K)'] +
+                           p*(v_from - v_to)/R['\AA**3*kPa/(mol*K)']*R['kJ/(mol*K)'])
+                    dH[key].append(delta_H)
+    return dH
 
 def calcdH_mixt(U, P, rhomol, Ntot):
     if 'box3' not in U.keys():
@@ -190,6 +224,39 @@ def calcdH_mixt(U, P, rhomol, Ntot):
                     dH[key].append(delta_H)
     return dH
 
+def rhoMCC(nMol, boxLx):
+    number_densities = {}
+    for mol in nMol.keys():
+        number_densities[mol] = {}
+        for box, val in nMol[mol].items():
+            V = [i**3/1000 for i in boxLx[box]]
+            number_densities[mol][box] = [j/k for j,k in zip(val, V)]
+    return number_densities
+
+def getRhoByMCC(feed, seed, path, type, guessStart, interval,
+                verbosity, **kwargs):
+    from MCFlow.file_formatting import reader
+    my_dir = '%s/%s/%i' % (path, feed, seed)
+    (old_begin, nfiles) = what2Analyze(my_dir, type,
+                                       guessStart, interval)
+    if verbosity > 0:
+        print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
+    # get data from old files
+    (N, P, boxLengths,
+     ncycle_old, molWeights, E) = reader.read_fort12(my_dir, old_begin,
+                                                     nfiles, tag=type)
+
+    (number_densities, chemical_potential,
+     swap_info, biasPot, volumes,
+     totalComposition, cbmc_info,
+     T, zeolite) = reader.go_through_runs(my_dir, ncycle_old,
+                                          old_begin, nfiles,
+                                          tag=type)
+    number_densities = rhoMCC(N, boxLengths)
+    # do calculations for other data that may be needed
+    number_dens_real = getRealRho(number_densities, biasPot, T)
+    os.chdir(path)
+    return number_dens_real
 
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
@@ -223,7 +290,10 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 # do calculations for other data that may be needed
                 number_dens_real = getRealRho(number_densities, biasPot, T)
                 deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
-                dH_mixt = calcdH_mixt(E, P, number_dens_real, Ntotal)
+                if P['box1']:
+                    dH_mixt = calcdH_mixt(E, P, number_dens_real, Ntotal)
+                else:
+                    dH_mixt = calcdHig_mixt(E, T, number_dens_real, Ntotal)
                 if liq:
                     concentrations = {}
                     assert kwargs['box'], 'box needed for liquid phase'
@@ -286,6 +356,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
         general_data[feed]['temperature'] = T
         if zeolite:
             general_data[feed]['zeolite'] = zeolite
+    os.chdir(path)
     return data, general_data
 
 import math, os, sys

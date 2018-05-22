@@ -1,11 +1,11 @@
-from MCFlow.writeXvY import IdealGasAds
+from MCFlow.writeXvY import IdealGasAds, writeAGR
 from MCFlow.writeHB import HBvC
 
 class kH(HBvC,IdealGasAds):
     def __init__(self, **kwargs):
-        self.N={};self.P={};self.rho={};self.gen_data={};self.K={}; self.X={}; self.dG={}
-        self.files = ['N-data.db','P-data.db', 'rho-data.db','general-data.db','K-data.db','X-data.db','dG-data.db']
-        self.variables = [self.N, self.P, self.rho, self.gen_data,self.K, self.X,self.dG]
+        self.N={};self.P={};self.rho={};self.gen_data={};self.K={}; self.X={}; self.dG={}; self.dHmixt={}; self.U = {}
+        self.files = ['N-data.db','P-data.db', 'rho-data.db','general-data.db','K-data.db','X-data.db','dG-data.db','dH-mixt-data.db', 'U-data.db']
+        self.variables = [self.N, self.P, self.rho, self.gen_data,self.K, self.X,self.dG,self.dHmixt, self.U]
         self.xlabel = ['kH', 'dkH']
         if kwargs['feeds']:
             self.feeds = kwargs['feeds']
@@ -39,13 +39,89 @@ class kH(HBvC,IdealGasAds):
             else:
                 self.film = False
 
+    def dHigvX(self):
+        U = self.U[self.feed][self.run]
+        dH_store = self.dHmixt[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run]
+        file_name = 'dHig_vapor_to_%s.dat'%self.box
+        X = self.getX()
+        N = self.N[self.feed][self.run]
+        P = self.P[self.feed][self.run]
+        N1_tot = sum(N[i][self.box]['mean'] for i in N.keys())
+        _rho_ = self.rho[self.feed][self.run]
+        rho_total = getRhoTotal(_rho_)
+        N1 = {'mean':N1_tot,
+              'stdev':math.pow( sum(N[i][self.box]['stdev']**2 for i in N.keys()), 0.5)} # mol
+        vapor_box = 'box3'
+        N2 = {'mean':
+    sum(N[i]['box3']['mean'] for i in N.keys())}
+        N2['stdev'] = math.pow(
+sum(N[i]['box3']['stdev']**2 for i in N.keys())
+,  0.5)
+        nIndep = gen_data['numIndep']
+#       dH = ((U[self.box]['mean']/N1['mean'] - U[vapor_box]['mean']/N2['mean'])*8.314/1000 - 8.314/1000*self.T  -
+#               dH_store['box3-->box2']['mean'])
+        H_box1 = U[self.box]['mean']/N1['mean']
+        H_box2 = P['box2']['mean']*1000./rho_total['box2']*N_av/R['\AA**3*kPa/(mol*K)']
+        H_box3 = U[vapor_box]['mean']/N2['mean'] - P['box3']['mean']*1000./rho_total['box3']*N_av/R['\AA**3*kPa/(mol*K)']
+        dH = (H_box1 - H_box2  - H_box3)*R['kJ/(mol*K)']
+        ddH = math.pow(
+            (1/N1['mean'])**2*U['box1']['stdev']**2 +
+            (-1*U['box1']['mean']/N1['mean']**2)**2*N1['stdev']**2  +
+            (1/N2['mean'])**2*U[vapor_box]['stdev']**2 +
+            (-1*U[vapor_box]['mean']/N2['mean']**2)**2*N2['stdev']**2
+            + dH_store['box3-->box2']['stdev']**2
+            ,0.5)*8.314/1000
+        dH_mean, dH_stdev = dH, ddH
+        file_description = 'dHig     %s    ddHig     %s'%(self.xlabel[0],
+                                                       self.xlabel[1])
+        if '95conf' not in X.keys():
+            X['95conf'] = calc95conf(X['stdev'], nIndep)
+        writeAGR([X['mean']],[dH_mean],
+                [X['95conf']], [calc95conf(dH_stdev, nIndep)],
+                [self.feed], file_name, file_description)
+
+    def dHvX(self):
+        P = self.P[self.feed][self.run]
+        U = self.U[self.feed][self.run]
+        _rho_ = self.rho[self.feed][self.run]
+        rho_total = getRhoTotal(_rho_)
+        dH = self.dHmixt[self.feed][self.run]
+        N = self.N[self.feed][self.run]
+        N1_tot = sum(N[i][self.box]['mean'] for i in N.keys())
+        N1 = {'mean':N1_tot,
+              'stdev':math.pow( sum(N[i][self.box]['stdev']**2 for i in N.keys()), 0.5)} # mol
+        gen_data = self.gen_data[self.feed][self.run]
+        file_description = 'Q(%s)     %s    dQ     %s'%(self.units, self.xlabel[0],
+                                                       self.xlabel[1])
+        if self.boxes:
+            boxFrom, boxTo = self.boxes
+#       else:
+#           boxFrom = self.box
+#           boxTo = 'box1'
+        file_name = 'dH_%s_mixture.dat'%boxTo
+        assert 'box' in boxFrom, 'Wrong notation for box'
+        transfer = boxFrom + '-->' + boxTo
+        transfer2 = 'box2-->box1'
+        X = self.getX()
+        nIndep = gen_data['numIndep']
+        H_zeo = (U['box1']['mean']/N1_tot + 0.1*1000./rho_total['box1']*N_av/R['\AA**3*kPa/(mol*K)']) * R['kJ/(mol*K)']
+        dH_mean, dH_stdev = (dH[transfer]['mean'] + dH[transfer2]['mean'] - H_zeo,
+                                   math.pow( dH[transfer]['stdev']**2 + 4*dH[transfer2]['stdev']**2 , 0.5))
+        if '95conf' not in X.keys():
+            X['95conf'] = calc95conf(X['stdev'], nIndep)
+        writeAGR([X['mean']],[dH_mean],
+                [X['95conf']], [calc95conf(dH_stdev, nIndep)],
+                [self.feed], file_name, file_description)
+
     def getX(self):
         # pressure info ----------------------
         numIndep = self.gen_data[self.feed][self.run]['numIndep']
 #       try:
             # convert number density to pressure [kPa]
             # (molec/nm**3)*(mol/molec)*(nm**3*kPa/(mol*K))*K = kPa
-        rho = self.rho[self.feed][self.run][self.mol]['box3']
+        my_box = self.findVapBox(self.rho[self.feed][self.run], self.mol)
+        rho = self.rho[self.feed][self.run][self.mol][my_box]
         p_mean = rho['mean']/N_av*R['nm**3*kPa/(mol*K)']*self.T
         p_stdev = rho['stdev']/N_av*R['nm**3*kPa/(mol*K)']*self.T
         p_raw = [i/N_av*R['nm**3*kPa/(mol*K)']*self.T for i in rho['raw']]
@@ -64,7 +140,7 @@ class kH(HBvC,IdealGasAds):
 '''
 Write isotherm from previously generated databank files
 '''
-from runAnalyzer import checkRun, calc95conf
+from runAnalyzer import checkRun, calc95conf, getRhoTotal
 from chem_constants import R, N_av
 import math
 
@@ -95,6 +171,10 @@ if __name__ == '__main__':
             my_plotter.XvX()
         elif args['yaxis'] == 'dG':
             my_plotter.dGvX()
+        elif args['yaxis'] == 'dH':
+            my_plotter.dHvX()
+        elif args['yaxis'] == 'dHig':
+            my_plotter.dHigvX()
         elif args['yaxis'] == 'HB':
             my_plotter.readHB()
             my_plotter.HB_write()

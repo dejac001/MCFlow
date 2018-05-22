@@ -5,6 +5,7 @@ def getResults(data, mol, MW):
     P = data.P[data.feed][data.run]
     rho = data.rho[data.feed][data.run]
     nIndep = data.gen_data[data.feed][data.run]['numIndep']
+    print(mol, data.feed)
     if rho[mol]['box2']['mean'] < rho[mol]['box1']['mean']:
         gas_box, liq_box = 'box2', 'box1'
     else:
@@ -23,6 +24,7 @@ def getResults(data, mol, MW):
 
 import numpy as np
 from chem_constants import N_av
+from MCFlow.file_organization import equilName, prodName
 
 if __name__ == '__main__':
     import argparse, os
@@ -33,7 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('-T','--temperatures',help='temperatures corresponding to feeds',
                         nargs='+',type=float)
     parser.add_argument('-t','--type',help='type of run',type=str,
-                        choices=['equil-','prod-'],default='prod-')
+                        choices=[equilName,prodName],default=prodName)
     parser.add_argument('-MW','--molWeight',help='molecular weight of molecule (g / mol)',
                         type=float,default=104.15)
     parser.add_argument('-m','--mol',help='molecule',type=str,default='1')

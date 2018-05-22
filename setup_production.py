@@ -47,9 +47,8 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
     for box in new_input_data['SIMULATION_BOX'].keys():
         rcut[box] = float(new_input_data['SIMULATION_BOX'][box]['rcut'].rstrip('d0'))
 
-    restart_data = read_restart('%s/equil-%i/config.equil-%i'%(path,
-                                                               lastEquilNum,lastEquilNum),
-                                nmolty, nbox)
+    restart_file = fo.read(path,'config.',fo.equilName,lastEquilnum)
+    restart_data = read_restart(restart_file,nmolty, nbox)
     new_restart_data = copy.deepcopy(restart_data)
     for box, value in restart_data['max displacement']['translation'].items():
         for mol, line in value.items():
@@ -61,6 +60,7 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
 import math, copy, shutil, os
 from file_formatting.reader import read_restart, read_fort4
 from file_formatting.writer import write_restart, write_fort4
+import MCFlow.file_organization as fo
 from runAnalyzer import what2Analyze
 
 if __name__ == '__main__':

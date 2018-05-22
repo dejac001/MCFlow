@@ -302,6 +302,8 @@ class Movie:
                         torsion_histogram[box][mlcl].append(all_tors_data) # do we want to append here, or would it be better to +=?
         return torsion_histogram
 
+import MCFlow.file_organization as fo
+
 def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
     def initVars(nbox, nmolty):
         chemical_potential = properties.MolProperty(nbox, nmolty)
@@ -315,7 +317,7 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
     zeolite = {}
     runBegin = False
     for j in range(start_of_runs, start_of_runs + num_files):
-        f = open(tag+str(j)+'/'+'run.' + tag + str(j))
+        f = open(fo.read(path,'run.',tag, j))
         swap_section = False #need to find a better way to read the files than this
         swatch_section = False
         cbmc_section = False
@@ -466,7 +468,7 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
     for j in range(start_of_runs, start_of_runs + num_files):
         run_index = j - start_of_runs
         try:
-            f = open(path +'/'+tag+str(j)+'/'+'fort12.' + tag + str(j))
+            f = open(fo.read(path,'fort12.',tag, j))
         except:
             print(path+'/'+tag+str(j)+'/'+'fort12.' + tag + str(j) + ' not found')
             quit()
@@ -493,13 +495,13 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
             if box == 0:
                 box = nbox
                 ncycles[run_index] += 1
-            offset = len(line.split()) - nmolty - 1
+            my_split = line.split()
+            offset = len(my_split) - nmolty - 1
             for mol in range(1, nmolty+1):
                 try:
-                    N_mlcls.data[str(mol)]['box%i'%box].append( int(line.split()[offset+mol]) )
+                    N_mlcls.data[str(mol)]['box%i'%box].append( int(my_split[offset+mol]) )
                 except:
                     print(path,'run=',j,'fort.12 is binary')
-            my_split = line.split()
             if 'E' in my_split[4]:
                 Pressure.data['box%i'%box].append(float(my_split[4]))
             try:

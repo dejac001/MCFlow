@@ -86,8 +86,7 @@ class Struc:
             if self.args['verbosity'] > 0:
                 print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
             for fileNum in range(old_begin, old_begin+nfiles):
-                movie_file = '%s/%s%i/movie.%s%i'%(my_dir, self.args['type'],fileNum,
-                                                   self.args['type'],fileNum)
+                movie_file = fo.read(my_dir,'movie.',self.args['type'], fileNum)
                 if (fileNum == old_begin) and (seed == self.args['indep'][0]):
                     # keep track of info only for each feed
                     I = self.analysis_class(movie_file, *args)
@@ -106,6 +105,7 @@ class Struc:
         D.countMols(self.args['indep'],self.feed, D.frame_data)
         if self.args['vectors']: D.foldMovieToUC(self.args['vectors'])
         for mol_num in D.averages[self.feed].keys():
+            if mol_num == 'number of frames': continue
             xyz_data = D.getCoords(mol_num, self.args['box'], self.args['bead'])
             flag=''
             if self.filter_function:
@@ -130,6 +130,8 @@ from MCFlow.file_formatting.writer import xyz
 from MCFlow.parser import Results
 from MCFlow.getData import outputDB
 from MCFlow.calc_tools import calculate_distance2
+import MCFlow.file_organization as fo
+
 
 if __name__ == '__main__':
     M = Struc()

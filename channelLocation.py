@@ -5,7 +5,7 @@ class FindRegion(Struc):
     def __init__(self,vectors,channelMap={'straight':{'D'}, 'zig-zag':{'F'}, 'intersection':{'H'}}):
         self.boxLengths = vectors
         self.gridName = '/Users/dejacor/Documents/butanol-water/323K/MFI/energy_grid_114_O.out'
-        self.mergedGridName = '/Users/dejacor/Documents/butanol-water/323K/MFI/energy-grids-merged/new_channels.xyz'
+        self.mergedGridName = '/Users/dejacor/Documents/butanol-water/323K/MFI/energy-grids-merged/new_channels-4.0.xyz'
         self.channelMap = channelMap
         self.defaultLabel = 'other'
         self.initGrids()
