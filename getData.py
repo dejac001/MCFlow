@@ -4,6 +4,7 @@ def outputDB(path, feeds, type, data):
         with shelve.open(path + '/%s-data.db'%data_type,writeback=True) as db:
             for feed in feeds:
                 nextRun = runAnalyzer.findNextRun('%s/%s/1/'%(path, feed), type)
+                assert nextRun != None, 'No run found'
                 if (feed in db.keys()) and (type in db[feed].keys()):
                     # some data has already been input into db
                     if (('%s%i'%(type,nextRun-1) not in db[feed].keys())

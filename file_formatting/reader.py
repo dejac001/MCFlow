@@ -140,6 +140,10 @@ class Movie:
                             N[box][mol]['raw data'][seed_index].append( np.mean(FRAME_DATA[box][mol] ))
                             raw_data[box][mol]['raw data'][seed_index] += FRAME_DATA[box][mol]
                         elif type(FRAME_DATA[box][mol]) == type([]):
+#                           print(N.keys(), FRAME_DATA.keys())
+#                           print(N[box].keys(), FRAME_DATA[box].keys())
+#                           print(N[box][mol].keys(), FRAME_DATA[box][mol].keys())
+                            print(seed_index)
                             N[box][mol]['raw data'][seed_index].append( len(FRAME_DATA[box][mol] ))
                             if not raw_data[box][mol]['raw data'][seed_index]:
                                 raw_data[box][mol]['raw data'][seed_index] = len(FRAME_DATA[box][mol])
@@ -470,7 +474,7 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
         try:
             f = open(fo.read(path,'fort12.',tag, j))
         except:
-            print(path+'/'+tag+str(j)+'/'+'fort12.' + tag + str(j) + ' not found')
+            print(fo.read(path,'fort12.',tag, j), 'not found')
             quit()
         nline = 0
         line1 = next(f)
@@ -749,7 +753,7 @@ def read_fort4(file):
             if 'nunit' in line:
                 itype += 1
                 input_data[section]['mol%i'%itype] = ''
-            if line.split():
+            if line.split() and itype > 0:
                 input_data[section]['mol%i'%itype] += line
         elif section == 'MC_SWAP':
             if line.split() and line[0].isdigit():
@@ -804,7 +808,9 @@ def read_fort4(file):
                     my_box = 'box%i'%(i+1)
                     if my_box not in input_data[section][mol].keys():
                         input_data[section][mol][my_box] = {}
-                    input_data[section][mol][my_box] = float(line.split()[i].rstrip('d0'))
+                    new_var = line.split()[i]
+                    if 'd0' in new_var: new_var = new_var.rstrip('d0')
+                    input_data[section][mol][my_box] = float(new_var)
         else:
             print( section, 'is missing formatting')
     return input_data
