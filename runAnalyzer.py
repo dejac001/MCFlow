@@ -9,7 +9,7 @@ def findFinalSimRun(path, tag):
                 and os.path.isfile('%s/%s%i/movie_Hbond_moltype.txt'%(path, tag, nfiles+1)):
             nfiles += 1
     else:
-        while os.path.isfile('%s/%s%i/run.%s%i'%(path, tag, nfiles+1, tag, nfiles+1)):
+        while os.path.isfile(fo.read(path,'run.',tag,nfiles+1)):
             nfiles += 1
     return nfiles
 
@@ -20,7 +20,6 @@ def findNextRun(path, tag):
     sorted_numbers = sorted([int(i) for i in Runs])
     sorted_numbers.reverse()
     for runNum in sorted_numbers:
-        print(fo.read(path, 'run.', tag, runNum))
         if os.path.isfile( fo.read(path, 'run.', tag, runNum) ):
             return runNum+1
 
@@ -40,7 +39,10 @@ def findFinalSimIntvl(path, fileNumStart, numIntvl, tag='equil-'):
     return runAnalStart
 
 def what2Analyze(path, oldTagName, fileNumStart, numIntvl):
-    TAG = oldTagName[:(oldTagName.find('-')+1)]
+    if '-' in oldTagName:
+        TAG = oldTagName[:(oldTagName.find('-')+1)]
+    else:
+        TAG = oldTagName
     if 'prod' in oldTagName:
         if numIntvl == 0:
             # use all files for production
@@ -53,6 +55,8 @@ def what2Analyze(path, oldTagName, fileNumStart, numIntvl):
         if numIntvl == 0: numIntvl = 1
         old_begin = findFinalSimIntvl(path, fileNumStart, numIntvl, TAG)
         nfiles = numIntvl
+    else:
+        raise NoFilesAnalyzed
     return old_begin, nfiles
 
 def getRealRho(rhoBias, bias, T):
@@ -92,7 +96,6 @@ def checkRun(tag, listOfDBs, feed):
     data_run = ''
     for run in set(run_names):
         if tag in run:
-            print(run)
             data_run += run
     assert data_run, 'No run analyzed of run type prompted for feed %s'%feed
     assert data_run in listOfDBs[0][feed].keys(), 'More than one run found to analyze {}'.format(listOfDBs[0][feed].keys())
