@@ -78,7 +78,6 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
     swapInfo = {}
     swatchInfo = {}
     pmvol = nActPerCycle / (nchain*tavol) # desired pmvol
-    pmvol = 0.0167
     newSwaps = {}
     newSwatches = {}
     pctAct = {}
@@ -576,8 +575,8 @@ if __name__ == '__main__':
             #   general info
             input_data['&mc_shared']['time_limit'] = '%i'%args['time']
             input_data['&mc_shared']['nstep'] = '%i'%args['nstep']
-#           input_data['&mc_shared']['iratio'] = '500'
-#           input_data['&mc_shared']['rmin'] = '1.0'
+            input_data['&mc_shared']['iratio'] = '500'
+            input_data['&mc_shared']['rmin'] = '1.0'
             iblock = int(args['nstep']/10)
             if iblock > 1000: iblock = 1000
             input_data['&analysis']['iblock'] = '%i'%iblock
