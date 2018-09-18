@@ -14,7 +14,8 @@ def findFinalSimRun(path, tag):
     return nfiles
 
 def findNextRun(path, tag):
-    Runs = [i.split(tag)[-1] for i in os.listdir(path) if (tag in i and len(i.split(tag))>1)]
+    Runs = [i.split(tag)[-1] for i in os.listdir(path) if (i.startswith(tag) and len(i.split(tag))>1)]
+    assert len(Runs) > 0, 'No runs found' + path
     Runs = [i for i in Runs if len(i) > 0]
     Runs = set(Runs)
     sorted_numbers = sorted([int(i) for i in Runs])
@@ -49,7 +50,7 @@ def what2Analyze(path, oldTagName, fileNumStart, numIntvl):
             old_begin = fileNumStart
             nfiles = findFinalSimRun(path, TAG)
         else:
-            old_begin = fileNumStart #findFinalSimIntvl(path, fileNumStart, numIntvl, TAG)
+            old_begin = findFinalSimIntvl(path, fileNumStart, numIntvl, TAG)
             nfiles = numIntvl
     elif 'equil' in oldTagName:
         if numIntvl == 0: numIntvl = 1
@@ -155,7 +156,8 @@ def getKX(N, Ntot):
             X[box] = {i:[1.] for i in mols}
             continue
         for imol, mol1 in enumerate(mols):
-            for mol2 in mols[(imol+1):]:
+            for mol2 in mols:
+                if mol1 == mol2: continue
                 # calculate K
                 K[box][mol1 +'/'+ mol2] = []
                 for (i,j) in zip(N[mol1][box], N[mol2][box]):

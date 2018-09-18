@@ -32,7 +32,6 @@ class HB:
     def HB_write(self):
         assert self.mol, 'Mol needed  for HB plot x axis'
         nIndep = self.gen_data[self.feed][self.run]['numIndep']
-        print([i for i in self.HB[self.feed].keys() if i[:-1] in self.run])
         my_run = [i for i in self.HB[self.feed].keys() if i[:-1] in self.run][0]
         HB = self.HB[self.feed][my_run]
         file_description = 'Q       N_HB        dQ          dN_HB'
@@ -43,7 +42,9 @@ class HB:
         else:
             X = self.getX()
         for pair in HB.keys():
-            if HB[pair][self.box]['mean'] > 0.:
+            if type(HB[pair]) == type(int(1)):
+                continue
+            elif HB[pair][self.box]['mean'] > 0.:
                 file_name = 'HB_%s_v_%s_%s.dat'%(pair.replace('->','-').replace(' ',''), self.mol, self.xlabel[0])
                 if '95conf' in X.keys():
                     err = X['95conf']

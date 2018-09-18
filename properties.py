@@ -93,8 +93,10 @@ class AnyProperty():
                 elif isinstance(value, list):
                     mean = np.mean(value)
                     stdev = np.std(value)
-                    allAverages[key] = {'mean':mean, 'stdev':stdev, 'raw':value[:],
-                                        'block means':blockMean[key], 'block std':blockStd[key]}
+                    allAverages[key] = {'mean':mean, 'stdev':stdev, 'raw':value[:]}
+                    if key in blockMean.keys() and key in blockStd.keys():
+                        allAverages[key]['block means'] = blockMean[key]
+                        allAverages[key]['block std'] = blockStd[key]
                     dataToAverage[key].clear()
         if not self.averaging: # if havent started averaging need to make new dict
             self.averages = {}

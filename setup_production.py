@@ -47,7 +47,7 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
     for box in new_input_data['SIMULATION_BOX'].keys():
         rcut[box] = float(new_input_data['SIMULATION_BOX'][box]['rcut'].rstrip('d0'))
 
-    restart_file = fo.read(path,'config.',fo.equilName,lastEquilnum)
+    restart_file = fo.read(path,'config.',fo.equilName,lastEquilNum)
     restart_data = read_restart(restart_file,nmolty, nbox)
     new_restart_data = copy.deepcopy(restart_data)
     for box, value in restart_data['max displacement']['translation'].items():
@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     my_parser = Change()
     my_parser.parser.add_argument('-imv','--imovie', help='Movie output frequency',
-                                 type=int, default=100000)
+                                 type=int, default=1000)
 
     args = vars(my_parser.parse_args())
 
