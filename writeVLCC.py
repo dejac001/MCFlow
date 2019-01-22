@@ -5,16 +5,27 @@ def getResults(data, mol, MW):
     P = data.P[data.feed][data.run]
     rho = data.rho[data.feed][data.run]
     nIndep = data.gen_data[data.feed][data.run]['numIndep']
-    print(mol, data.feed)
-    if rho[mol]['box2']['mean'] < rho[mol]['box1']['mean']:
-        gas_box, liq_box = 'box2', 'box1'
+    if 'high dens' in rho[mol].keys() and 'low dens' in rho[mol].keys():
+        gas_box, liq_box = 'low dens', 'high dens'
+        for box in 'box1','box2':
+            print(P[box]['mean'],P[box]['stdev'])
+        p_box = 'box2'
+        print('using dpd for %s'%data.feed)
     else:
-        gas_box, liq_box = 'box1', 'box2'
+        if  rho[mol]['box2']['mean'] < rho[mol]['box1']['mean']:
+            gas_box, liq_box = 'box2', 'box1'
+        else:
+            gas_box, liq_box = 'box1', 'box2'
+        for box in gas_box, liq_box:
+            rho[mol][box]['95conf'] = calc95conf(rho[mol][box]['stdev'], nIndep)
+        p_box = gas_box
     print('gas box is %s and liquid box is %s'%(gas_box,liq_box))
     return (
-        rho[mol][gas_box]['mean'], calc95conf(rho[mol][gas_box]['stdev'],nIndep),
-        rho[mol][liq_box]['mean'], calc95conf(rho[mol][liq_box]['stdev'],nIndep),
-        P[gas_box]['mean'], calc95conf(P[gas_box]['stdev'],nIndep)
+            rho[mol][gas_box]['mean']*conv_factor,
+            rho[mol][gas_box]['95conf']*conv_factor,
+            rho[mol][liq_box]['mean']*conv_factor,
+            rho[mol][liq_box]['95conf']*conv_factor,
+        P[p_box]['mean'], calc95conf(P[p_box]['stdev'],nIndep)
             )
     # return (
     #     rho[mol][gas_box]['mean'], rho[mol][gas_box]['stdev']/np.sqrt(nIndep),
@@ -41,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('-m','--mol',help='molecule',type=str,default='1')
     args = vars(parser.parse_args())
     assert args['feeds'], 'No feeds given'
-    assert (len(args['feeds']) == len(args['temperatures'])), 'Num feeds not equal to num temps'
+    assert (len(args['feeds']) == len(args['temperatures'])), 'Num feeds %i not equal to num temps %i'%(len(args['feeds']), len(args['temperatures']))
     assert args['temperatures'][0] == min(args['temperatures']), 'First T is not smallest'
     my_data = VLCC_data()
     my_data.files.append( 'P-data.db')
@@ -78,10 +89,10 @@ if __name__ == '__main__':
         for TK, rG, drG, rL, drL, p, dp in zip(temperatures,gas_densities['mean'],gas_densities['error'],
                                                liquid_densities['mean'],liquid_densities['error'],
                                                pressures['mean'],pressures['error']):
-            f.write('%e %e %e %e %e %e %e\n'%(TK, rG, drG, rL, drL, p, dp))
-            cc_string += '%e %e %e\n'%(TK, p, dp)
+            f.write('%15.8f %15.8f %15.8f %15.8f %15.8f %15.8f %15.8f\n'%(TK, rG, drG, rL, drL, p, dp))
+            cc_string += '%12f %12f %12f\n'%(TK, p, dp)
         f.write('TMIN NPOINT for VLCC plots\n')
-        f.write('%e  200\n'%(temperatures[0]*0.995))
+        f.write('%f  200\n'%(temperatures[0]*0.995))
         f.write('NDATA  STP\n')
         f.write('%i      101.325\n'%(len(temperatures)))
         f.write(' T    PRESSURE    ERROR\n')

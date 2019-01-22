@@ -4,14 +4,52 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from MCFlow.runAnalyzer import calc95conf, checkRun
 import shelve
+import math
 
-def gaussian(x,alpha,peakdens,variation):
+def gaussian(x, mu, sigma):
+
+    #Input: An array of x-values, and three parameters for a Gaussian fit
+    #Output: An array of y-values consistent with the specified Gaussian distribution
+    square_term = (x-mu)/sigma
+    exponential_term = -1./2.*square_term*square_term
+
+    return 1/sigma/np.sqrt(2*np.pi)*np.exp(exponential_term)
+
+def jac_gaussian(x,mu, sigma):
+
+    #Input: An array of x-values, and three parameters for a Gaussian fit
+    #Output: An array of y-values consistent with the specified Gaussian distribution
+    ds = (x-mu)
+    square_term = ds/sigma
+    exponential_term = -1./2.*square_term*square_term
+
+    J = np.array([
+    ds*np.exp(exponential_term)/np.sqrt(2*np.pi)/sigma/sigma/sigma,
+    np.exp(exponential_term)/sigma/sigma/np.sqrt(2*np.pi)*(ds*ds/sigma/sigma - 1)
+])
+
+    return J.transpose()
+def gaussian_old(x,alpha,peakdens,variation):
 
     #Input: An array of x-values, and three parameters for a Gaussian fit
     #Output: An array of y-values consistent with the specified Gaussian distribution
 
-    return alpha*np.exp( (-(x-peakdens)**2) / (2.0*(variation**2)))
+    return alpha*np.exp( -(x-peakdens)*(x-peakdens) / (2.0*(variation**2)))
 
+def jac_gaussian_old(x,alpha,peakdens,variation):
+
+    #Input: An array of x-values, and three parameters for a Gaussian fit
+    #Output: An array of y-values consistent with the specified Gaussian distribution
+    ds = (x-peakdens)
+    exponential_term = np.exp( -ds*ds / (2.0*(variation**2)))
+
+    J = np.array([
+    exponential_term, 
+    alpha*ds*exponential_term/variation/variation,
+   alpha*ds*ds*exponential_term/variation/variation 
+])
+
+    return J.transpose()
 
 class DPD:
     def __init__(self, **kwargs):
@@ -20,7 +58,6 @@ class DPD:
         self.mol = kwargs['molNum']
         self.feeds = kwargs['feeds']
         self.fracPeakMax = 0.75 # only fit data 75 % of peak maximum
-        self.conversionFactor = 1/1000
         self.numBins = 2000
         self.verbosity = kwargs['verbosity']
         self.guessStart = kwargs['guessStart']
@@ -40,39 +77,6 @@ class DPD:
 
 
 
-    def plot(self, density_probability_distributions):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        densities_overall = {'low dens':[], 'high dens':[]}
-        for i, dpd in enumerate(density_probability_distributions):
-            for key in 'low dens','high dens':
-                bins = dpd[key]['bins']
-                vals = dpd[key]['vals']
-                gauss_x = np.linspace(dpd[key]['min rho gauss'], dpd[key]['max rho gauss'])
-                gauss_y = gaussian(gauss_x, *dpd[key]['parameters'])
-                kwargs = {'color':'C%i'%i}
-                densities_overall[key].append(dpd[key]['parameters'][1])
-                ax.plot(bins, vals,ls='dotted', **kwargs)
-                if key == 'high dens': kwargs['label'] = 'run %i'%self.indep[i]
-                ax.plot(gauss_x, gauss_y, ls='solid', **kwargs)
-        ax.set_ylabel('$P(\\rho)$')
-        ax.set_xlabel('$\\rho\mathrm{[\;molec/\AA^3]}$')
-        ax.legend()
-        for key, val in densities_overall.items():
-            with shelve.open('rho-data.db',writeback=True) as db:
-                run = [i for i in list(db[self.feed].keys()) if self.type in i][0]
-                db[self.feed][run][self.mol][key] = {'mean':np.mean(val),
-                                            '95conf': calc95conf(np.std(val), len(self.indep))}
-        fig.savefig('dpd-%s.pdf'%(self.feed.replace('/','-')))
-
-    def main(self):
-        for self.feed in self.feeds:
-            all_data = []
-            self.initializeData()
-            for i in range(len(self.indep)):
-                my_hist, my_bins = self.dpd(i)
-                all_data.append(self.fit_gaussian_2peaks(my_hist, my_bins))
-            self.plot(all_data)
 
     def dpd(self, indep_seed):
         # Input: A Python list of densities
@@ -82,7 +86,7 @@ class DPD:
         # make density list
         all_box_densities = []
         for box, val in self.rho_by_MCC_by_seed[indep_seed][self.mol].items():
-            all_box_densities += [i* self.conversionFactor for i in val]
+            all_box_densities += val
 
         densities = np.array(all_box_densities)
         hist, edges = np.histogram(densities, bins=self.numBins, density=True)
@@ -113,10 +117,47 @@ class DPD:
             y = [data[key]['vals'][i] for i in indices]
             data[key]['min rho gauss'] = np.min(x)
             data[key]['max rho gauss'] = np.max(x)
-            initial_guess = [np.max(y), np.sum(i*j for i,j in zip(x,y))/np.sum(y), np.std(y)]
-            params, errors = curve_fit(gaussian, x, y, p0=initial_guess, maxfev=16000)
+            initial_guess = [np.sum(i*j for i,j in zip(x,y))/np.sum(y), np.std(x)]
+            print(initial_guess)
+            params, errors = curve_fit(gaussian, x, y, p0=initial_guess, check_finite=True, jac=jac_gaussian,
+                                            **{'ftol':1e-12,'xtol':1e-12,'gtol':1e-12})
+            print(params, errors)
             data[key]['parameters'] = params
         return data
+
+    def plot(self, density_probability_distributions):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        densities_overall = {'low dens':[], 'high dens':[]}
+        for i, dpd in enumerate(density_probability_distributions):
+            for key in 'low dens','high dens':
+                bins = dpd[key]['bins']
+                vals = dpd[key]['vals']
+                gauss_x = np.linspace(dpd[key]['min rho gauss'], dpd[key]['max rho gauss'])
+                gauss_y = gaussian(gauss_x, *dpd[key]['parameters'])
+                kwargs = {'color':'C%i'%i}
+                densities_overall[key].append(dpd[key]['parameters'][0])
+                ax.plot(bins, vals,ls='dotted', **kwargs)
+                if key == 'high dens': kwargs['label'] = 'run %i'%self.indep[i]
+                ax.plot(gauss_x, gauss_y, ls='solid', **kwargs)
+        ax.set_ylabel('$P(\\rho)$')
+        ax.set_xlabel('$\\rho\mathrm{[\;molec/nm}^3\mathrm{]}$')
+        ax.legend()
+        for key, val in densities_overall.items():
+            with shelve.open('rho-data.db',writeback=True) as db:
+                run = [i for i in list(db[self.feed].keys()) if self.type in i][0]
+                db[self.feed][run][self.mol][key] = {'mean':np.mean(val),
+                                            '95conf': calc95conf(np.std(val), len(self.indep))}
+        fig.savefig('dpd-%s.pdf'%(self.feed.replace('/','-')))
+
+    def main(self):
+        for self.feed in self.feeds:
+            all_data = []
+            self.initializeData()
+            for i in range(len(self.indep)):
+                my_hist, my_bins = self.dpd(i)
+                all_data.append(self.fit_gaussian_2peaks(my_hist, my_bins))
+            self.plot(all_data)
 
 import numpy as np
 
