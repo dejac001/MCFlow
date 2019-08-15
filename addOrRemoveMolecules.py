@@ -67,7 +67,7 @@ def initialize(input, restart,  molID, box):
         q.append( float(bead['q'].rstrip('\n')) )
     return (boxlx, boxly, boxlz), mol_number, old_coords, q
 
-def addMolecules(input_dat, restart_dat, nAdd, box, molID, changeVol):
+def addMolecules(input_dat, restart_dat, nAddorRemove, box, molID, changeVol):
     def getXYZCoords(mol_coords):
         coords = []
         for bead in mol_coords:
@@ -75,7 +75,7 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID, changeVol):
         return coords
     # initialize volume to ideal gas volume in new box
     p = float(input_dat['SIMULATION_BOX']['box%s'%box]['pressure'])
-    N = restart_dat['box types'].count(box) + nAdd
+    N = restart_dat['box types'].count(box) + nAddorRemove
     temperature = input_dat['SIMULATION_BOX']['box%s'%box]['temperature']
     if 'd0' in temperature:
         temperature = temperature.rstrip('d0')
@@ -83,12 +83,13 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID, changeVol):
     V = N/N_av*R['\AA**3*MPa/(mol*K)']*T/p
     boxlx = pow(V, 1/3)
     boxlx_old = next(map(float,restart_dat['box dimensions']['box%s'%box].split()))
-    if (boxlx > boxlx_old) and changeVol:
+    if (boxlx > boxlx_old) and changeVol == 'True':
         restart_dat['box dimensions']['box%s'%box] = '{} {} {}\n'.format(boxlx, boxlx, boxlx)
         input_dat['SIMULATION_BOX']['box%s'%box]['rcut'] = '%e'%(boxlx/2*0.99)
     input_dat['&mc_shared']['iratio'] = '500'
     input_dat['&mc_shared']['time_limit'] = '1'
-    input_dat['&analysis']['imv'] = '%i'%(int(input_dat['&mc_shared']['nstep']) + 10)
+    if '&analysis' in input_dat.keys():
+        input_dat['&analysis']['imv'] = '%i'%(int(input_dat['&mc_shared']['nstep']) + 10)
     input_dat['&mc_volume']['iratv'] = '500'
     if float(restart_dat['max displacement']['volume']['box%s'%box]) < 100000.0:
         restart_dat['max displacement']['volume']['box%s'%box] = '100000.0'
@@ -103,12 +104,12 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID, changeVol):
             for key, value in zip(['mol types','box types','coords'], [my_mol, my_box, my_coords]):
                 mol_coord_data[key].append(value)
     assert len(mol_coord_data['mol types']) > 0, 'No mols found for moltype in boxtype provided'
-    for newMol in range(nAdd):
+    for newMol in range(nAddorRemove):
         try:
-            if (newMol+1)%(nAdd//4) == 0:
-                print('%5.1f %% of molecules added'%(100*(newMol+1)/nAdd))
+            if (newMol+1)%(nAddorRemove//4) == 0:
+                print('%5.1f %% of molecules added'%(100*(newMol+1)/nAddorRemove))
         except ZeroDivisionError:
-            print('%5.1f %% of molecules added'%(100*(newMol+1)/nAdd))
+            print('%5.1f %% of molecules added'%(100*(newMol+1)/nAddorRemove))
         # find random molecule to copy configuration of
         random_mol = random.randint(0, len(mol_coord_data['mol types'])-1)
         new_config = getXYZCoords(mol_coord_data['coords'][random_mol])
@@ -134,7 +135,7 @@ def addMolecules(input_dat, restart_dat, nAdd, box, molID, changeVol):
     input_dat['&mc_shared']['nchain'] = restart_dat['nchain'].split()[0]
     return copy.deepcopy(input_dat), copy.deepcopy(restart_dat)
 
-def removeMolecules(input_dat, restart_dat, nAdd, box, molID):
+def removeMolecules(input_dat, restart_dat, nAddorRemove, box, molID):
     def keepMol():
         for key in ['box types', 'mol types', 'coords']:
             new_restart_data[key].append(restart_dat[key][i])
@@ -147,15 +148,15 @@ def removeMolecules(input_dat, restart_dat, nAdd, box, molID):
         new_restart_data[key] = []
     for i in range(len(restart_dat['box types'])):
         if (restart_dat['mol types'][i] == mol_num) and (restart_dat['box types'][i] == box):
-            if taken_out > nAdd:
+            if taken_out > nAddorRemove:
                 # don't keep
                 taken_out -= 1
-            elif taken_out == nAdd:
+            elif taken_out == nAddorRemove:
                 # correct molec but have already taken enough out
                 keepMol()
         else:
             keepMol()
-    assert taken_out == nAdd, 'Not enough mols of type {} taken out; only {}'.format(mol_num, taken_out)
+    assert taken_out == nAddorRemove, 'Not enough mols of type {} taken out; only {}'.format(mol_num, taken_out)
 
     new_restart_data['nchain']  = restart_dat['nchain'].replace(
                 restart_dat['nchain'].split()[0], '%i'%(int(restart_dat['nchain'].split()[0])+taken_out)
@@ -201,9 +202,9 @@ if __name__ == '__main__':
     from parser import ChangeInput
     my_parser = ChangeInput()
     my_parser.molecules()
-    my_parser.parser.add_argument('-cv','--changeVol',help='whether to change volume',type=bool,default=False)
+    my_parser.parser.add_argument('-cv','--changeVol',help='whether to change volume',type=str,default='False',choices=['True','False'])
     args = vars(my_parser.parse_args())
-    assert args['nAdd'] != 0, 'Cannot add or remove 0 molecules'
+    assert args['nAddorRemove'] != 0, 'Cannot add or remove 0 molecules'
 
     for feed in args['feeds']:
         for seed in args['indep']:
@@ -217,13 +218,13 @@ if __name__ == '__main__':
             restart_data = reader.read_restart('%s%s'%(base_dir,args['restart']),nmolty, nbox)
             if args['boxAdd']:
                 new_input_data, new_restart_data = addMolecules(input_data, restart_data,
-                                                args['nAdd'], args['boxAdd'],args['molID'], args['changeVol'])
+                                                args['nAddorRemove'], args['boxAdd'],args['molID'], args['changeVol'])
                 if args['boxRemove']:
                     new_input_data, new_restart_data = removeMolecules(new_input_data, new_restart_data,
-                        -1*args['nAdd'], args['boxRemove'],args['molID'])
+                        -1*args['nAddorRemove'], args['boxRemove'],args['molID'])
             elif args['boxRemove']:
                 new_input_data, new_restart_data = removeMolecules(input_data, restart_data,
-                        -1*args['nAdd'], args['boxRemove'],args['molID'])
+                        -1*args['nAddorRemove'], args['boxRemove'],args['molID'])
             elif len(args['chainsToRemove']) > 0:
                 new_input_data, new_restart_data = removeChains(input_data, restart_data, args['chainsToRemove'])
             writer.write_fort4(new_input_data, '%sfort.4.newMols'%base_dir)

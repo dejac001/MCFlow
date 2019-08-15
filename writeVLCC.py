@@ -55,12 +55,12 @@ if __name__ == '__main__':
     assert (len(args['feeds']) == len(args['temperatures'])), 'Num feeds %i not equal to num temps %i'%(len(args['feeds']), len(args['temperatures']))
     assert args['temperatures'][0] == min(args['temperatures']), 'First T is not smallest'
     my_data = VLCC_data()
-    my_data.files.append( 'P-data.db')
+    my_data.files.append( 'P-data.json')
     my_data.path = os.getcwd()
     my_data.feeds = args['feeds']
     my_data.P = {}
     my_data.variables.append( my_data.P )
-    my_data.readDBs()
+    my_data.read_json()
 
     # gather data
     temperatures = []; gas_densities = {'mean':[],'error':[]}; liquid_densities = {'mean':[],'error':[]}

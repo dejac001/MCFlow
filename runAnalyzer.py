@@ -297,10 +297,6 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 # do calculations for other data that may be needed
                 number_dens_real = getRealRho(number_densities, biasPot, T)
                 deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
-                if P['box1']:
-                    dH_mixt = calcdH_mixt(E, P, number_dens_real, Ntotal)
-                else:
-                    dH_mixt = calcdHig_mixt(E, T, number_dens_real, Ntotal)
                 if liq:
                     concentrations = {}
                     assert kwargs['box'], 'box needed for liquid phase'
@@ -319,13 +315,12 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                     Nmlcl = properties.AnyProperty(N)
                     SWAP = properties.AnyProperty(swap_info)
                     U = properties.AnyProperty(E)
-                    dH = properties.AnyProperty(dH_mixt)
                     rho = properties.AnyProperty(number_dens_real)
                     dG = properties.AnyProperty( deltaG )
                     data = {'CBMC':CBMC, 'P':Press, 'N':Nmlcl,
                             'SWAP':SWAP, 'U':U, 'rho':rho,
                             'boxlx':boxlx, 'dG':dG, 'K':k_ratio,
-                             'X':X, 'dH-mixt':dH}
+                             'X':X}
                     if liq:
                         if (verbosity > 1):
                             print('Doing analysis for C [ g/mL ] for mol {}'.format(mol))
@@ -337,7 +332,6 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 Nmlcl.addVals(N)
                 SWAP.addVals(swap_info)
                 U.addVals(E)
-                dH.addVals(dH_mixt)
                 rho.addVals(number_dens_real)
                 boxlx.addVals(boxLengths)
                 dG.addVals(deltaG)
@@ -354,7 +348,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
         for cls in data.values():
             cls.avgVals(feed)
         general_data[feed]['numIndep'] = len(indep)
-        general_data[feed]['indepSims'] = indep
+        general_data[feed]['indepSims'] = list(indep)
 
         # get general data
         general_data[feed]['compositions'] = totalComposition

@@ -75,7 +75,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
 
     pressure = pressure[vaporBox]['mean']/100. # convert to bar
     print('pressure was %5.2f bar'%pressure)
-    N = {'mol%s'%mol: {box: N[mol][box] for box in N[mol].keys()} for mol in N.keys()} # get same notation
+    N = {'mol%s'%mol: {box: N[mol][box] for box in N[mol].keys() if 'box' in box} for mol in N.keys()} # get same notation
     bias_new = {mol: {box: 0 for box in N[mol].keys()} for mol in N.keys()}
     nbox = len(N['mol1'].keys())
     rho = number_densities # already have taken out biasing potentials!!
@@ -85,7 +85,7 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
     solvent = -1
     mols_sorted = list(map(int,[i.strip('mol') for i in N.keys()]))
     for mol in ['mol%i'%i for i in mols_sorted]:
-        total_number_mol = sum([N[mol][i]['mean'] for i in N[mol].keys()])
+        total_number_mol = sum([N[mol][i]['mean'] for i in N[mol].keys() if 'box' in i])
         if total_number_mol > maxSorbate:
             if solvent == -1:
                 # molecule is solvent
@@ -108,12 +108,14 @@ def newBias(number_densities, boxLengths, N, biasOld, T, pressure,
             impurities.append( mol )
             print('- impurity molecule is {}'.format(mol))
 
+
+    print('sorbates are', sorbates)
     if len(sorbates) == 0:
         nSorbate_vapor = [1.0]
         sorbates = [impurities.pop(-1)]
     elif (N[sorbates[0]]['box1']['mean'] == 0.) and (nbox == 3):
         print(' no "sorbates" in zeolite')
-        nSorbate_vapor = [0.50*nchain_sorbate]
+        nSorbate_vapor = [ numVapor ]
 #   elif nchain_sorbate > 250:
 #       nSorbate_vapor = [0.25*nchain_sorbate]
     else:
@@ -219,6 +221,7 @@ if __name__ == '__main__':
         except FileNotFoundError:
             input_data = reader.read_fort4(args['path']+'/' + feed + '/1/old-fort4')
         if not (data['P'].averages[feed][vapor_box]['mean']  > 0):
+            print('pressure not found, using input p = ', args['pressure'])
             data['P'].averages[feed][vapor_box]['mean'] = args['pressure']
         (vapor_boxlx_AA3, bias, nGhost) = newBias(data['rho'].averages[feed],
                                                             data['boxlx'].averages[feed],

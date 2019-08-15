@@ -68,19 +68,19 @@ if __name__ == '__main__':
     my_parser = Plot()
     my_parser.axes()
     my_parser.isotherm()
-    my_parser.parser.add_argument('-N-data','--NDATA',help='different file to replace N-data.db with',
+    my_parser.parser.add_argument('-N-data','--NDATA',help='different file to replace N-data.json with',
                                   type=str)
 
     args = vars(my_parser.parse_args())
     assert args['yaxis'], 'No y axis chosen for plot'
     assert args['xaxis'], 'No x axis chosen for plot'
-    assert args['NDATA'], 'Specialed N-data.db needed to be provided'
+    assert args['NDATA'], 'Specialed N-data.jsonneeded to be provided'
 
 
     if args['xaxis'] == 'C':
         my_plotter = myLiqAds(**args)
     elif args['xaxis'] == 'Pig':
-        # TODO: add alternative way to calculate P w/ P-data.db & using mole fraction in box
+        # TODO: add alternative way to calculate P w/ P-data.json & using mole fraction in box
         my_plotter = IdealGasAds(**args)
     elif args['xaxis'] == 'rho':
         my_plotter = RhoBoxAds(**args)
@@ -94,9 +94,9 @@ if __name__ == '__main__':
         my_plotter = MoleFrac(**args)
     elif args['xaxis'] == 'kH':
         my_plotter = mykH(**args)
-    old_index = my_plotter.files.index('N-data.db')
+    old_index = my_plotter.files.index('N-data.json')
     my_plotter.files[old_index] = args['NDATA']
-    my_plotter.readDBs()
+    my_plotter.read_json()
 
     for feed in args['feeds']:
         # determine if run has been completed

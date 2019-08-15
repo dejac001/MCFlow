@@ -8,7 +8,7 @@ import math
 
 if __name__ == '__main__':
     from parser import Plot
-    import shelve
+    import json 
 
     my_parser = Plot()
     # TODO: decide to do kH adsorption if kH provided? -- gas Iso & kH iso in same file?
@@ -22,12 +22,13 @@ if __name__ == '__main__':
     assert args['box'], 'Box needed for pressure in gas phase isotherm'
 
     N = {}; P = {}; gen_data = {}
-    for file, var in zip(['N-data.db','P-data.db', 'general-data.db'],
+    for file, var in zip(['N-data.json','P-data.json', 'general-data.json'],
                          [N, P, gen_data]):
-        with shelve.open('%s/%s'%(args['path'], file)) as db:
-            for feed in args['feeds']:
-                assert feed in db.keys(), 'Feed {} not in database'.format(feed)
-                var[feed] = db[feed]
+        with open('%s/%s'%(args['path'], file)) as f:
+            db = json.load(f)
+        for feed in args['feeds']:
+            assert feed in db.keys(), 'Feed {} not in database'.format(feed)
+            var[feed] = db[feed]
 
     # mol_data = {}
     # for feed in args['feeds']:

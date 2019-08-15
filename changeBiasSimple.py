@@ -1,8 +1,9 @@
 def newBias(N, biasOld, T, impMols, impBox):
     bias_new = {mol: {box: biasOld[mol][box] for box in biasOld[mol].keys()} for mol in biasOld.keys()}
     for mol in impMols:
-        n_tot_imp = sum(N[mol][i]['mean'] for i in N[mol].keys())
+        n_tot_imp = sum(N[mol][i]['mean'] for i in N[mol].keys() if 'box' in i)
         n_each_box = n_tot_imp / len(impBox)
+        print(mol, n_tot_imp, n_each_box)
         for box in impBox:
             bias_add = T*math.log(N[mol][box]['mean']/n_each_box)
             bias_add_stdev = T*N[mol][box]['stdev']/N[mol][box]['mean']

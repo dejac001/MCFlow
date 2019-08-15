@@ -11,21 +11,20 @@ class HB:
             files_list = []
             for i in os.listdir(my_dir):
                 if i.startswith('HB-%sdeg-%sAngst-'%(self.angle, self.dist)) and (self.box in i):
-                    if i[-3:] == '.db':
+                    if i[-5:] == '.json':
                         files_list.append(i)
-                    elif i[:-4][-3:] == '.db':
-                        files_list.append(i[:-4])
             files_list = set(files_list)
             for file in files_list:
-                with shelve.open('%s/%s'%(my_dir, file)) as db:
-                    if (feed in db.keys()) and (len(db[feed].keys()) > 1):
-                        self.HB[feed] = db[feed]
-        notInDB = []
+                with open('%s/%s'%(my_dir, file)) as f:
+                    data = json.load(f)
+                if (feed in data.keys()) and (len(data[feed].keys()) > 1):
+                    self.HB[feed] = data[feed]
+        not_in_json = []
         for feed in self.feeds:
             if feed not in self.HB.keys():
-                notInDB.append(feed)
-        assert len(notInDB) == 0, 'Feeds {} not in databases'.format(notInDB)
-        for i in notInDB:
+                not_in_json.append(feed)
+        assert len(not_in_json) == 0, 'Feeds {} not in databases'.format(not_in_json)
+        for i in not_in_json:
             print('not plotting for feed %s, %sdeg-%sAngst'%(i,self.angle,self.dist))
             self.feeds.remove( i )
 
@@ -91,8 +90,8 @@ def parse_input():
     my_parser = Plot()
     my_parser.axes()
     my_parser.isotherm()
-    my_parser.parser.add_argument('-a','--angle',help='angle for db criteria',type=str)
-    my_parser.parser.add_argument('-d','--dist',help='distance for db criteria',type=str)
+    my_parser.parser.add_argument('-a','--angle',help='angle for json criteria',type=str)
+    my_parser.parser.add_argument('-d','--dist',help='distance for json criteria',type=str)
 
     kwargs = vars(my_parser.parse_args())
     assert kwargs['xaxis'], 'No x axis chosen for plot'

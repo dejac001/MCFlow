@@ -590,8 +590,8 @@ if __name__ == '__main__':
                 print('pmcb was zero previously, keeping it that way')
                 pmcb_old = 0.
                 pmtra_old = (1-pswap_old)/2.
-                pmcb = 0.
-                pmtra = (1-pswap_new)*pmtra_old/(1-pswap_old) + pmcb
+                pmcb = -1.0
+                pmtra = (1-pswap_new)*pmtra_old/(1-pswap_old) + pswap_new
             else:
                 pmcb = (1-pswap_new)*pmcb_old/(1-pswap_old) + pswap_new
                 pmtra_old = (1-pswap_old - pmcb_old)/2

@@ -25,7 +25,7 @@ def iaverage(nstep):
     return iprint, iblock
 
 
-def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
+def makeProdFiles(path, lastEquilNum, nstep, imv, total_time, type):
     'Note: chdir to correct directory first'
     input_data = read_fort4(path + 'fort.4')
     nbox = int(input_data['&mc_shared']['nbox'])
@@ -45,7 +45,11 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time):
         new_input_data['&mc_volume'].pop( 'allow_cutoff_failure' )
     rcut = {}
     for box in new_input_data['SIMULATION_BOX'].keys():
-        rcut[box] = float(new_input_data['SIMULATION_BOX'][box]['rcut'].rstrip('d0'))
+        rcut_string = new_input_data['SIMULATION_BOX'][box]['rcut']
+        if 'd0' in rcut_string:
+            rcut_string = rcut_string.rstrip('d0')
+        print(box)
+        rcut[box] = float(rcut_string)
 
     restart_file = fo.read(path,'config.',fo.equilName,lastEquilNum)
     restart_data = read_restart(restart_file,nmolty, nbox)
@@ -87,4 +91,4 @@ if __name__ == '__main__':
                 shutil.copy('%s/fort.4.%s%i'%(my_dir,args['type'],old_begin +nfiles), '%s/fort.4'%my_dir)
             if args['verbosity'] > 0:
                 print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
-            makeProdFiles(my_dir, old_begin+nfiles-1, nstep, imv, time)
+            makeProdFiles(my_dir, old_begin+nfiles-1, nstep, imv, time, args['type'])

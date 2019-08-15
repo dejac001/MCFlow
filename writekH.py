@@ -4,7 +4,7 @@ from MCFlow.writeHB import HBvC
 class kH(HBvC,IdealGasAds):
     def __init__(self, **kwargs):
         self.N={};self.P={};self.rho={};self.gen_data={};self.K={}; self.X={}; self.dG={}; self.dHmixt={}; self.U = {}
-        self.files = ['N-data.db','P-data.db', 'rho-data.db','general-data.db','K-data.db','X-data.db','dG-data.db','dH-mixt-data.db', 'U-data.db']
+        self.files = ['N-data.json','P-data.json', 'rho-data.json','general-data.json','K-data.json','X-data.json','dG-data.json','dH-mixt-data.json', 'U-data.json']
         self.variables = [self.N, self.P, self.rho, self.gen_data,self.K, self.X,self.dG,self.dHmixt, self.U]
         self.xlabel = ['kH', 'dkH']
         if kwargs['feeds']:
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     assert args['yaxis'], 'No y axis chosen for plot'
 
     my_plotter = kH(**args)
-    my_plotter.readDBs()
+    my_plotter.read_json()
 
     for feed in args['feeds']:
         # determine if run has been completed

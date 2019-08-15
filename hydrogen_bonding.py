@@ -31,7 +31,7 @@ def findHydroxylHydrogen(Oxyz, Hcoords, abc):
 
 def hy_bond_from_DB(hmap_data, box, htype, name, feed):
     run = 'prod-'
-    my_db = {run:{}}
+    my_data = {run:{}}
     for pair, values in hmap_data[box].items():
         mol1, mol2 = [i.strip('mol') for i in pair.split('-')]
         pair1 = mol1 + '->' + mol2
@@ -43,10 +43,10 @@ def hy_bond_from_DB(hmap_data, box, htype, name, feed):
                     nHB += 1
         n1 = hmap_data[box][mol1]
         n2 = hmap_data[box][mol2]
-        my_db[run][pair1] = {box:{'mean':nHB/n1,'stdev':0.}}
-        my_db[run][pair2] = {box:{'mean':nHB/n2,'stdev':0.}}
-    with shelve.open(name +'-'+ htype + '-'+box+'-data.db',writeback=True) as db:
-        db[feed] = my_db
+        my_data[run][pair1] = {box:{'mean':nHB/n1,'stdev':0.}}
+        my_data[run][pair2] = {box:{'mean':nHB/n2,'stdev':0.}}
+    with open(name +'-'+ htype + '-'+box+'='+ feed + '-data.db') as f:
+        json.dump(my_data, f)
 
 def findHB(beadsFrom, beadsTo, abc, criteria, angle, dist_sq, molNum1, molNum2):
     def addData(molDonor, molAcceptor, O_Donor, O_Acceptor):
@@ -90,41 +90,46 @@ def findHB(beadsFrom, beadsTo, abc, criteria, angle, dist_sq, molNum1, molNum2):
                         addData(molNum1, molNum2, nO1+1, nO2+1)
     return nHB, HB_pairs
 
-def readDBs(path, my_feed, my_type, boxes):
+def read_json(path, my_feed, my_type, boxes):
+    """ read databases
+
+    """
     my_hist_data = {}
-    with shelve.open('%s/%s/HB-map.db'%(path,my_feed)) as db:
-        if my_feed not in db.keys(): return my_hist_data
-        for key, value in db[my_feed].items():
-            if my_type in key:
-                my_hist_data = value
-                if 'nchain count' not in value.keys():
-                    my_hist_data['nchain count'] = {}
-                for box in boxes:
-                    if box not in value.keys():
-                        # we need to search other dbs, its not in this one
-                        print(box, 'not in db for my_feed',my_feed)
-                        my_hist_data['nchain count'][box] = {}
-                        sims = [i for i in os.listdir(my_feed)
-                                    if (os.path.isdir( my_feed +'/' + i) and i.isdigit())]
-                        my_hist_data[box] = {}
-                        for sim in sims:
-                            with shelve.open('%s/%s/%s/HB-map.db'%(path,my_feed,sim)) as db2:
-                                for k2, v2 in db2[my_feed].items():
-                                    if my_type in k2:
-                                        if box in v2.keys():
-                                            for pair, val in v2[box].items():
-                                                if pair not in my_hist_data[box].keys():
-                                                    my_hist_data[box][pair] = {'distance':[],'angle':[]}
-                                                my_hist_data[box][pair]['distance'] += val['distance']
-                                                my_hist_data[box][pair]['angle'] += val['angle']
-                                        if ('nchain count' in v2.keys()):
-                                            for molty, m_count in v2['nchain count'][box].items():
-                                                if molty not in my_hist_data['nchain count'][box].keys():
-                                                    my_hist_data['nchain count'][box][molty] = m_count
-                                                else:
-                                                    my_hist_data['nchain count'][box][molty] += m_count
-                    elif box not in my_hist_data['nchain count'].keys():
-                        my_hist_data['nchain count'][box] = {}
+    with open('%s/%s/HB-map.json'%(path,my_feed)) as f:
+        db = json.load(f)
+    if my_feed not in db.keys(): return my_hist_data
+    for key, value in db[my_feed].items():
+        if my_type in key:
+            my_hist_data = value
+            if 'nchain count' not in value.keys():
+                my_hist_data['nchain count'] = {}
+            for box in boxes:
+                if box not in value.keys():
+                    # we need to search other dbs, its not in this one
+                    print(box, 'not in db for my_feed',my_feed)
+                    my_hist_data['nchain count'][box] = {}
+                    sims = [i for i in os.listdir(my_feed)
+                                if (os.path.isdir( my_feed +'/' + i) and i.isdigit())]
+                    my_hist_data[box] = {}
+                    for sim in sims:
+                        with open('%s/%s/%s/HB-map.json'%(path,my_feed,sim)) as f:
+                            db2 = json.load(f)
+                        for k2, v2 in db2[my_feed].items():
+                            if my_type in k2:
+                                if box in v2.keys():
+                                    for pair, val in v2[box].items():
+                                        if pair not in my_hist_data[box].keys():
+                                            my_hist_data[box][pair] = {'distance':[],'angle':[]}
+                                        my_hist_data[box][pair]['distance'] += val['distance']
+                                        my_hist_data[box][pair]['angle'] += val['angle']
+                                if ('nchain count' in v2.keys()):
+                                    for molty, m_count in v2['nchain count'][box].items():
+                                        if molty not in my_hist_data['nchain count'][box].keys():
+                                            my_hist_data['nchain count'][box][molty] = m_count
+                                        else:
+                                            my_hist_data['nchain count'][box][molty] += m_count
+                elif box not in my_hist_data['nchain count'].keys():
+                    my_hist_data['nchain count'][box] = {}
     return my_hist_data
 
 from MCFlow.file_formatting.reader import Movie
@@ -264,7 +269,7 @@ class HB(Struc):
         D.criteria = self.args['htype']
         D.angle_radians, D.dist_squared = self.args['minAngle']/180.*np.pi, self.args['minDist']*self.args['minDist']
         if self.args['readDB']:
-            hist_data = readDBs(self.args['path'], self.feed, self.args['type'], [self.args['box']])
+            hist_data = read_json(self.args['path'], self.feed, self.args['type'], [self.args['box']])
         if self.args['readDB'] and (('nchain count' in hist_data.keys()) and
                 (self.args['box'] in hist_data['nchain count'].keys()) and
                 (len(hist_data['nchain count'][self.args['box']].keys()) > 0)):
@@ -275,7 +280,7 @@ class HB(Struc):
         else:
             D.calcHB(self.args['box'], self.args['verbosity'])
             HB = D.countHB(self.args['indep'],self.feed, D.HB)
-            outputDB(self.args['path'],[self.feed],self.args['type'],
+            output_json(self.args['path'],[self.feed],self.args['type'],
                 {self.args['name']+'-%ideg-%.2fAngst'%(self.args['minAngle'], self.args['minDist'])
                         +'-' + self.args['htype'] + '-'+self.args['box']:HB})
 
@@ -289,10 +294,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from MCFlow.calc_tools import calculate_distance2, calculate_angle
 from MCFlow.parser import MultMols
-from MCFlow.getData import outputDB
+from MCFlow.getData import output_json
 import numpy as np
 import scipy.sparse as sps
-import shelve, os
+import json, os
 
 if __name__ == '__main__':
     M = HB()

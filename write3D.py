@@ -41,8 +41,9 @@ class Plotter:
         # TODO: make general db reader that all files can do
         self.N = {}; self.rho = {}; self.gen_data = {}; self.dG = {}; self.K = {}; self.P = {}; self.X = {}
         self.U = {}; self.boxlx = {}; self.C = {}
-        self.files = ['N-data.db','rho-data.db','general-data.db','dG-data.db','K-data.db','P-data.db','X-data.db',
-                      'U-data.db','boxlx-data.db','Conc-data.db']
+        self.files = ['N-data.json','rho-data.json','general-data.json','dG-data.json',
+                        'K-data.json','P-data.json','X-data.json',
+                      'U-data.json','boxlx-data.json','Conc-data.json']
         self.variables = [self.N, self.rho, self.gen_data, self.dG, self.K, self.P, self.X,
                           self.U, self.boxlx, self.C]
 
@@ -61,16 +62,17 @@ class Plotter:
             # self.boxes = kwargs['boxes']
             # self.film = kwargs['film']
 
-    def readDBs(self):
+    def read_json(self):
         files_to_remove = []
         for file, var in zip(self.files, self.variables):
-            with shelve.open('%s/%s'%(self.path, file)) as db:
-                for feed in self.feeds:
-                    if feed not in db.keys():
-                        print('Feed {} not in {}'.format(feed, file))
-                        files_to_remove.append( self.files.index(file))
-                    else:
-                        var[feed] = db[feed]
+            with open('%s/%s'%(self.path, file), 'w') as f:
+                data = json.load(f)
+            for feed in self.feeds:
+                if feed not in data.keys():
+                    print('Feed {} not in {}'.format(feed, file))
+                    files_to_remove.append( self.files.index(file))
+                else:
+                    var[feed] = data[feed]
         self.files = [self.files[i] for i in range(len(self.files)) if i not in files_to_remove]
         self.variables = [self.variables[i] for i in range(len(self.variables)) if i not in files_to_remove]
 
@@ -234,7 +236,7 @@ from MCFlow.chem_constants import N_av, R
 from MCFlow.calc_tools import eProp_division
 #from MCFlow.writeXvY import calculateMoleFrac, calculateIGMolFrac, calculateS_ab
 import numpy as np
-import os, math, shelve
+import os, math, json
 
 from MCFlow.parser import Plot, Main
 
@@ -286,7 +288,7 @@ if __name__ == '__main__':
     assert args['xaxis'], 'No x axis chosen for plot'
 
     my_plotter = Plotter(**args)
-    my_plotter.readDBs()
+    my_plotter.read_json()
 
 
     boxFrom, boxTo = args['boxes']

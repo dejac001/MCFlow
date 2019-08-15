@@ -5,7 +5,7 @@ def getNbox(data, box, feed):
                 print('feed: %s    mol:%s in %s is %s +/- %s'%(feed, key, box, value[box]['mean'],
                                                       value[box]['stdev']))
         else:
-            if key != 'time':
+            if key != 'time' and len(key.split()) == 1:
                 getNbox(data[key], box, feed)
 
 def getNmolBox(data, box, mol):

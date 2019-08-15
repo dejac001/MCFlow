@@ -77,10 +77,10 @@ def calculateS_ab(Na, Nb, boxFrom='box2', boxTo='box1'):
 class IdealGasAds:
     def __init__(self, **kwargs):
 
-        # TODO: make general db reader that all files can do
+        # TODO: make general json reader that all files can do
         self.N = {}; self.rho = {}; self.gen_data = {}; self.dG = {}; self.K = {}; self.P = {}; self.X = {}; self.dHmixt = {}
         self.U = {}
-        self.files = ['N-data.db','rho-data.db','general-data.db','dG-data.db','K-data.db','P-data.db','X-data.db','dH-mixt-data.db','U-data.db']
+        self.files = ['N-data.json','rho-data.json','general-data.json','dG-data.json','K-data.json','P-data.json','X-data.json','dH-mixt-data.json','U-data.json']
         self.variables = [self.N, self.rho, self.gen_data, self.dG, self.K, self.P, self.X,self.dHmixt, self.U]
         if kwargs:
             assert kwargs['mol'], 'Mol needed for number density to calculate P assuming I.G.'
@@ -198,16 +198,17 @@ class IdealGasAds:
             [calc95conf(X['stdev'], nIndep)], [calc95conf(stdev, nIndep)],
             [self.feed], file_name, file_description)
 
-    def readDBs(self):
-#       if 'dH-mixt-data.db' in self.files:
-#           index = self.files.index('dH-mixt-data.db')
-#           self.files.pop(index)
-#           self.variables.pop(index)
+    def read_json(self):
+        if 'dH-mixt-data.json' in self.files:
+            index = self.files.index('dH-mixt-data.json')
+            self.files.pop(index)
+            self.variables.pop(index)
         for file, var in zip(self.files, self.variables):
-            with shelve.open('%s/%s'%(self.path, file)) as db:
-                for feed in self.feeds:
-                    assert feed in db.keys(), 'Feed {} not in database for file {}'.format(feed, file)
-                    var[feed] = db[feed]
+            with open('%s/%s'%(self.path, file)) as f:
+                data = json.load(f)
+            for feed in self.feeds:
+                assert feed in data.keys(), 'Feed {} not in database for file {}'.format(feed, file)
+                var[feed] = data[feed]
 
     def getMolAds(self, num_molec):
         mols_adsorbed = []
@@ -494,9 +495,9 @@ class IdealGasAds:
 class RhoBoxAds(IdealGasAds):
     def __init__(self, **kwargs):
 
-        # TODO: make general db reader that all files can do
+        # TODO: make general json reader that all files can do
         self.N = {}; self.rho = {}; self.gen_data = {}
-        self.files = ['N-data.db','rho-data.db','general-data.db']
+        self.files = ['N-data.json','rho-data.json','general-data.json']
         self.variables = [self.N, self.rho, self.gen_data]
         if kwargs:
             assert kwargs['mol'], 'Mol needed for number density'
@@ -563,8 +564,8 @@ class LoadAds(IdealGasAds):
         self.N = {}; self.P = {}; self.gen_data = {}; self.U = {}; self.boxlx = {}; self.dG = {}; self.X = {}
         self.rho = {}
         self.dHmixt = {}
-        self.files = ['N-data.db','P-data.db','general-data.db','U-data.db',
-                      'boxlx-data.db','dG-data.db','X-data.db','rho-data.db']#'dH-mixt-data.db']
+        self.files = ['N-data.json','P-data.json','general-data.json','U-data.json',
+                      'boxlx-data.json','dG-data.json','X-data.json','rho-data.json']#'dH-mixt-data.json']
         self.variables = [self.N, self.P, self.gen_data, self.U,
                           self.boxlx, self.dG, self.X, self.rho] #, self.dHmixt]
         if kwargs:
@@ -606,7 +607,7 @@ class LoadAds(IdealGasAds):
 class GasMolAds(IdealGasAds):
     def __init__(self, **kwargs):
         self.N = {}; self.P = {}; self.gen_data = {}; self.rho = {}#; self.dG = {}
-        self.files = ['N-data.db','P-data.db','general-data.db','rho-data.db']#, 'dG-data.db']
+        self.files = ['N-data.json','P-data.json','general-data.json','rho-data.json']#, 'dG-data.json']
         self.variables = [self.N, self.P, self.gen_data, self.rho]#, self.dG]
         if kwargs:
             assert kwargs['mol'], 'Mol needed to calculate partial pressure'
@@ -647,7 +648,7 @@ class LiqAds(IdealGasAds):
     def __init__(self, **kwargs):
         self.dG = {}; self.C = {}; self.N = {}; self.rho = {}; self.gen_data = {}; self.K = {}; self.X = {}; self.dHmixt={}
         self.U = {}
-        self.files = ['dG-data.db','Conc-data.db','N-data.db','rho-data.db','general-data.db','K-data.db','X-data.db','dH-mixt-data.db','U-data.db']
+        self.files = ['dG-data.json','Conc-data.json','N-data.json','rho-data.json','general-data.json','K-data.json','X-data.json','dH-mixt-data.json','U-data.json']
         self.variables = [self.dG, self.C, self.N, self.rho, self.gen_data,self.K, self.X, self.dHmixt, self.U]
         if kwargs:
             self.xlabel = ['C(g/mL)','dC']
@@ -711,7 +712,7 @@ class LiqAds(IdealGasAds):
 class MoleFrac(LiqAds):
     def __init__(self, **kwargs):
         self.dG = {};self.N = {}; self.rho = {}; self.gen_data = {}; self.X = {}
-        self.files = ['dG-data.db','N-data.db','rho-data.db','general-data.db','X-data.db']
+        self.files = ['dG-data.json','N-data.json','rho-data.json','general-data.json','X-data.json']
         self.variables = [self.dG, self.N, self.rho, self.gen_data, self.X]
         if kwargs:
             assert kwargs['mol'], 'Mol needed for axes mole fractions'
@@ -792,7 +793,7 @@ from MCFlow.chem_constants import N_av, R
 from MCFlow.calc_tools import eProp_division
 from MCFlow.parser import Plot
 import numpy as np
-import os, math, shelve
+import os, math, json 
 extra_film_mass = 24/N_av*1.0079 + 36*2/N_av*1.0079
 film_vapor_volume = 4.*4.*4.
 
@@ -812,7 +813,7 @@ if __name__ == '__main__':
     if args['xaxis'] == 'C':
         my_plotter = LiqAds(**args)
     elif args['xaxis'] == 'Pig':
-        # TODO: add alternative way to calculate P w/ P-data.db & using mole fraction in box
+        # TODO: add alternative way to calculate P w/ P-data.json & using mole fraction in box
         my_plotter = IdealGasAds(**args)
     elif args['xaxis'] == 'rho':
         my_plotter = RhoBoxAds(**args)
@@ -826,7 +827,7 @@ if __name__ == '__main__':
         my_plotter = MoleFrac(**args)
     elif args['xaxis'] == 'T':
         my_plotter = Temp(**args)
-    my_plotter.readDBs()
+    my_plotter.read_json()
 
     for feed in args['feeds']:
         print(feed)
