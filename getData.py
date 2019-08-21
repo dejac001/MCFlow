@@ -5,7 +5,7 @@ def output_json(path, feeds, type, data):
         data_to_save = {}
         for feed in feeds:
             nextRun = runAnalyzer.findNextRun('%s/%s/1/'%(path, feed), type)
-            assert nextRun != None, 'No run found'
+            assert nextRun is not None, 'No run found'
             data_to_save[feed] = {
                     '%s%i'%(type, nextRun-1) : data[data_type].averages[feed],
                     'time' : time.time()
@@ -17,6 +17,7 @@ def output_json(path, feeds, type, data):
         
         with open(file_name, 'w') as f:
             json.dump(data_to_save, f)
+
 
 def outputGen_json(path, feeds, run_type, general_data):
     """Save data in json. If previous data exists, copy it to an old file"""
@@ -42,10 +43,11 @@ def outputGen_json(path, feeds, run_type, general_data):
         json.dump(data_to_save, f)
 
 
-
-import os, json
-from MCFlow import runAnalyzer
+import json
+import os
 import time
+
+from MCFlow import runAnalyzer
 
 if __name__ == '__main__':
     from parser import Results

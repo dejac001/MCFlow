@@ -1,5 +1,6 @@
-from MCFlow.structure_analysis import Struc
 from MCFlow.file_formatting.reader import Movie
+from MCFlow.structure_analysis import Struc
+
 
 class FindRegion(Struc):
     def __init__(self,vectors,channelMap={'straight':{'D'}, 'zig-zag':{'F'}, 'intersection':{'H'}}):
@@ -64,6 +65,7 @@ class FindRegion(Struc):
                 return channel
         assert True, 'channel not found'
 
+
 class Channel(FindRegion):
 
     def __init__(self, regionMap):
@@ -94,6 +96,7 @@ class Channel(FindRegion):
                             for name in self.regionNames}
         self.data = {region:[] for region in self.regionNames}
         self.averages = {region:{} for region in self.regionNames}
+        self.N = dict()
 
     def checks(self):
         assert self.args['name'], 'Output ID name needed to output local structure info'
@@ -109,15 +112,6 @@ class Channel(FindRegion):
                     print('bin {} with energy {} not labeled as basin'
                           ' in merged grids'.format(bins, line.split()[-1]))
                     return
-
-    def addToGrid(self, xyz, iseed):
-        region = self.getRegion(xyz)
-        self.count[region][iseed] += 1
-        if region == self.defaultLabel:
-            x = bins[0]/self.numBins[0] * self.boxLengths[0]
-            y = bins[1]/self.numBins[1] * self.boxLengths[1]
-            z = bins[2]/self.numBins[2] * self.boxLengths[2]
-            self.missedLocations.append([x,y,z])
 
     def __str__(self):
         rep = 'REGION      LOADING (mlcl)\n'
@@ -208,21 +202,30 @@ class Channel(FindRegion):
         self.regionToChannel()
         self.avgIndep()
 
+    def output_results(self):
+        from runAnalyzer import findNextRun
+        import time
+        import json
+        import os
+        next_run = findNextRun('%s/%s/1' % (self.args['path'], self.feed), self.args['type'])
+        data_to_save = {
+            '%s%i' % (self.args['type'], next_run - 1): self.averages[self.feed],
+            'time': time.time()
+        }
+        file_name = self.args['path'] + '/%s-%s-data.json' % (self.args['name'], self.feed)
+        if os.path.isfile(file_name):
+            os.rename(file_name, self.args['path'] + '/old-%s-%s-data.json' % (self.args['name'], self.feed))
+
+        with open(file_name, 'w') as f:
+            json.dump(data_to_save, f)
+
     def myCalcs(self, D ):
         if self.args['vectors']: D.foldMovieToUC(self.args['vectors'])
         self.countBins(D.frame_data, D.frame_seed)
         if self.missedLocations:
             data = {'coords':self.missedLocations,'atoms':['N' for i in self.missedLocations]}
             xyz(self.args['path'] + '/'+ self.feed +'/'+ 'gridMissedLocs.xyz', data)
-#   print(Regions)
-#   sys.stdout.write(repr(Regions))
-#           flag=''
-#           if self.filter_function:
-#               flag = '_filtered'
-#           xyz('%s/%s/movie_coords_mol%s_box%s%s_sim%s_%s.xyz'%(self.args['path'], self.feed,
-#                                                       mol_num, self.args['box'],flag, ''.join(map(str,self.args['indep'])),
-#                                                       '-'.join(self.args['bead'])), xyz_data)
-        outputDB(self.args['path'],[self.feed],self.args['type'],{self.args['name']: self } )
+        self.output_results()
 
     def main(self):
         for feed in self.args['feeds']:
@@ -231,9 +234,7 @@ class Channel(FindRegion):
             analysis = self.read_movies()
             self.myCalcs(analysis)
 
-from PythonCode.PaperWriting.makeHTable import tabularNumbers
 from MCFlow.parser import Results
-from MCFlow.getData import outputDB
 import numpy as np
 from MCFlow.file_formatting.writer import xyz
 
