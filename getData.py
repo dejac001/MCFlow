@@ -1,13 +1,14 @@
-def output_json(path, feeds, type, data):
+def output_json(path, type, data):
     """Save data in json. If previous data exists, copy it to an old file"""
-    for data_type in data.keys():
+    first_feed = list(data.keys())[0]
+    for data_type in data[first_feed].keys():
         # convert data to json format
         data_to_save = {}
-        for feed in feeds:
+        for feed, vals in data.items():
             nextRun = runAnalyzer.findNextRun('%s/%s/1/'%(path, feed), type)
             assert nextRun is not None, 'No run found'
             data_to_save[feed] = {
-                    '%s%i'%(type, nextRun-1) : data[data_type].averages[feed],
+                    '%s%i'%(type, nextRun-1) : vals[data_type].averages[feed],
                     'time' : time.time()
             }
 
@@ -19,11 +20,11 @@ def output_json(path, feeds, type, data):
             json.dump(data_to_save, f)
 
 
-def outputGen_json(path, feeds, run_type, general_data):
+def outputGen_json(path, run_type, general_data):
     """Save data in json. If previous data exists, copy it to an old file"""
     data_type = 'general'
     data_to_save = {}
-    for feed in feeds:
+    for feed, val in general_data.items():
         nextRun = runAnalyzer.findNextRun('%s/%s/1/'%(path, feed), run_type)
         assert nextRun != None, 'No run found'
         run_key ='%s%i'%(run_type, nextRun-1) 
@@ -31,8 +32,8 @@ def outputGen_json(path, feeds, run_type, general_data):
                 run_key : {},
                 'time' : time.time()
         }
-        for key, val in general_data[feed].items():
-            data_to_save[feed][run_key][key] = val
+        for key, val2 in val.items():
+            data_to_save[feed][run_key][key] = val2
 
 
     file_name = path + '/%s-data.json'% data_type
@@ -64,11 +65,14 @@ if __name__ == '__main__':
             args_to_send.pop(key)
 
     feeds = args['feeds']
+    data = {}
+    gen_data = {}
     for feed in feeds:
         try:
             args['feeds'] = [feed]
-            data, gen_data = getFileData(**args_to_send)
-            output_json(args['path'], args['feeds'], args['type'], data)
-            outputGen_json(args['path'], args['feeds'], args['type'], gen_data)
+            data[feed], gen_data[feed] = getFileData(**args_to_send)
         except NoFilesAnalyzed:
             print('No files to analyzed for feed %s'%feed)
+
+    output_json(args['path'], args['type'], data)
+    outputGen_json(args['path'], args['type'], gen_data)
