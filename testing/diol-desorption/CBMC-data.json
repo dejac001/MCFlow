@@ -1,0 +1,133 @@
+{
+  "E-MFI-343K-256-1": {
+    "prod-2": {
+      "1 ETOH": {
+        "1": {
+          "1": {
+            "accepted": {
+              "mean": 24.0,
+              "stdev": 0.0,
+              "raw": [
+                24
+              ],
+              "block means": [],
+              "block std": []
+            },
+            "attempted": {
+              "mean": 38.0,
+              "stdev": 0.0,
+              "raw": [
+                38
+              ],
+              "block means": [],
+              "block std": []
+            }
+          },
+          "2": {
+            "accepted": {
+              "mean": 11.0,
+              "stdev": 0.0,
+              "raw": [
+                11
+              ],
+              "block means": [],
+              "block std": []
+            },
+            "attempted": {
+              "mean": 39.0,
+              "stdev": 0.0,
+              "raw": [
+                39
+              ],
+              "block means": [],
+              "block std": []
+            }
+          },
+          "3": {
+            "accepted": {
+              "mean": 6.0,
+              "stdev": 0.0,
+              "raw": [
+                6
+              ],
+              "block means": [],
+              "block std": []
+            },
+            "attempted": {
+              "mean": 79.0,
+              "stdev": 0.0,
+              "raw": [
+                79
+              ],
+              "block means": [],
+              "block std": []
+            }
+          }
+        },
+        "2": {
+          "1": {
+            "accepted": {
+              "mean": 3.0,
+              "stdev": 0.0,
+              "raw": [
+                3
+              ],
+              "block means": [],
+              "block std": []
+            },
+            "attempted": {
+              "mean": 3.0,
+              "stdev": 0.0,
+              "raw": [
+                3
+              ],
+              "block means": [],
+              "block std": []
+            }
+          },
+          "3": {
+            "accepted": {
+              "mean": 4.0,
+              "stdev": 0.0,
+              "raw": [
+                4
+              ],
+              "block means": [],
+              "block std": []
+            },
+            "attempted": {
+              "mean": 4.0,
+              "stdev": 0.0,
+              "raw": [
+                4
+              ],
+              "block means": [],
+              "block std": []
+            }
+          },
+          "2": {
+            "accepted": {
+              "mean": 3.0,
+              "stdev": 0.0,
+              "raw": [
+                3
+              ],
+              "block means": [],
+              "block std": []
+            },
+            "attempted": {
+              "mean": 3.0,
+              "stdev": 0.0,
+              "raw": [
+                3
+              ],
+              "block means": [],
+              "block std": []
+            }
+          }
+        }
+      }
+    },
+    "time": 1569505439.4312756
+  }
+}

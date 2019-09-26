@@ -68,7 +68,7 @@ import MCFlow.file_organization as fo
 from runAnalyzer import what2Analyze
 
 if __name__ == '__main__':
-    from parser import Change
+    from analysis_parsers import Change
 
     my_parser = Change()
     my_parser.parser.add_argument('-imv','--imovie', help='Movie output frequency',

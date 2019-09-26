@@ -199,7 +199,7 @@ import random, copy
 import numpy as np
 
 if __name__ == '__main__':
-    from parser import ChangeInput
+    from analysis_parsers import ChangeInput
     my_parser = ChangeInput()
     my_parser.molecules()
     my_parser.parser.add_argument('-cv','--changeVol',help='whether to change volume',type=str,default='False',choices=['True','False'])

@@ -1,4 +1,4 @@
-def output_json(path, type, data):
+def output_json(path, type, data, save_old):
     """Save data in json. If previous data exists, copy it to an old file"""
     first_feed = list(data.keys())[0]
     for data_type in data[first_feed].keys():
@@ -13,14 +13,14 @@ def output_json(path, type, data):
             }
 
         file_name = path + '/%s-data.json'% data_type
-        if os.path.isfile(file_name):
+        if save_old == 'Yes' and os.path.isfile(file_name):
             os.rename(file_name, path + '/old-%s-data.json' % data_type)
         
         with open(file_name, 'w') as f:
             json.dump(data_to_save, f)
 
 
-def outputGen_json(path, run_type, general_data):
+def outputGen_json(path, run_type, general_data, save_old):
     """Save data in json. If previous data exists, copy it to an old file"""
     data_type = 'general'
     data_to_save = {}
@@ -35,32 +35,17 @@ def outputGen_json(path, run_type, general_data):
         for key, val2 in val.items():
             data_to_save[feed][run_key][key] = val2
 
-
     file_name = path + '/%s-data.json'% data_type
-    if os.path.isfile(file_name):
+    if save_old == 'Yes' and os.path.isfile(file_name):
         os.rename(file_name, path + '/old-%s-data.json' % data_type)
 
     with open(file_name, 'w') as f:
         json.dump(data_to_save, f)
 
 
-import json
-import os
-import time
-
-from MCFlow import runAnalyzer
-
-if __name__ == '__main__':
-    from parser import Results
-    from runAnalyzer import getFileData, NoFilesAnalyzed
-
-    my_parser = Results()
-    my_parser.parser.add_argument('-l','--liq',help='whether or not liqid',type=bool,
-                                  default=False)
-    args = vars(my_parser.parse_args())
-
+def main(args):
     args_to_send = args
-    for key in ('rcut', 'nstep', 'time'): #
+    for key in ('rcut', 'nstep', 'time'):  #
         if key in args_to_send.keys():
             args_to_send.pop(key)
 
@@ -70,9 +55,33 @@ if __name__ == '__main__':
     for feed in feeds:
         try:
             args['feeds'] = [feed]
-            data[feed], gen_data[feed] = getFileData(**args_to_send)
-        except NoFilesAnalyzed:
-            print('No files to analyzed for feed %s'%feed)
+            data[feed], gen_data[feed] = runAnalyzer.getFileData(**args_to_send)
+        except runAnalyzer.NoFilesAnalyzed:
+            print('No files to analyzed for feed %s' % feed)
 
-    output_json(args['path'], args['type'], data)
-    outputGen_json(args['path'], args['type'], gen_data)
+    output_json(args['path'], args['type'], data, args['save_old_data'])
+    outputGen_json(args['path'], args['type'], gen_data, args['save_old_data'])
+
+
+def my_parser():
+    from analysis_parsers import Results
+    my_parser = Results()
+    my_parser.parser.add_argument('-l', '--liq', help='whether or not liqid',
+                                  type=bool,
+                                  default=False)
+    my_parser.parser.add_argument('-e', '--energies', help='whether or not to calculate dU,'
+                                                           ' dH of transfer (takes extra time)',
+                                  type=str, choices=['Yes', 'No'], default='No')
+    my_parser.parser.add_argument('-ss', '--save_old_data', help='whether or not to save old data',
+                                  type=str, choices=['Yes', 'No'], default='Yes')
+    return vars(my_parser.parse_args())
+
+
+import json
+import os
+import time
+import runAnalyzer
+
+if __name__ == '__main__':
+    arguments = my_parser()
+    main(arguments)

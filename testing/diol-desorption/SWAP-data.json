@@ -1,0 +1,29 @@
+{
+  "E-MFI-343K-256-1": {
+    "prod-2": {
+      "1 ETOH": {
+        "12": {
+          "accepted": {
+            "mean": 117970.0,
+            "stdev": 0.0,
+            "raw": [
+              117970
+            ],
+            "block means": [],
+            "block std": []
+          },
+          "attempted": {
+            "mean": 1032256.0,
+            "stdev": 0.0,
+            "raw": [
+              1032256
+            ],
+            "block means": [],
+            "block std": []
+          }
+        }
+      }
+    },
+    "time": 1569505439.4342678
+  }
+}

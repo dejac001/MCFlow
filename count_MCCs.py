@@ -1,5 +1,5 @@
 if __name__ == '__main__':
-    from parser import Main
+    from analysis_parsers import Main
     from runAnalyzer import what2Analyze
     import numpy as np
     my_parser = Main()

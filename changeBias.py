@@ -190,7 +190,7 @@ import math
 from chem_constants import N_av
 
 if __name__ == '__main__':
-    from parser import Change
+    from analysis_parsers import Change
     from runAnalyzer import getFileData, findNextRun
     from file_formatting import writer, reader
     from getData import outputGenDB, outputDB

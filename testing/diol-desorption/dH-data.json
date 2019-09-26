@@ -1,0 +1,14 @@
+{
+  "E-MFI-343K-256-1": {
+    "prod-2": {
+      "box2-->box1": {
+        "mean": NaN,
+        "stdev": NaN,
+        "raw": [],
+        "block means": [],
+        "block std": []
+      }
+    },
+    "time": 1569505439.4372594
+  }
+}

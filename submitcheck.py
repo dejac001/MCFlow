@@ -43,7 +43,7 @@ from MCFlow.file_organization import equilName, prodName
 
 if __name__ == '__main__':
 
-    from parser import Main
+    from analysis_parsers import Main
     my_parser = Main()
     my_parser.other()
     my_parser.parser.description = "Determine how many runs have been successfully finished"

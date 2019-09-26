@@ -1,9 +1,10 @@
-
-from MCFlow.structure_analysis import Struc
+from structure_analysis import Struc
 rOO_max = 10.89 # 3.3*3.3
+
 
 class DoneSearching(Exception):
     pass
+
 
 def FloydWarshallWithPath(weights):
     '''
@@ -24,10 +25,12 @@ def FloydWarshallWithPath(weights):
                     prev[i,j] = prev[k,j]
     return dist, prev
 
+
 def findHydroxylHydrogen(Oxyz, Hcoords, abc):
     for Hxyz in Hcoords:
         if calculate_distance2(Oxyz, Hxyz, abc) < 1.0:
             return Hxyz
+
 
 def hy_bond_from_DB(hmap_data, box, htype, name, feed):
     run = 'prod-'
@@ -90,6 +93,7 @@ def findHB(beadsFrom, beadsTo, abc, criteria, angle, dist_sq, molNum1, molNum2):
                         addData(molNum1, molNum2, nO1+1, nO2+1)
     return nHB, HB_pairs
 
+
 def read_json(path, my_feed, my_type, boxes):
     """ read databases
 
@@ -132,7 +136,9 @@ def read_json(path, my_feed, my_type, boxes):
                     my_hist_data['nchain count'][box] = {}
     return my_hist_data
 
-from MCFlow.file_formatting.reader import Movie
+
+from file_formatting.reader import Movie
+
 
 class HydrogenBond(Movie):
     def __init__(self, file_name, *args):
@@ -238,6 +244,7 @@ class HydrogenBond(Movie):
         new.countMols(nIndep, feed, data)
         return new
 
+
 class HB(Struc):
     def __init__(self):
         self.parser = MultMols()
@@ -290,13 +297,11 @@ nx_options = {
 'node_size': 8,
 'width': 1}
 
-import matplotlib.pyplot as plt
 import networkx as nx
-from MCFlow.calc_tools import calculate_distance2, calculate_angle
-from MCFlow.parser import MultMols
-from MCFlow.getData import output_json
+from calc_tools import calculate_distance2, calculate_angle
+from analysis_parsers import MultMols
+from getData import output_json
 import numpy as np
-import scipy.sparse as sps
 import json, os
 
 if __name__ == '__main__':

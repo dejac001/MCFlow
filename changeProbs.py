@@ -456,7 +456,7 @@ import os, shutil
 from MCFlow.dataUtil import sortMolKeys
 
 if __name__ == '__main__':
-    from parser import Change
+    from analysis_parsers import Change
 
     args = vars(Change().parse_args())
     feeds = args.pop('feeds')

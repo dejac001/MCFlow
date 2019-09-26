@@ -1,0 +1,57 @@
+{
+  "E-MFI-343K-256-1": {
+    "prod-2": {
+      "box1": {
+        "mean": NaN,
+        "stdev": NaN,
+        "raw": [
+          NaN
+        ],
+        "block means": [
+          [
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN
+          ]
+        ],
+        "block std": [
+          [
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN
+          ]
+        ]
+      },
+      "box2": {
+        "mean": NaN,
+        "stdev": NaN,
+        "raw": [
+          NaN
+        ],
+        "block means": [
+          [
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN
+          ]
+        ],
+        "block std": [
+          [
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN
+          ]
+        ]
+      }
+    },
+    "time": 1569505439.4322731
+  }
+}

@@ -140,12 +140,13 @@ sum(N[i]['box3']['stdev']**2 for i in N.keys())
 '''
 Write isotherm from previously generated databank files
 '''
-from runAnalyzer import checkRun, calc95conf, getRhoTotal
+from runAnalyzer import checkRun, getRhoTotal
+from statistics import calc95conf
 from chem_constants import R, N_av
 import math
 
 if __name__ == '__main__':
-    from parser import Plot
+    from analysis_parsers import Plot
 
     my_parser = Plot()
     my_parser.isotherm()

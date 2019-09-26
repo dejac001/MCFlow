@@ -20,7 +20,7 @@ from MCFlow.chem_constants import R, N_av
 import math
 
 if __name__ == '__main__':
-    from parser import Main
+    from analysis_parsers import Main
     import shelve
 
     my_parser = Main()

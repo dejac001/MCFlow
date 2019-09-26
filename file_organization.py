@@ -9,11 +9,12 @@ def tjo(path, name, type, num):
     return '%s/%s%s%i' % (path, name, type, num)
 
 
-if os.getlogin() == 'tjo':
-    equilName='all.equil'
-    prodName='all.prod'
-    read = tjo
-else:
-    equilName='equil-'
-    prodName='prod-'
-    read = rob
+# note: need to change file here based off of how you organize your files
+# if os.getlogin() == 'tjo':
+#     equilName='all.equil'
+#     prodName='all.prod'
+#     read = tjo
+# else:
+equilName = 'equil-'
+prodName = 'prod-'
+read = rob
