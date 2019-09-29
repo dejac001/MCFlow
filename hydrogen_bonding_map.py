@@ -1,4 +1,5 @@
 from MCFlow.hydrogen_bonding import HydrogenBond, HB
+import json
 
 class HB_map(HydrogenBond):
     def __init__(self, file_name, *args):
@@ -51,17 +52,16 @@ class HB_map(HydrogenBond):
         nextRun = runAnalyzer.findNextRun('%s/1/'%path, type)
         if len(indep) == 1:
             path = '%s/%i/'%(path,indep[0])
-        with shelve.open(path + '/HB-map.db',writeback=True) as db:
-            if feed not in list(db.keys()):
-                db[feed] = {}
-            run = '%s%i'%(type, nextRun-1)
-            if run not in db[feed].keys():
-                db[feed][run] = {}
-            db[feed][run]['box%s'%box] = self.histogram
-            if 'nchain count' not in db[feed][run].keys():
-                db[feed][run]['nchain count'] = {}
-            db[feed][run]['nchain count']['box%s'%box] = self.nchain_count
-            db[feed]['time'] = time.time()
+        db = {}
+        run = '%s%i'%(type, nextRun-1)
+        db[feed] = {run:  {}}
+        db[feed][run]['box%s'%box] = self.histogram
+        if 'nchain count' not in db[feed][run].keys():
+            db[feed][run]['nchain count'] = {}
+        db[feed][run]['nchain count']['box%s'%box] = self.nchain_count
+        db[feed]['time'] = time.time()
+        with open(path + '/HB-map-%s.json' % feed, 'w') as f:
+            json.dump(db, f)
 
 class HB_format_map(HB):
 

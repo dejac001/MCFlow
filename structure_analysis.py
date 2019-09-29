@@ -1,3 +1,8 @@
+import time
+import json
+import os
+
+
 class Region:
     def __init__(self, func):
         '''
@@ -26,6 +31,24 @@ class Region:
             return True
         else:
             return False
+
+def output_json(path, type, data, save_old):
+    """Save data in json. If previous data exists, copy it to an old file"""
+    data_to_save = {}
+    for feed, vals in data.items():
+        nextRun = findNextRun('%s/%s/1/'%(path, feed), type)
+        assert nextRun is not None, 'No run found'
+        data_to_save[feed] = {
+                '%s%i'%(type, nextRun-1) : vals.averages[feed],
+                'time' : time.time()
+        }
+
+    file_name = path + '/HB-data.json'
+    if save_old == 'Yes' and os.path.isfile(file_name):
+        os.rename(file_name, path + '/old-HB-data.json')
+    
+    with open(file_name, 'w') as f:
+        json.dump(data_to_save, f)
 
 def intersection(coords):
     rcut = 5.0/2.
@@ -114,7 +137,7 @@ class Struc:
                                                         mol_num, self.args['box'],flag, ''.join(map(str,self.args['indep'])),
                                                         '-'.join(self.args['bead'])), xyz_data)
         if self.args['name']:
-            outputDB(self.args['path'],[self.feed],self.args['type'],{self.args['name']: D } )
+            output_json(self.args['path'],self.args['type'],{self.feed: D } , 'Yes')
 
     def main(self):
         for feed in self.args['feeds']:
@@ -124,13 +147,12 @@ class Struc:
             self.myCalcs(analysis)
 
 
-from MCFlow.runAnalyzer import what2Analyze
-from MCFlow.file_formatting.reader import Movie
-from MCFlow.file_formatting.writer import xyz
-from MCFlow.parser import Results
-from MCFlow.getData import outputDB
-from MCFlow.calc_tools import calculate_distance2
-import MCFlow.file_organization as fo
+from runAnalyzer import what2Analyze, findNextRun
+from file_formatting.reader import Movie
+from file_formatting.writer import xyz
+from analysis_parsers import Results
+from calc_tools import calculate_distance2
+import file_organization as fo
 
 
 if __name__ == '__main__':

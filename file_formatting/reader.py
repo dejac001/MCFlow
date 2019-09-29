@@ -184,7 +184,7 @@ class Movie:
                         continue
                 else:
                     mean, stdev = np.mean(N[box][mol]['raw data'][0]), np.std(N[box][mol]['raw data'][0])
-                num_molec_data[mol_num][box]['mean'] = mean
+                num_molec_data[mol_num][box]['mean'] = mean.tolist()
                 num_molec_data[mol_num][box]['stdev'] = stdev
                 # make histogram
                 try:
@@ -196,8 +196,8 @@ class Movie:
                             all_data += seed_data
                     if len(all_data) > 0:
                         histogram, edges = np.histogram(all_data, bins=list(range(max(all_data) + 2)))
-                        num_molec_data[mol_num][box]['histogram'] = histogram
-                        num_molec_data[mol_num][box]['edges'] = edges
+                        num_molec_data[mol_num][box]['histogram'] = histogram.tolist()
+                        num_molec_data[mol_num][box]['edges'] = edges.tolist()
                     else:
                         raise ValueError
                 except ValueError:

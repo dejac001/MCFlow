@@ -1,29 +1,5 @@
-from structure_analysis import Struc
+from structure_analysis import Struc, output_json
 rOO_max = 10.89 # 3.3*3.3
-
-
-class DoneSearching(Exception):
-    pass
-
-
-def FloydWarshallWithPath(weights):
-    '''
-    '''
-    dist = np.zeros(np.shape(weights))*np.inf
-    prev = np.ones(np.shape(weights),dtype=int)*-9999
-    N, M = np.shape(weights)
-    assert N == M, 'Weights matrix not square'
-    for u in range(N):
-        for v in range(N):
-            dist[u,v] = weights[u,v]
-            prev[u,v] = u
-    for k in range(N):
-        for i in range(N):
-            for j in range(N):
-                if dist[i,j] > dist[i,k] + dist[k,j]:
-                    dist[i,j] = dist[i,k] + dist[k,j]
-                    prev[i,j] = prev[k,j]
-    return dist, prev
 
 
 def findHydroxylHydrogen(Oxyz, Hcoords, abc):
@@ -48,7 +24,7 @@ def hy_bond_from_DB(hmap_data, box, htype, name, feed):
         n2 = hmap_data[box][mol2]
         my_data[run][pair1] = {box:{'mean':nHB/n1,'stdev':0.}}
         my_data[run][pair2] = {box:{'mean':nHB/n2,'stdev':0.}}
-    with open(name +'-'+ htype + '-'+box+'='+ feed + '-data.db') as f:
+    with open(name +'-'+ htype + '-'+box+'='+ feed + '-data.json', 'w') as f:
         json.dump(my_data, f)
 
 def findHB(beadsFrom, beadsTo, abc, criteria, angle, dist_sq, molNum1, molNum2):
@@ -148,8 +124,10 @@ class HydrogenBond(Movie):
         '''
         '''
         self.HB_info = []
-        OTypes = {'62':'alkanol','114':'water','178':'zeo','181':'silanol'}
-        HTypes ={'61':'alkanol','115':'water','182':'silanol'}
+         #OTypes = {'62':'alkanol','114':'water','178':'zeo','181':'silanol'}
+        # HTypes ={'61':'alkanol','115':'water','182':'silanol'}
+        OTypes = {'62':'alkanol','114':'water','178':'silanol','111':'furan','302':'acidO=C','303':'acidO-C'} # '502':zeo
+        HTypes ={'61':'alkanol','115':'water','42':'silanol','304':'acidH'}
         for iframe, FRAME_DATA in enumerate(self.frame_data):
             # store H and O for all other mols
             HB_mols = {}
@@ -287,9 +265,8 @@ class HB(Struc):
         else:
             D.calcHB(self.args['box'], self.args['verbosity'])
             HB = D.countHB(self.args['indep'],self.feed, D.HB)
-            output_json(self.args['path'],[self.feed],self.args['type'],
-                {self.args['name']+'-%ideg-%.2fAngst'%(self.args['minAngle'], self.args['minDist'])
-                        +'-' + self.args['htype'] + '-'+self.args['box']:HB})
+            output_json(self.args['path'],self.args['type'],
+                {self.feed: HB}, 'Yes')
 
 
 nx_options = {
@@ -300,7 +277,6 @@ nx_options = {
 import networkx as nx
 from calc_tools import calculate_distance2, calculate_angle
 from analysis_parsers import MultMols
-from getData import output_json
 import numpy as np
 import json, os
 
