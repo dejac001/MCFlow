@@ -1,0 +1,1 @@
+{"FAU-0": {"equil-1": {"FAU-0": {"molecular weight": {"2": 16.043, "1": 2.0158}, "compositions": {"2 CH4": 300, "1 H2": 300}, "temperature": 300.0, "ncycle": [50000], "indepSims": [1, 2], "numIndep": 2, "zeolite": {"volume": 115430.16691, " mol/kg / 1 mlcl adsorbed": 0.0108356149, "unit cells": 8, "mass (g)": 1.53248241e-19}}}, "time": 1572958155.609393}}

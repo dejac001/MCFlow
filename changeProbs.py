@@ -450,7 +450,7 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
 
 from MCFlow.runAnalyzer import getFileData, findNextRun
 from MCFlow.file_formatting import writer, reader
-from MCFlow.getData import outputDB, outputGenDB
+from MCFlow.getData import output_json, outputGen_json
 import numpy as np
 import os, shutil
 from MCFlow.dataUtil import sortMolKeys
@@ -460,21 +460,21 @@ if __name__ == '__main__':
 
     args = vars(Change().parse_args())
     feeds = args.pop('feeds')
+    data = {}
+    gen_data = {}
 
     for feed in feeds:
         args['feeds'] = [feed]
-        data, gen_data = getFileData(**args)
-        outputDB(args['path'], args['feeds'],args['type'], data )
-        outputGenDB(args['path'], args['feeds'],args['type'], gen_data )
-        nbox = len(data['rho'].averages[feed].keys())
+        data[feed], gen_data[feed] = getFileData(**args)
+        nbox = len(data[feed]['rho'].averages[feed].keys())
         # TODO: format return from analyzeTransfers to fit well with fort4 data dict
         try:
             (newSwaps, newSwatches, pctAct,
             nActCycle, normSwaps, normSwatches,
-            pmvol, pswatch_norm, pswap_norm) = analyzeTransfers(data['SWAP'].averages[feed],
-                                                            gen_data[feed]['ncycle'],
+            pmvol, pswatch_norm, pswap_norm) = analyzeTransfers(data[feed]['SWAP'].averages[feed],
+                                                            gen_data[feed][feed]['ncycle'],
 #                                                       nActPerCycle=3656/200, tavol=0.3,
-                                                            gen_data[feed]['compositions'])
+                                                            gen_data[feed][feed]['compositions'])
         except NoSwapsAccepted:
             print('no swaps accepted for {}'.format(feed))
             continue
@@ -601,7 +601,9 @@ if __name__ == '__main__':
             input_data['&mc_simple']['pmtra'] = '%e'%pmtra
             #   box lengths
             for box in range(1,int(input_data['&mc_shared']['nbox'])+1):
-                boxLengths = data['boxlx'].averages[feed]['box%i'%box]['mean']
+                if 'boxlx' not in data[feed].keys():
+                    continue
+                boxLengths = data[feed]['boxlx'].averages[feed]['box%i'%box]['mean']
                 input_data['SIMULATION_BOX']['box%i'%box]['dimensions'] = (
                                     '%8f %8f %8f'%(boxLengths, boxLengths, boxLengths)
                                                                         )
@@ -621,3 +623,5 @@ if __name__ == '__main__':
             nextRun = 'fort.4.%s%i'%(args['type'],findNextRun(my_path,args['type']))
             writer.write_fort4(input_data, my_path + nextRun)
             input_data = None
+    output_json(args['path'], args['type'], data, 'Yes')
+    outputGen_json(args['path'], args['type'], gen_data, 'Yes')
