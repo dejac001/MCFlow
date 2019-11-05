@@ -1,0 +1,1 @@
+{"TON-0": {"equil-2": {"TON-0": {"numIndep": 2, "indepSims": [1, 2], "compositions": {"1 H2": 50, "2 CH4": 0}, "ncycle": [50000], "molecular weight": {"1": 2.0158, "2": 16.043}, "temperature": 300.0, "zeolite": {"unit cells": 24, "mass (g)": 5.74680904e-20, "volume": 31745.5769, " mol/kg / 1 mlcl adsorbed": 0.028894973}}}, "time": 1572960066.9902227}}

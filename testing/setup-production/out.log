@@ -1,0 +1,43 @@
+------------Dir is TON-0------------
+old_begin = 2, nfiles = 1
+PROBLEM PROBLEM PROBLEM PROBLEM PROBLEM !!!!
+ ### problem with energy ###  box            2
+
+file is <_io.TextIOWrapper name='/home/dejacor/MCFlow/testing/setup-production/TON-0/1/equil-2/run.equil-2' mode='r' encoding='ANSI_X3.4-1968'>
+path is /home/dejacor/MCFlow/testing/setup-production/TON-0/1
+  Total energy:   -21.9445940776566       -21.9467705918228       2.176514166276178E-003
+
+PROBLEM PROBLEM PROBLEM PROBLEM PROBLEM !!!!
+ ### problem  ###
+
+file is <_io.TextIOWrapper name='/home/dejacor/MCFlow/testing/setup-production/TON-0/1/equil-2/run.equil-2' mode='r' encoding='ANSI_X3.4-1968'>
+path is /home/dejacor/MCFlow/testing/setup-production/TON-0/1
+  Coulomb.en.:    1.59681232469123        1.59463576985256       2.176554838673184E-003
+
+old_begin = 2, nfiles = 1
+PROBLEM PROBLEM PROBLEM PROBLEM PROBLEM !!!!
+ ### problem with energy ###  box            2
+
+file is <_io.TextIOWrapper name='/home/dejacor/MCFlow/testing/setup-production/TON-0/2/equil-2/run.equil-2' mode='r' encoding='ANSI_X3.4-1968'>
+path is /home/dejacor/MCFlow/testing/setup-production/TON-0/2
+  Total energy:   -1.19376767180048       -1.17628449191531      -1.748317988516690E-002
+
+PROBLEM PROBLEM PROBLEM PROBLEM PROBLEM !!!!
+ ### problem  ###
+
+file is <_io.TextIOWrapper name='/home/dejacor/MCFlow/testing/setup-production/TON-0/2/equil-2/run.equil-2' mode='r' encoding='ANSI_X3.4-1968'>
+path is /home/dejacor/MCFlow/testing/setup-production/TON-0/2
+  Coulomb.en.:    1.13957105961374        1.15705419135384      -1.748313174009941E-002
+
+number of accepted transfer moves was [ 0.6288]
+ordered mols for calculating swaps is ['1 H2', '2 CH4']
+predicted probability too high, setting maxProb = 0.6000
+actual accepted swaps per cycle will be 0.6289 (we arent doing swatches)
+{'1 H2': {'12': 1.0, 'total': 1.0}, '2 CH4': {'total': 0.0}}
+pmcb was zero previously, keeping it that way
+pmcb was zero previously, keeping it that way
+------------Dir is TON-0------------
+old_begin = 2, nfiles = 1
+average value too large: 270.238821653324; changing to 162.1432929919944
+old_begin = 2, nfiles = 1
+average value too large: 284.421082743682; changing to 170.6526496462092

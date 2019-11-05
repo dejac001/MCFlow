@@ -1,0 +1,2360 @@
+Program started at 2019-11-04 19:18:30.658
+Number of processors: 1
+Threads per processor: 1
+
+MCCCS topmon (branch: ABE)
+Commit hash: 609c031
+Build on host: ln0003
+Preprocessor definitions: __DOUBLE_PRECISION__;__USEOWN__;__MPI__
+Using Intel compiler: /panfs/roc/intel/x86_64/2016/parallel_studio_xe_msi/compilers_and_libraries_2016.3.210/linux/bin/intel64/ifort
+
+ run_num: 1    
+ suffix: a
+ L_movie_xyz:  F
+ L_movie_pdb:  F
+
+***** PROGRAM  =  THE MAGIC BLACK BOX *****
+NPT Gibbs ensemble
+Using periodic boundaries in x y z
+3-dimensional periodic box
+Particle coordinates are folded into central box
+Additional center-of-mass cutoff on computed rcmu
+CBMC simultaneously grows all beads conected to the same bead
+   with bond lengths/angles generated from Gaussian distribution
+Program will call explct() for explicit-hydrogen models
+Dual Cutoff Configurational-bias Monte Carlo
+Coulombic interactions will NOT be considered during CBMC growth (added only in the final acceptance test)
+Coulombic inter- and intra-molecular interactions will be calculated
+   using Ewald-sum techniques
+   with additional tail corrections
+Tabulated potential enabled for rigid framework zeolites/MOFs
+Lorentz-Berthelot combining rules apply
+ L_spline:  F
+ L_linear:  F
+*******************************************
+
+NAMELIST MC_SHARED
+------------------------------------------
+Random number seed: 1
+number of boxes in the system: 2
+number of molecule types: 2
+number of chains: 50
+number of cycles: 50000
+the code will try to run for 18000 seconds
+ iratio: 500
+minimum cutoff (rmin):   1.000 [Ang]
+ softcut:   100.000000    
+Write checkpoint file every 6000 seconds, and keep the last 1 copies
+ linit:  F
+ lreadq:  F
+
+NAMELIST ANALYSIS
+------------------------------------------
+ iprint: 50001
+ imv: 1000000
+ iblock: 1000
+ iratp: 500
+ idiele: 10000000
+ iheatcapacity: 1000000000
+ ianalyze: 1000000
+ nbin: 1
+ lrdf:  F
+ lintra:  F
+ lstretch:  F
+ lgvst:  F
+ lbend:  F
+ lete:  F
+ lrhoz:  F
+ bin_width:  0.200000000    
+ lucall:  F
+
+SECTION SIMULATION_BOX
+------------------------------------------
+
+ READING FRAMEWORK LATTICE FROM FILE:     zeolite.cif                                                                                                                                                                                                                                                     
+ --------------------------------------------------
+ box dimensions       =     28.210    35.684    31.536 Angstrom
+ box angles           =     90.000    90.000    90.000 degrees
+ number of unit cells =     2    2    6
+
+Box 1:   28.210 x   35.684 x   31.536
+   rcut: 14.000 [Ang], kalp:  3.500
+   neighbor list cutoff (rcutnn):  0.000
+   number of dimensions that are isotropic: 0
+   lsolid:  F, lrect:  F, lideal:  F, ltwice:  F
+   temperature:  300.000 [K]
+   external pressure:  0.100000000E-01 [MPa]
+   initial number of chains of each type:   0  0
+   Ghost particles: 0
+   initial number of chains in x, y and z directions: 0 x 0 x 0
+   initial rotational displacement: 0, inimix: 0, zshift:   0.0, dshift:   3.110
+Box 2:  590.000 x  590.000 x  590.000
+   rcut: ****** [Ang], kalp:  3.500
+   neighbor list cutoff (rcutnn):  0.000
+   number of dimensions that are isotropic: 0
+   lsolid:  F, lrect:  F, lideal:  F, ltwice:  F
+   temperature:  300.000 [K]
+   external pressure:  0.100000000E-01 [MPa]
+   initial number of chains of each type:   50  0
+   Ghost particles: 0
+   initial number of chains in x, y and z directions: 4 x 4 x 4
+   initial rotational displacement: 0, inimix: 0, zshift:   0.0, dshift:  20.606
+
+NUMBER OF MOLECULES OF EACH TYPE
+ number of chains of each type:   50  0
+
+SECTION MOLECULE_TYPE
+------------------------------------------
+molecule type:  1 H2        
+   number of units: 3
+   number of units for CBMC growth: 3
+   number of carbons for EH alkane: 3
+   maximum number of units for CBMC: 3
+   maximum number of interior segments for SAFE-CBMC regrowth: 3
+   number of atoms in a ring (if lring=.true.): 3
+   iurot: 0, isolute: 1000000, lelect:  T, lring:  F, lrigid:  F, lbranch:  F, lsetup:  F, lq14scale:  F, qscale: 0.5
+
+   bead 1: bead type 1 [H], charge leader 1
+      bonded to bead 2, type 1, bond length:  0.37050, k/2:   0.00000000    
+      bending interaction through 2 with bead 3, bending type: 1, bending angle:  180.000, k/2:   0.00000000    
+
+   bead 2: bead type 2 [M], charge leader 2
+      bonded to bead 1, type 1, bond length:  0.37050, k/2:   0.00000000    
+      bonded to bead 3, type 1, bond length:  0.37050, k/2:   0.00000000    
+
+   bead 3: bead type 1 [H], charge leader 3
+      bonded to bead 2, type 1, bond length:  0.37050, k/2:   0.00000000    
+      bending interaction through 2 with bead 1, bending type: 1, bending angle:  180.000, k/2:   0.00000000    
+molecule type:  2 CH4       
+   number of units: 1
+   number of units for CBMC growth: 1
+   number of carbons for EH alkane: 1
+   maximum number of units for CBMC: 1
+   maximum number of interior segments for SAFE-CBMC regrowth: 1
+   number of atoms in a ring (if lring=.true.): 1
+   iurot: 0, isolute: 1000000, lelect:  F, lring:  F, lrigid:  F, lbranch:  F, lsetup:  F, lq14scale:  F, qscale: 0.5
+
+   bead 1: bead type 3 [C], charge leader 1
+
+MOLECULAR MASS:       2.01580     16.04300
+
+SPECIAL INTERACTION RULES
+------------------------------------------
+  Total: 0 exclusion rules for intermolecular interactions
+
+  Total: 0 inclusion rules for intramolecular interactions
+
+  Total: 0 special rules for intramolecular 1-5 OH interactions
+
+SECTION UNIFORM_BIASING_POTENTIALS
+------------------------------------------
+Molecule type, biasing potential 1 through nbox [K]: 
+     0.000     0.000
+     0.000     0.000
+
+SECTION SPECIFIC_ATOM_TRANSL
+------------------------------------------
+
+Molecule type: 1
+
+LJ INCLUSION TABLE
+       1   2   3
+   1   F   F   F
+   2   F   F   F
+   3   F   F   F
+
+CHARGE INCLUSION TABLE
+       1   2   3
+   1   F   F   F
+   2   F   F   F
+   3   F   F   F
+
+1-4 LJ SCALING FACTORS
+             1      2      3
+      1  1.000  1.000  1.000
+      2  1.000  1.000  1.000
+      3  1.000  1.000  1.000
+
+1-4 CHARGE SCALING FACTORS
+             1      2      3
+      1  1.000  1.000  1.000
+      2  1.000  1.000  1.000
+      3  1.000  1.000  1.000
+
+Molecule type: 2
+
+LJ INCLUSION TABLE
+       1
+   1   F
+
+CHARGE INCLUSION TABLE
+       1
+   1   F
+
+1-4 LJ SCALING FACTORS
+             1
+      1  1.000
+
+1-4 CHARGE SCALING FACTORS
+             1
+      1  1.000
+
+PAIRWISE LJ AND COULOMB INTERACTIONS
+    i    j         q0(i)         q0(j)     vvdW_1     vvdW_2 ...
+    1    1      0.470000      0.470000   32.240       3.0300    
+    1    2      0.470000     -0.940000   0.0000       0.0000    
+    1    3      0.470000      0.000000   138.15       3.3800    
+    2    1     -0.940000      0.470000   0.0000       0.0000    
+    2    2     -0.940000     -0.940000   0.0000       0.0000    
+    2    3     -0.940000      0.000000   0.0000       0.0000    
+    3    1      0.000000      0.470000   138.15       3.3800    
+    3    2      0.000000     -0.940000   0.0000       0.0000    
+    3    3      0.000000      0.000000   592.00       3.7300    
+
+NAMELIST TRANSFER
+------------------------------------------
+lopt_bias:  F F
+freq_opt_bias: 500
+
+NAMELIST MC_VOLUME
+------------------------------------------
+target volume acceptance ratio (tavol): 0.30
+frequency to adjust maximum volume displacement: 500
+initial maximum volume displacement (rmvol): ********
+pmvol:  0.666000000E-01
+   pmvlmt for box 1:   0.00000000    
+   pmvlmt for box 2:   1.00000000    
+nvolb: 1
+cutoff will be addressed with option:  1
+   box pair 1: between 1 and 2,   pmvolb =   1.00000000    
+
+NAMELIST MC_SWATCH
+------------------------------------------
+pmswat:  -1.00000000    
+   number of swatch pairs (nswaty): 0
+
+NAMELIST MC_SWAP
+------------------------------------------
+pmswap:  0.100000000    
+   swap probability for molecule type 1 (pmswmt):   2.0000
+   swap probability for molecule type 2 (pmswmt):   0.0000
+   number of swap box pairs for molecule type 1: 1
+   pmswapb:   1.00000000    
+   box pair:    1    2
+   number of swap box pairs for molecule type 2: 1
+   pmswapb:   1.00000000    
+   box pair:    1    2
+
+NAMELIST MC_CBMC
+------------------------------------------
+CBMC inner cutoff (rcutin):  5.000 [Ang]
+AVBMC outer cutoff (rbsmax):  3.500 [Ang], inner cutoff (rbsmin):  2.500 [Ang]
+lpresim:  F
+iupdatefix: 5010000
+pmcb:  -1.00000000    
+
+molecule type: nchoi1  nchoi nchoir nchoih nchtor nchbna nchbnb icbdir icbsta first_bead_to_swap
+            1:     32     16     16      1    100   1000   1000      0      0      1
+            2:     32     16     16      1    100   1000   1000      0      0      1
+
+molecule type:    pmcbmt         pmall  avbmc_version    pmbias        pmbsmt       pmbias2         pmfix   lrig
+            1:  -1.00000       0.00000              0   0.00000       0.00000       0.00000       0.00000      F
+            2:  -1.00000       0.00000              0   0.00000       0.00000       0.00000       0.00000      F
+
+NAMELIST MC_FLUCQ
+------------------------------------------
+target fluctuating charge acceptance ratio (taflcq): 0.95
+fluctuating charge temperature:    5.000 [K]
+initial maximum displacement for fluctuating charge moves:  0.100000000    
+pmflcq:   0.00000000    
+   nchoiq for each box:   1  1
+nswapq: 0
+
+molecule type:  lflucq lqtrans   pmfqmt            fqegp
+            1:       F       F   0.5000           0.0000
+            2:       F       F   1.0000           0.0000
+
+NAMELIST MC_EE
+------------------------------------------
+pmexpc:   0.00000000    
+   expanded ens. prob. for molecule type 1 (pmeemt):   0.5000, lexpand:  F
+   expanded ens. prob. for molecule type 2 (pmeemt):   1.0000, lexpand:  F
+pmexpc1:   0.00000000    
+
+NAMELIST MC_SIMPLE
+------------------------------------------
+pm_atom_tra:   0.00000000    
+initial maximum displacement for atom translation:  0.100000000E-01
+target translation acceptance ratio: 0.30
+initial maximum displacement for molecule translation:  0.300000000    
+pmtra:  0.500000000    
+   translation probability for molecule type 1 (pmtrmt):   2.0000
+   translation probability for molecule type 2 (pmtrmt):   0.0000
+target rotation acceptance ratio: 0.30
+initial maximum displacement for molecule rotation:  0.400000000    
+pmrot:   1.00000000    
+   rotational probability for molecule type 1 (pmromt):   2.0000
+   rotational probability for molecule type 2 (pmromt):   0.0000
+
+percentage move probabilities:
+ volume move       :    6.66 %
+ swatch move       :    0.00 %
+ swap move         :    3.34 %
+ CBMC move         :    0.00 %
+ fluct. charge move:    0.00 %
+ expanded ens. move:    0.00 %
+ new EE move       :    0.00 %
+ atom trans. move  :    0.00 %
+ translation move  :   40.00 %
+ rotation move     :   50.00 %
+
+NAMELIST EXTERNAL_FIELD
+------------------------------------------
+Steele 10-4-3 slit pore
+On both sides of the simulation box (z = 0 & z = boxlz)
+Surface material bead type: 190
+Surface atom density:  0.11400 [Ang^-3]
+Surface layer spacing:  3.40000 [Ang]
+a1:  2.46000 [Ang]
+Electric field in z direction:     0.00000000         0.00000000     [V/A]
+
+READING CONFIGURATION FROM RESTART FILE
+------------------------------------------
+new maximum displacements read from restart-file
+   max atom trans. displacement:     0.010000    0.010000    0.010000
+   max volume displacement:   0.1914E+07  0.4015E+07
+
+box      #1
+   molecule type 1
+      max trans. displacement:     0.616506   1.665997   2.800000
+      max rot. displacement:       3.141500   3.141500   3.141500
+      max fluc. q displacement:    0.100000
+   molecule type 2
+      max trans. displacement:     0.300000   0.300000   0.300000
+      max rot. displacement:       0.400000   0.400000   0.400000
+      max fluc. q displacement:    0.100000
+
+box      #2
+   molecule type 1
+      max trans. displacement:   342.423096 342.423096 342.423096
+      max rot. displacement:       3.141500   3.141500   3.141500
+      max fluc. q displacement:    0.100000
+   molecule type 2
+      max trans. displacement:     0.300000   0.300000   0.300000
+      max rot. displacement:       0.400000   0.400000   0.400000
+      max fluc. q displacement:    0.100000
+
+reading new box size from restart-file
+ dimension box 2: a =   342.423096  b =   342.423096  c =   342.423096 rcut =  270.000000
+
+Finished writing simulation box related info
+
+****Ewald Parameters*****
+ibox:      calp  kmaxl  kmaxm  kmaxn         rcut
+   1:     0.229      7      9      8      14.0000
+   2:     0.019      7      7      7     171.2115
+
+ Tabulated framework potential: 
+ --------------------------------------------------
+ number of O:1152    number of Si:576
+ number of framework atom types   =          2
+ number of framework atoms        =       1728
+ number of atoms in the unit cell =         72
+ framework mass                   =  0.574680904E-19 grams
+ framework volume                 =      31745.57690 Angst**3
+ one adsorbed molecule in sim box =  0.288949730E-01 mol/kg
+ unit-cell size: 14.1050 x 17.8420 x  5.2560
+   x-dir       :    70  size:  0.2015
+   y-dir       :    89  size:  0.2005
+   z-dir       :    26  size:  0.2022
+
+ read in tabulated potential:
+lewald[T] ltailcZeo[F] lshift[F] AddTailc[T] rcut[  14.0    ]
+ 
+ sumup control
+ number of chains           0
+number of chains of type    1 H2               0
+number of chains of type    2 CH4              0
+ inter lj energy   0.000000000000000E+000
+ intra lj energy   0.000000000000000E+000
+ Tail correction   0.000000000000000E+000
+ bond vibration    0.000000000000000E+000
+ bond bending      0.000000000000000E+000
+ torsional         0.000000000000000E+000
+ external          0.000000000000000E+000
+ coulombic energy  0.000000000000000E+000
+ fluc Q energy     0.000000000000000E+000
+ well energy       0.000000000000000E+000
+ total energy      0.000000000000000E+000
+ 
+ box             1  initial v   =   0.000000000000000E+000
+ surf. tension :   box 1 =       0.00000
+ pressure check:   box 1 =          0.00
+ compress factor:  box 1 =           NaN
+ 
+ sumup control
+ number of chains          50
+number of chains of type    1 H2              50
+number of chains of type    2 CH4              0
+ inter lj energy  -4.916247524929531E-002
+ intra lj energy   0.000000000000000E+000
+ Tail correction  -2.593111006703998E-006
+ bond vibration    0.000000000000000E+000
+ bond bending      0.000000000000000E+000
+ torsional         0.000000000000000E+000
+ external          0.000000000000000E+000
+ coulombic energy  0.692023907554156     
+ fluc Q energy     0.000000000000000E+000
+ well energy       0.000000000000000E+000
+ total energy      0.642861432304861     
+ 
+ box             2  initial v   =   0.642861432304861     
+ surf. tension :   box 2 =       0.00000
+ pressure check:   box 2 =          5.16
+ compress factor:  box 2 =       0.99999
+ 
+ +++++ start of markov chain +++++
+ 
+ Cycle   Total   Energy    Boxlength    Pressure     Compress    Molecules
+ Box            1
+ Type  1 bn      2.      1.      0.      1.      0.      1.
+         bs      1.      1.      0.      1.      0.      1.
+ max.displ.       1.0275      5.5533      2.8000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3315.   3359.   3371.   4199.   4102.   4148.
+         bs   3315.   3359.   3370.   4199.   4101.   4148.
+ max.displ.     261.6251    261.6251    261.6251      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1674.0   bs =  1219.0   max.displ. = 0.17908E+07
+ Box            1
+ Type  1 bn      2.      3.      1.      4.      2.      3.
+         bs      2.      0.      1.      4.      1.      3.
+ max.displ.       3.4250      0.5553      9.3333      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3316.   3328.   3365.   4085.   4143.   4197.
+         bs   3314.   3327.   3365.   4085.   4143.   4197.
+ max.displ.     279.3671    279.3671    279.3671      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1674.0   bs =  1481.0   max.displ. = 0.21803E+07
+ Box            1
+ Type  1 bn      0.      2.      2.      2.      3.      0.
+         bs      0.      2.      2.      2.      3.      0.
+ max.displ.       3.4250      1.8511     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3423.   3375.   3230.   4103.   4051.   4233.
+         bs   3420.   3375.   3230.   4103.   4051.   4233.
+ max.displ.     311.1688    311.1688    311.1688      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1690.0   bs =  1424.0   max.displ. = 0.30129E+07
+ Box            1
+ Type  1 bn      0.      1.      2.      1.      0.      0.
+         bs      0.      0.      2.      1.      0.      0.
+ max.displ.       3.4250      0.1851     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3414.   3332.   3299.   4093.   4201.   4172.
+         bs   3414.   3331.   3297.   4093.   4201.   4172.
+ max.displ.     292.1729    292.1729    292.1729      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1687.0   bs =  1338.0   max.displ. = 0.24941E+07
+ Box            1
+ Type  1 bn      1.      0.      3.      0.      3.      0.
+         bs      0.      0.      2.      0.      3.      0.
+ max.displ.       0.3425      0.1851     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3307.   3303.   3342.   4167.   4277.   4100.
+         bs   3306.   3301.   3339.   4167.   4277.   4100.
+ max.displ.     280.3493    280.3493    280.3493      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1693.0   bs =  1410.0   max.displ. = 0.22034E+07
+ Box            1
+ Type  1 bn      2.      3.      0.      2.      0.      2.
+         bs      2.      3.      0.      2.      0.      2.
+ max.displ.       1.1417      0.6170     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3308.   3343.   3273.   4216.   4159.   4178.
+         bs   3307.   3342.   3270.   4215.   4159.   4178.
+ max.displ.     281.3264    281.3264    281.3264      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1684.0   bs =  1407.0   max.displ. = 0.22265E+07
+ Box            1
+ Type  1 bn      0.      1.      2.      1.      2.      2.
+         bs      0.      1.      2.      1.      2.      2.
+ max.displ.       1.1417      2.0568     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3290.   3324.   3424.   4224.   4098.   4171.
+         bs   3287.   3321.   3423.   4224.   4098.   4171.
+ max.displ.     276.6298    276.6298    276.6298      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1654.0   bs =  1409.0   max.displ. = 0.21169E+07
+ Box            1
+ Type  1 bn      2.      1.      3.      3.      5.      3.
+         bs      1.      1.      1.      1.      4.      2.
+ max.displ.       1.9028      6.8560     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3226.   3410.   3283.   4260.   4055.   4211.
+         bs   3222.   3407.   3281.   4260.   4055.   4211.
+ max.displ.     255.4699    255.4699    255.4699      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1723.0   bs =  1456.0   max.displ. = 0.16673E+07
+ Box            1
+ Type  1 bn      0.      0.      2.      2.      5.      1.
+         bs      0.      0.      2.      2.      5.      1.
+ max.displ.       1.9028      6.8560     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3240.   3359.   3401.   4048.   4193.   4149.
+         bs   3240.   3359.   3400.   4048.   4193.   4149.
+ max.displ.     278.3816    278.3816    278.3816      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1731.0   bs =  1502.0   max.displ. = 0.21574E+07
+ Box            1
+ Type  1 bn      0.      0.      2.      1.      1.      0.
+         bs      0.      0.      2.      1.      1.      0.
+ max.displ.       1.9028      6.8560     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3296.   3321.   3372.   4217.   4192.   4148.
+         bs   3294.   3320.   3371.   4217.   4192.   4148.
+ max.displ.     279.2955    279.2955    279.2955      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1587.0   bs =  1346.0   max.displ. = 0.21787E+07
+ Box            1
+ Type  1 bn      2.      2.      3.      0.      5.      2.
+         bs      2.      0.      1.      0.      4.      2.
+ max.displ.       6.3427      0.6856     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3430.   3439.   3369.   4114.   4119.   4023.
+         bs   3428.   3437.   3367.   4114.   4119.   4023.
+ max.displ.     293.2836    293.2836    293.2836      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1648.0   bs =  1428.0   max.displ. = 0.25227E+07
+ Box            1
+ Type  1 bn      1.      6.      4.      4.      1.      6.
+         bs      0.      5.      2.      3.      1.      6.
+ max.displ.       0.6343      1.9044     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3225.   3386.   3341.   4101.   4220.   4195.
+         bs   3223.   3386.   3340.   4101.   4220.   4195.
+ max.displ.     277.6295    277.6295    277.6295      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1699.0   bs =  1442.0   max.displ. = 0.21399E+07
+ Box            1
+ Type  1 bn      0.      2.      2.      0.      1.      2.
+         bs      0.      1.      0.      0.      1.      2.
+ max.displ.       0.6343      3.1741      2.8000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3269.   3310.   3286.   4220.   4219.   4194.
+         bs   3269.   3309.   3286.   4220.   4219.   4194.
+ max.displ.     274.0957    274.0957    274.0957      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1630.0   bs =  1384.0   max.displ. = 0.20592E+07
+ Box            1
+ Type  1 bn      1.      4.      7.      1.      1.      4.
+         bs      1.      3.      5.      0.      1.      3.
+ max.displ.       2.1142      7.9351      6.6667      0.3142      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3225.   3352.   3320.   4227.   4160.   4167.
+         bs   3225.   3352.   3320.   4227.   4160.   4167.
+ max.displ.     272.8129    272.8129    272.8129      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1710.0   bs =  1504.0   max.displ. = 0.20305E+07
+ Box            1
+ Type  1 bn      0.      2.      0.      0.      2.      1.
+         bs      0.      1.      0.      0.      1.      0.
+ max.displ.       2.1142     13.2252      6.6667      0.3142      3.1415      0.3142
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3305.   3384.   3387.   4234.   4143.   4031.
+         bs   3305.   3383.   3386.   4234.   4143.   4031.
+ max.displ.     285.6250    285.6250    285.6250      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1712.0   bs =  1496.0   max.displ. = 0.23302E+07
+ Box            1
+ Type  1 bn      1.      1.      2.      1.      3.      3.
+         bs      1.      1.      2.      1.      3.      3.
+ max.displ.       7.0474     28.0000     22.2222      1.0472      3.1415      1.0472
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3332.   3405.   3358.   4193.   4121.   4137.
+         bs   3332.   3404.   3355.   4193.   4121.   4137.
+ max.displ.     267.6518    267.6518    267.6518      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1637.0   bs =  1392.0   max.displ. = 0.19174E+07
+ Box            1
+ Type  1 bn      1.      3.      4.      0.      4.      2.
+         bs      0.      1.      3.      0.      3.      2.
+ max.displ.       0.7047     28.0000     28.0000      1.0472      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3231.   3399.   3294.   4208.   4106.   4223.
+         bs   3231.   3399.   3292.   4208.   4106.   4223.
+ max.displ.     297.6153    297.6153    297.6153      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1660.0   bs =  1446.0   max.displ. = 0.26361E+07
+ Box            1
+ Type  1 bn      0.      1.      2.      3.      2.      3.
+         bs      0.      1.      2.      3.      2.      3.
+ max.displ.       0.7047     28.0000     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3390.   3434.   3196.   4228.   4140.   4168.
+         bs   3389.   3434.   3196.   4228.   4139.   4168.
+ max.displ.     267.7533    267.7533    267.7533      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1625.0   bs =  1299.0   max.displ. = 0.19196E+07
+ Box            1
+ Type  1 bn      0.      2.      1.      3.      2.      1.
+         bs      0.      0.      0.      2.      2.      1.
+ max.displ.       0.7047      2.8000      2.8000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3360.   3323.   3326.   4109.   4180.   4243.
+         bs   3360.   3322.   3326.   4109.   4180.   4243.
+ max.displ.     277.9741    277.9741    277.9741      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1652.0   bs =  1399.0   max.displ. = 0.21479E+07
+ Box            1
+ Type  1 bn      2.      2.      3.      4.      2.      1.
+         bs      1.      2.      3.      4.      1.      1.
+ max.displ.       1.1746      9.3333      9.3333      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3390.   3302.   3338.   4173.   4136.   4192.
+         bs   3389.   3302.   3337.   4173.   4136.   4192.
+ max.displ.     283.6891    283.6891    283.6891      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1632.0   bs =  1391.0   max.displ. = 0.22831E+07
+ Box            1
+ Type  1 bn      2.      3.      3.      3.      0.      6.
+         bs      1.      0.      3.      1.      0.      6.
+ max.displ.       1.9576      0.9333     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3298.   3338.   3344.   4187.   4152.   4171.
+         bs   3298.   3337.   3343.   4187.   4152.   4171.
+ max.displ.     276.0790    276.0790    276.0790      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1668.0   bs =  1427.0   max.displ. = 0.21043E+07
+ Box            1
+ Type  1 bn      1.      2.      0.      0.      1.      1.
+         bs      0.      1.      0.      0.      1.      1.
+ max.displ.       0.1958      1.5556     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3307.   3414.   3389.   4136.   4111.   4090.
+         bs   3305.   3413.   3387.   4136.   4110.   4090.
+ max.displ.     309.6358    309.6358    309.6358      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1675.0   bs =  1439.0   max.displ. = 0.29686E+07
+ Box            1
+ Type  1 bn      3.      2.      3.      4.      0.      2.
+         bs      3.      0.      3.      3.      0.      2.
+ max.displ.       0.6525      0.1556     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3250.   3415.   3328.   4175.   4176.   4162.
+         bs   3247.   3414.   3327.   4175.   4176.   4162.
+ max.displ.     279.6000    279.6000    279.6000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1693.0   bs =  1366.0   max.displ. = 0.21858E+07
+ Box            1
+ Type  1 bn      2.      1.      5.      2.      1.      1.
+         bs      2.      1.      4.      2.      1.      1.
+ max.displ.       2.1751      0.5185     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3389.   3455.   3343.   4218.   4084.   4075.
+         bs   3389.   3454.   3342.   4218.   4084.   4075.
+ max.displ.     270.3070    270.3070    270.3070      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1610.0   bs =  1373.0   max.displ. = 0.19750E+07
+ Box            1
+ Type  1 bn      1.      2.      1.      3.      0.      3.
+         bs      0.      2.      1.      3.      0.      3.
+ max.displ.       0.2175      1.7284     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3300.   3312.   3360.   4096.   4167.   4168.
+         bs   3299.   3312.   3360.   4096.   4167.   4168.
+ max.displ.     257.2967    257.2967    257.2967      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1737.0   bs =  1473.0   max.displ. = 0.17033E+07
+ Box            1
+ Type  1 bn      1.      3.      2.      1.      2.      2.
+         bs      1.      3.      2.      1.      2.      2.
+ max.displ.       0.7250      5.7613     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3309.   3313.   3231.   4161.   4179.   4214.
+         bs   3308.   3311.   3228.   4161.   4178.   4213.
+ max.displ.     279.6349    279.6349    279.6349      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1728.0   bs =  1546.0   max.displ. = 0.21866E+07
+ Box            1
+ Type  1 bn      0.      0.      2.      3.      5.      1.
+         bs      0.      0.      1.      3.      5.      1.
+ max.displ.       0.7250      5.7613     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3352.   3359.   3328.   4100.   4114.   4223.
+         bs   3348.   3359.   3326.   4099.   4113.   4222.
+ max.displ.     283.3721    283.3721    283.3721      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1655.0   bs =  1436.0   max.displ. = 0.22755E+07
+ Box            1
+ Type  1 bn      1.      2.      1.      6.      2.      1.
+         bs      1.      0.      1.      6.      2.      1.
+ max.displ.       2.4168      0.5761     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3322.   3293.   3306.   4090.   4215.   4199.
+         bs   3321.   3292.   3305.   4090.   4215.   4199.
+ max.displ.     265.9471    265.9471    265.9471      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1755.0   bs =  1484.0   max.displ. = 0.18810E+07
+ Box            1
+ Type  1 bn      1.      1.      1.      1.      1.      1.
+         bs      0.      1.      1.      1.      1.      1.
+ max.displ.       0.2417      1.9204     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3249.   3223.   3434.   4130.   4252.   4213.
+         bs   3243.   3223.   3432.   4130.   4252.   4213.
+ max.displ.     283.3232    283.3232    283.3232      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1668.0   bs =  1443.0   max.displ. = 0.22743E+07
+ Box            1
+ Type  1 bn      4.      1.      4.      2.      4.      2.
+         bs      4.      1.      1.      2.      3.      2.
+ max.displ.       0.8056      6.4015     23.3333      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3235.   3367.   3269.   4137.   4221.   4213.
+         bs   3232.   3365.   3269.   4137.   4221.   4213.
+ max.displ.     284.9660    284.9660    284.9660      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1683.0   bs =  1435.0   max.displ. = 0.23141E+07
+ Box            1
+ Type  1 bn      2.      0.      3.      2.      2.      4.
+         bs      1.      0.      3.      2.      2.      4.
+ max.displ.       1.3427      6.4015     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3319.   3329.   3386.   4161.   4140.   4131.
+         bs   3319.   3327.   3386.   4161.   4139.   4131.
+ max.displ.     263.2898    263.2898    263.2898      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1757.0   bs =  1507.0   max.displ. = 0.18252E+07
+ Box            1
+ Type  1 bn      0.      1.      0.      0.      1.      0.
+         bs      0.      0.      0.      0.      1.      0.
+ max.displ.       1.3427      0.6401     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3314.   3368.   3290.   4178.   4252.   4160.
+         bs   3314.   3368.   3290.   4178.   4252.   4160.
+ max.displ.     301.0932    301.0932    301.0932      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1625.0   bs =  1427.0   max.displ. = 0.27296E+07
+ Box            1
+ Type  1 bn      1.      1.      2.      2.      1.      0.
+         bs      1.      1.      2.      2.      1.      0.
+ max.displ.       4.4756      2.1338     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3428.   3263.   3367.   4221.   4093.   4120.
+         bs   3427.   3263.   3366.   4220.   4093.   4119.
+ max.displ.     265.3073    265.3073    265.3073      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1649.0   bs =  1363.0   max.displ. = 0.18674E+07
+ Box            1
+ Type  1 bn      2.      1.      4.      1.      1.      1.
+         bs      1.      0.      3.      1.      1.      1.
+ max.displ.       7.4593      0.2134     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3303.   3349.   3329.   4152.   4165.   4191.
+         bs   3301.   3347.   3329.   4151.   4165.   4191.
+ max.displ.     261.2751    261.2751    261.2751      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1667.0   bs =  1441.0   max.displ. = 0.17836E+07
+ Box            1
+ Type  1 bn      2.      0.      0.      4.      2.      2.
+         bs      1.      0.      0.      3.      2.      2.
+ max.displ.      12.4321      0.2134     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3364.   3423.   3339.   4190.   4215.   4059.
+         bs   3363.   3421.   3339.   4190.   4215.   4059.
+ max.displ.     276.5816    276.5816    276.5816      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1616.0   bs =  1408.0   max.displ. = 0.21158E+07
+ Box            1
+ Type  1 bn      4.      1.      2.      0.      1.      5.
+         bs      0.      1.      2.      0.      1.      5.
+ max.displ.       1.2432      0.7113     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3273.   3301.   3300.   4165.   4214.   4227.
+         bs   3272.   3301.   3300.   4165.   4214.   4227.
+ max.displ.     281.5029    281.5029    281.5029      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1657.0   bs =  1416.0   max.displ. = 0.22307E+07
+ Box            1
+ Type  1 bn      1.      3.      2.      2.      1.      1.
+         bs      1.      2.      2.      2.      1.      1.
+ max.displ.       4.1440      1.5806     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3294.   3383.   3365.   4201.   4080.   4213.
+         bs   3292.   3383.   3365.   4201.   4080.   4213.
+ max.displ.     291.1397    291.1397    291.1397      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1613.0   bs =  1381.0   max.displ. = 0.24678E+07
+ Box            1
+ Type  1 bn      1.      1.      2.      0.      2.      4.
+         bs      1.      1.      1.      0.      1.      4.
+ max.displ.      13.8134      5.2687     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3377.   3401.   3396.   4072.   4175.   4091.
+         bs   3377.   3398.   3396.   4072.   4175.   4091.
+ max.displ.     250.7760    250.7760    250.7760      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1611.0   bs =  1355.0   max.displ. = 0.15771E+07
+ Box            1
+ Type  1 bn      2.      2.      3.      4.      5.      5.
+         bs      0.      2.      3.      4.      5.      4.
+ max.displ.       1.3813     17.5623     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3447.   3274.   3314.   4131.   4209.   4059.
+         bs   3446.   3273.   3314.   4131.   4209.   4059.
+ max.displ.     268.0984    268.0984    268.0984      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1687.0   bs =  1495.0   max.displ. = 0.19270E+07
+ Box            1
+ Type  1 bn      1.      1.      1.      1.      0.      3.
+         bs      1.      0.      1.      1.      0.      2.
+ max.displ.       4.6045      1.7562     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3293.   3359.   3369.   4161.   4131.   4149.
+         bs   3293.   3356.   3367.   4161.   4131.   4149.
+ max.displ.     307.3304    307.3304    307.3304      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1700.0   bs =  1507.0   max.displ. = 0.29028E+07
+ Box            1
+ Type  1 bn      1.      2.      0.      0.      0.      0.
+         bs      1.      1.      0.      0.      0.      0.
+ max.displ.      15.3483      2.9271     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3367.   3278.   3414.   4043.   4206.   4182.
+         bs   3366.   3277.   3413.   4043.   4206.   4182.
+ max.displ.     287.9706    287.9706    287.9706      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1705.0   bs =  1331.0   max.displ. = 0.23881E+07
+ Box            1
+ Type  1 bn      1.      2.      2.      5.      2.      2.
+         bs      0.      1.      2.      4.      2.      2.
+ max.displ.       1.5348      4.8784     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3425.   3405.   3369.   4112.   4223.   4029.
+         bs   3424.   3404.   3368.   4112.   4223.   4029.
+ max.displ.     281.2097    281.2097    281.2097      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1600.0   bs =  1357.0   max.displ. = 0.22238E+07
+ Box            1
+ Type  1 bn      1.      0.      2.      0.      2.      3.
+         bs      1.      0.      1.      0.      2.      3.
+ max.displ.       5.1161      4.8784     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3329.   3257.   3354.   4304.   4106.   4130.
+         bs   3327.   3257.   3354.   4304.   4106.   4130.
+ max.displ.     296.5526    296.5526    296.5526      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1661.0   bs =  1417.0   max.displ. = 0.26080E+07
+ Box            1
+ Type  1 bn      3.      2.      1.      3.      1.      2.
+         bs      1.      2.      1.      3.      1.      2.
+ max.displ.       5.6845     16.2614     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3198.   3425.   3412.   4185.   4216.   4016.
+         bs   3196.   3425.   3412.   4185.   4216.   4015.
+ max.displ.     272.8388    272.8388    272.8388      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1731.0   bs =  1411.0   max.displ. = 0.20310E+07
+ Box            1
+ Type  1 bn      0.      1.      1.      1.      2.      3.
+         bs      0.      1.      0.      1.      1.      3.
+ max.displ.       5.6845     28.0000      2.8000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3372.   3354.   3241.   4178.   4153.   4255.
+         bs   3372.   3352.   3241.   4178.   4153.   4255.
+ max.displ.     284.2790    284.2790    284.2790      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1632.0   bs =  1406.0   max.displ. = 0.22974E+07
+ Box            1
+ Type  1 bn      0.      4.      0.      2.      0.      1.
+         bs      0.      2.      0.      2.      0.      1.
+ max.displ.       5.6845     28.0000      2.8000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3382.   3362.   3433.   4172.   4097.   4135.
+         bs   3381.   3362.   3432.   4172.   4097.   4135.
+ max.displ.     280.7800    280.7800    280.7800      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1649.0   bs =  1420.0   max.displ. = 0.22136E+07
+ Box            1
+ Type  1 bn      0.      0.      1.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       5.6845     28.0000      0.2800      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3336.   3266.   3281.   4189.   4250.   4144.
+         bs   3335.   3265.   3278.   4188.   4250.   4144.
+ max.displ.     294.7475    294.7475    294.7475      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1672.0   bs =  1442.0   max.displ. = 0.25607E+07
+ Box            1
+ Type  1 bn      3.      0.      3.      2.      1.      1.
+         bs      1.      0.      3.      2.      1.      1.
+ max.displ.       6.3162     28.0000      0.9333      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3314.   3336.   3321.   4101.   4234.   4163.
+         bs   3311.   3336.   3321.   4101.   4234.   4163.
+ max.displ.     279.9208    279.9208    279.9208      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1711.0   bs =  1422.0   max.displ. = 0.21933E+07
+ Box            1
+ Type  1 bn      3.      3.      4.      5.      1.      3.
+         bs      1.      0.      4.      4.      1.      2.
+ max.displ.       7.0180      2.8000      3.1111      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3363.   3323.   3337.   4035.   4137.   4253.
+         bs   3362.   3323.   3336.   4035.   4137.   4253.
+ max.displ.     257.3997    257.3997    257.3997      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1688.0   bs =  1446.0   max.displ. = 0.17054E+07
+ Box            1
+ Type  1 bn      4.      1.      1.      2.      3.      0.
+         bs      1.      1.      1.      2.      3.      0.
+ max.displ.       5.8483      9.3333     10.3704      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3313.   3364.   3389.   4122.   4164.   4169.
+         bs   3309.   3362.   3388.   4122.   4163.   4169.
+ max.displ.     287.3945    287.3945    287.3945      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1638.0   bs =  1443.0   max.displ. = 0.23738E+07
+ Box            1
+ Type  1 bn      2.      5.      2.      5.      3.      1.
+         bs      0.      0.      1.      5.      3.      1.
+ max.displ.       0.5848      0.9333     17.2840      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3247.   3411.   3401.   4088.   4096.   4204.
+         bs   3247.   3410.   3401.   4088.   4096.   4204.
+ max.displ.     273.3976    273.3976    273.3976      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1674.0   bs =  1426.0   max.displ. = 0.20435E+07
+ Box            1
+ Type  1 bn      3.      4.      3.      3.      4.      7.
+         bs      3.      3.      2.      3.      4.      7.
+ max.displ.       1.9494      2.3333     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3376.   3379.   3221.   4129.   4253.   4130.
+         bs   3376.   3378.   3220.   4129.   4253.   4130.
+ max.displ.     260.9093    260.9093    260.9093      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1641.0   bs =  1417.0   max.displ. = 0.17761E+07
+ Box            1
+ Type  1 bn      2.      1.      2.      3.      0.      1.
+         bs      2.      1.      2.      3.      0.      1.
+ max.displ.       6.4981      7.7778     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3399.   3385.   3268.   4095.   4265.   4149.
+         bs   3399.   3384.   3267.   4094.   4265.   4147.
+ max.displ.     296.9150    296.9150    296.9150      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1603.0   bs =  1412.0   max.displ. = 0.26176E+07
+ Box            1
+ Type  1 bn      2.      2.      3.      1.      1.      2.
+         bs      1.      0.      2.      1.      1.      2.
+ max.displ.      10.8302      0.7778     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3373.   3363.   3333.   4206.   4069.   4153.
+         bs   3371.   3363.   3330.   4206.   4069.   4153.
+ max.displ.     277.2667    277.2667    277.2667      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1672.0   bs =  1373.0   max.displ. = 0.21315E+07
+ Box            1
+ Type  1 bn      1.      2.      0.      2.      1.      3.
+         bs      0.      2.      0.      2.      1.      3.
+ max.displ.       1.0830      2.5926     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3327.   3299.   3269.   4138.   4292.   4160.
+         bs   3323.   3298.   3267.   4138.   4292.   4160.
+ max.displ.     278.3630    278.3630    278.3630      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1655.0   bs =  1388.0   max.displ. = 0.21569E+07
+ Box            1
+ Type  1 bn      3.      1.      3.      3.      2.      2.
+         bs      3.      0.      3.      3.      1.      2.
+ max.displ.       3.6101      0.2593     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3353.   3307.   3372.   4103.   4167.   4193.
+         bs   3353.   3304.   3369.   4102.   4167.   4193.
+ max.displ.     242.5823    242.5823    242.5823      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1711.0   bs =  1484.0   max.displ. = 0.14275E+07
+ Box            1
+ Type  1 bn      0.      2.      1.      1.      0.      4.
+         bs      0.      2.      1.      1.      0.      3.
+ max.displ.       3.6101      0.8642     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3317.   3349.   3302.   4133.   4244.   4176.
+         bs   3316.   3348.   3302.   4133.   4244.   4176.
+ max.displ.     273.5502    273.5502    273.5502      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1650.0   bs =  1527.0   max.displ. = 0.20470E+07
+ Box            1
+ Type  1 bn      6.      4.      9.      7.      6.      3.
+         bs      1.      4.      4.      7.      5.      3.
+ max.displ.       2.0056      2.8807     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3372.   3258.   3268.   4182.   4176.   4201.
+         bs   3371.   3258.   3265.   4182.   4176.   4201.
+ max.displ.     269.1782    269.1782    269.1782      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1706.0   bs =  1458.0   max.displ. = 0.19504E+07
+ Box            1
+ Type  1 bn      1.      3.      3.      2.      0.      2.
+         bs      1.      1.      2.      2.      0.      1.
+ max.displ.       6.6853      3.2007     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3384.   3304.   3289.   4205.   4200.   4104.
+         bs   3383.   3304.   3288.   4205.   4200.   4104.
+ max.displ.     275.9452    275.9452    275.9452      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1668.0   bs =  1440.0   max.displ. = 0.21012E+07
+ Box            1
+ Type  1 bn      2.      0.      0.      1.      1.      0.
+         bs      0.      0.      0.      1.      1.      0.
+ max.displ.       0.6685      3.2007     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3406.   3294.   3274.   4115.   4228.   4143.
+         bs   3406.   3294.   3273.   4115.   4228.   4142.
+ max.displ.     278.9212    278.9212    278.9212      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1714.0   bs =  1487.0   max.displ. = 0.21699E+07
+ Box            1
+ Type  1 bn      4.      1.      2.      1.      4.      2.
+         bs      2.      0.      1.      1.      4.      2.
+ max.displ.       1.1142      0.3201     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3381.   3386.   3343.   4203.   4101.   4074.
+         bs   3381.   3382.   3342.   4203.   4101.   4074.
+ max.displ.     268.6279    268.6279    268.6279      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1689.0   bs =  1421.0   max.displ. = 0.19384E+07
+ Box            1
+ Type  1 bn      4.      1.      3.      0.      2.      1.
+         bs      2.      1.      2.      0.      2.      0.
+ max.displ.       1.8570      1.0669     28.0000      3.1415      3.1415      0.3142
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3348.   3352.   3399.   4098.   4126.   4229.
+         bs   3347.   3351.   3396.   4098.   4126.   4229.
+ max.displ.     278.8186    278.8186    278.8186      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1625.0   bs =  1427.0   max.displ. = 0.21675E+07
+ Box            1
+ Type  1 bn      1.      3.      1.      5.      4.      5.
+         bs      0.      2.      0.      5.      4.      5.
+ max.displ.       0.1857      2.3709      2.8000      3.1415      3.1415      1.0472
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3242.   3410.   3340.   4150.   4134.   4212.
+         bs   3239.   3405.   3340.   4150.   4134.   4212.
+ max.displ.     284.0138    284.0138    284.0138      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1648.0   bs =  1384.0   max.displ. = 0.22910E+07
+ Box            1
+ Type  1 bn      1.      2.      1.      1.      1.      1.
+         bs      1.      2.      1.      1.      1.      1.
+ max.displ.       0.6190      7.9030      9.3333      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3260.   3393.   3259.   4211.   4200.   4180.
+         bs   3259.   3389.   3259.   4211.   4200.   4180.
+ max.displ.     297.2192    297.2192    297.2192      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1638.0   bs =  1381.0   max.displ. = 0.26256E+07
+ Box            1
+ Type  1 bn      0.      0.      0.      1.      3.      1.
+         bs      0.      0.      0.      0.      3.      1.
+ max.displ.       0.6190      7.9030      9.3333      0.3142      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3345.   3387.   3298.   4212.   4072.   4242.
+         bs   3340.   3384.   3298.   4211.   4072.   4242.
+ max.displ.     256.9512    256.9512    256.9512      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1626.0   bs =  1359.0   max.displ. = 0.16965E+07
+ Box            1
+ Type  1 bn      0.      0.      0.      1.      0.      1.
+         bs      0.      0.      0.      1.      0.      1.
+ max.displ.       0.6190      7.9030      9.3333      1.0472      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3355.   3301.   3274.   4185.   4190.   4168.
+         bs   3353.   3299.   3273.   4185.   4190.   4168.
+ max.displ.     272.4873    272.4873    272.4873      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1664.0   bs =  1464.0   max.displ. = 0.20232E+07
+ Box            1
+ Type  1 bn      0.      1.      2.      2.      2.      0.
+         bs      0.      0.      2.      2.      1.      0.
+ max.displ.       0.6190      0.7903     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3402.   3366.   3319.   4163.   4122.   4105.
+         bs   3401.   3366.   3318.   4163.   4121.   4105.
+ max.displ.     265.5478    265.5478    265.5478      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1736.0   bs =  1505.0   max.displ. = 0.18725E+07
+ Box            1
+ Type  1 bn      0.      0.      0.      0.      0.      1.
+         bs      0.      0.      0.      0.      0.      1.
+ max.displ.       0.6190      0.7903     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3287.   3367.   3283.   4234.   4082.   4177.
+         bs   3286.   3363.   3282.   4234.   4082.   4177.
+ max.displ.     251.4923    251.4923    251.4923      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1714.0   bs =  1506.0   max.displ. = 0.15906E+07
+ Box            1
+ Type  1 bn      2.      1.      3.      1.      2.      3.
+         bs      0.      1.      3.      0.      1.      3.
+ max.displ.       0.0619      2.6343     28.0000      0.3142      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3274.   3338.   3369.   4211.   4177.   4117.
+         bs   3271.   3336.   3368.   4211.   4177.   4117.
+ max.displ.     278.4933    278.4933    278.4933      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1679.0   bs =  1509.0   max.displ. = 0.21600E+07
+ Box            1
+ Type  1 bn      1.      2.      1.      1.      2.      2.
+         bs      1.      1.      0.      1.      2.      2.
+ max.displ.       0.2063      4.3906      2.8000      1.0472      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3347.   3279.   3422.   4170.   4130.   4110.
+         bs   3346.   3278.   3422.   4170.   4130.   4110.
+ max.displ.     267.1969    267.1969    267.1969      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1663.0   bs =  1402.0   max.displ. = 0.19076E+07
+ Box            1
+ Type  1 bn      3.      3.      3.      0.      4.      1.
+         bs      3.      1.      3.      0.      4.      1.
+ max.displ.       0.6878      4.8784      9.3333      1.0472      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3276.   3426.   3294.   4185.   4091.   4179.
+         bs   3276.   3425.   3292.   4185.   4091.   4179.
+ max.displ.     285.6294    285.6294    285.6294      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1672.0   bs =  1478.0   max.displ. = 0.23303E+07
+ Box            1
+ Type  1 bn      5.      0.      2.      1.      2.      2.
+         bs      4.      0.      2.      1.      2.      2.
+ max.displ.       1.8341      4.8784     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3376.   3291.   3367.   4064.   4198.   4221.
+         bs   3376.   3290.   3366.   4064.   4198.   4221.
+ max.displ.     296.8967    296.8967    296.8967      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1620.0   bs =  1360.0   max.displ. = 0.26171E+07
+ Box            1
+ Type  1 bn      2.      2.      3.      4.      3.      3.
+         bs      2.      0.      0.      4.      3.      3.
+ max.displ.       6.1137      0.4878      2.8000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3393.   3370.   3369.   4078.   4187.   4109.
+         bs   3392.   3370.   3369.   4078.   4186.   4109.
+ max.displ.     272.7985    272.7985    272.7985      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1644.0   bs =  1353.0   max.displ. = 0.20301E+07
+ Box            1
+ Type  1 bn      1.      2.      0.      1.      1.      3.
+         bs      0.      2.      0.      1.      1.      3.
+ max.displ.       0.6114      1.6261      2.8000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3336.   3271.   3323.   4187.   4292.   4123.
+         bs   3336.   3271.   3322.   4187.   4292.   4123.
+ max.displ.     258.8196    258.8196    258.8196      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1643.0   bs =  1445.0   max.displ. = 0.17338E+07
+ Box            1
+ Type  1 bn      4.      1.      0.      2.      3.      4.
+         bs      3.      1.      0.      2.      2.      1.
+ max.displ.       1.5284      5.4205      2.8000      3.1415      3.1415      2.6179
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3365.   3316.   3338.   4102.   4253.   4171.
+         bs   3363.   3316.   3338.   4102.   4252.   4171.
+ max.displ.     275.8955    275.8955    275.8955      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1636.0   bs =  1452.0   max.displ. = 0.21001E+07
+ Box            1
+ Type  1 bn      2.      3.      3.      4.      0.      6.
+         bs      2.      1.      2.      4.      0.      6.
+ max.displ.       5.0947      6.0227      6.2222      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3330.   3321.   3297.   4055.   4214.   4192.
+         bs   3330.   3319.   3297.   4055.   4214.   4192.
+ max.displ.     274.3482    274.3482    274.3482      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1733.0   bs =  1465.0   max.displ. = 0.20649E+07
+ Box            1
+ Type  1 bn      2.      2.      2.      3.      0.      0.
+         bs      0.      0.      2.      3.      0.      0.
+ max.displ.       0.5095      0.6023     20.7407      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3394.   3332.   3342.   4106.   4192.   4170.
+         bs   3393.   3330.   3342.   4106.   4192.   4170.
+ max.displ.     278.9254    278.9254    278.9254      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1607.0   bs =  1399.0   max.displ. = 0.21700E+07
+ Box            1
+ Type  1 bn      2.      0.      3.      1.      3.      2.
+         bs      2.      0.      2.      1.      3.      2.
+ max.displ.       1.6982      0.6023     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3347.   3379.   3348.   4063.   4117.   4233.
+         bs   3347.   3377.   3347.   4063.   4117.   4233.
+ max.displ.     281.5315    281.5315    281.5315      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1671.0   bs =  1421.0   max.displ. = 0.22314E+07
+ Box            1
+ Type  1 bn      2.      0.      1.      3.      2.      2.
+         bs      2.      0.      1.      2.      2.      2.
+ max.displ.       5.6608      0.6023     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3394.   3276.   3329.   4114.   4220.   4175.
+         bs   3392.   3273.   3328.   4114.   4220.   4175.
+ max.displ.     274.6922    274.6922    274.6922      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1669.0   bs =  1425.0   max.displ. = 0.20727E+07
+ Box            1
+ Type  1 bn      0.      0.      0.      2.      2.      0.
+         bs      0.      0.      0.      2.      2.      0.
+ max.displ.       5.6608      0.6023     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3342.   3337.   3333.   4229.   4174.   4057.
+         bs   3340.   3337.   3333.   4229.   4174.   4057.
+ max.displ.     307.0859    307.0859    307.0859      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1722.0   bs =  1493.0   max.displ. = 0.28959E+07
+ Box            1
+ Type  1 bn      2.      0.      2.      4.      1.      0.
+         bs      0.      0.      2.      4.      1.      0.
+ max.displ.       0.5661      0.6023     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3238.   3361.   3364.   4099.   4133.   4217.
+         bs   3236.   3360.   3364.   4099.   4133.   4217.
+ max.displ.     252.6773    252.6773    252.6773      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1728.0   bs =  1423.0   max.displ. = 0.16132E+07
+ Box            1
+ Type  1 bn      3.      3.      2.      4.      1.      3.
+         bs      3.      1.      0.      4.      1.      3.
+ max.displ.       1.8869      0.6692      2.8000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3265.   3365.   3369.   4123.   4117.   4236.
+         bs   3262.   3365.   3369.   4123.   4117.   4236.
+ max.displ.     275.5502    275.5502    275.5502      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1684.0   bs =  1511.0   max.displ. = 0.20922E+07
+ Box            1
+ Type  1 bn      2.      5.      6.      7.      7.      4.
+         bs      2.      4.      1.      6.      6.      4.
+ max.displ.       6.2898      1.7845      1.5556      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3399.   3348.   3379.   4143.   4129.   4146.
+         bs   3398.   3347.   3378.   4143.   4129.   4146.
+ max.displ.     269.2322    269.2322    269.2322      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1615.0   bs =  1408.0   max.displ. = 0.19516E+07
+ Box            1
+ Type  1 bn      1.      5.      2.      2.      1.      4.
+         bs      0.      4.      2.      2.      1.      4.
+ max.displ.       0.6290      4.7587      5.1852      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3331.   3355.   3272.   4086.   4147.   4233.
+         bs   3330.   3352.   3271.   4086.   4147.   4232.
+ max.displ.     283.6841    283.6841    283.6841      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1700.0   bs =  1483.0   max.displ. = 0.22830E+07
+ Box            1
+ Type  1 bn      2.      2.      0.      2.      3.      3.
+         bs      2.      0.      0.      2.      1.      2.
+ max.displ.       2.0966      0.4759      5.1852      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3276.   3391.   3366.   4251.   4148.   4188.
+         bs   3275.   3390.   3364.   4251.   4148.   4188.
+ max.displ.     286.0993    286.0993    286.0993      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1585.0   bs =  1328.0   max.displ. = 0.23418E+07
+ Box            1
+ Type  1 bn      4.      3.      3.      1.      1.      2.
+         bs      1.      3.      2.      1.      1.      1.
+ max.displ.       1.7472      1.5862     11.5226      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3339.   3479.   3319.   4083.   4089.   4160.
+         bs   3339.   3479.   3319.   4083.   4089.   4160.
+ max.displ.     267.4465    267.4465    267.4465      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1630.0   bs =  1384.0   max.displ. = 0.19130E+07
+ Box            1
+ Type  1 bn      6.      2.      0.      2.      1.      2.
+         bs      1.      2.      0.      2.      1.      1.
+ max.displ.       0.9706      5.2875     11.5226      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3381.   3333.   3271.   4072.   4209.   4185.
+         bs   3380.   3333.   3270.   4072.   4209.   4185.
+ max.displ.     261.1662    261.1662    261.1662      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1682.0   bs =  1483.0   max.displ. = 0.17814E+07
+ Box            1
+ Type  1 bn      2.      0.      2.      1.      1.      1.
+         bs      1.      0.      1.      1.      1.      1.
+ max.displ.       1.6177      5.2875     19.2044      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3362.   3326.   3276.   4065.   4242.   4126.
+         bs   3362.   3325.   3274.   4065.   4242.   4126.
+ max.displ.     276.0898    276.0898    276.0898      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1705.0   bs =  1516.0   max.displ. = 0.21045E+07
+ Box            1
+ Type  1 bn      2.      0.      0.      1.      2.      0.
+         bs      2.      0.      0.      1.      2.      0.
+ max.displ.       5.3925      5.2875     19.2044      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3354.   3419.   3342.   4183.   4082.   4133.
+         bs   3351.   3419.   3341.   4183.   4082.   4132.
+ max.displ.     287.2999    287.2999    287.2999      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1631.0   bs =  1420.0   max.displ. = 0.23714E+07
+ Box            1
+ Type  1 bn      1.      2.      1.      1.      4.      1.
+         bs      0.      1.      1.      1.      4.      1.
+ max.displ.       0.5392      8.8124     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3428.   3247.   3269.   4205.   4235.   4102.
+         bs   3428.   3247.   3269.   4205.   4235.   4102.
+ max.displ.     280.0129    280.0129    280.0129      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1676.0   bs =  1404.0   max.displ. = 0.21955E+07
+ Box            1
+ Type  1 bn      3.      0.      5.      1.      5.      5.
+         bs      2.      0.      4.      1.      5.      5.
+ max.displ.       1.1983      8.8124     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3360.   3385.   3182.   4294.   4111.   4211.
+         bs   3360.   3383.   3182.   4293.   4110.   4211.
+ max.displ.     277.0301    277.0301    277.0301      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1613.0   bs =  1342.0   max.displ. = 0.21261E+07
+ Box            1
+ Type  1 bn      3.      6.      6.      3.      4.      1.
+         bs      2.      0.      5.      3.      4.      1.
+ max.displ.       2.6630      0.8812     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3410.   3341.   3294.   4000.   4229.   4198.
+         bs   3410.   3341.   3293.   4000.   4229.   4198.
+ max.displ.     262.1805    262.1805    262.1805      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1662.0   bs =  1393.0   max.displ. = 0.18022E+07
+ Box            1
+ Type  1 bn      2.      0.      0.      1.      2.      0.
+         bs      0.      0.      0.      1.      2.      0.
+ max.displ.       0.2663      0.8812     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3422.   3342.   3291.   4073.   4191.   4155.
+         bs   3421.   3341.   3291.   4073.   4191.   4154.
+ max.displ.     288.9506    288.9506    288.9506      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1681.0   bs =  1474.0   max.displ. = 0.24125E+07
+ Box            1
+ Type  1 bn      0.      2.      1.      2.      4.      3.
+         bs      0.      2.      1.      2.      2.      3.
+ max.displ.       0.2663      2.9375     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3286.   3304.   3251.   4228.   4213.   4170.
+         bs   3283.   3300.   3251.   4228.   4213.   4170.
+ max.displ.     294.2796    294.2796    294.2796      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1695.0   bs =  1423.0   max.displ. = 0.25485E+07
+ Box            1
+ Type  1 bn      3.      3.      4.      4.      0.      0.
+         bs      3.      1.      4.      4.      0.      0.
+ max.displ.       0.8877      3.2639     28.0000      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3392.   3398.   3280.   4085.   4173.   4201.
+         bs   3391.   3396.   3280.   4085.   4173.   4201.
+ max.displ.     236.1965    236.1965    236.1965      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1632.0   bs =  1366.0   max.displ. = 0.13177E+07
+ Box            1
+ Type  1 bn      1.      0.      0.      4.      0.      1.
+         bs      1.      0.      0.      4.      0.      0.
+ max.displ.       2.9588      3.2639     28.0000      3.1415      3.1415      0.3142
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3356.   3342.   3331.   4165.   4079.   4173.
+         bs   3353.   3340.   3329.   4165.   4078.   4173.
+ max.displ.     283.2296    283.2296    283.2296      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1702.0   bs =  1556.0   max.displ. = 0.22720E+07
+ Box            1
+ Type  1 bn      5.      1.      5.      5.      2.      8.
+         bs      2.      1.      5.      5.      0.      8.
+ max.displ.       3.9451     10.8795     28.0000      3.1415      0.3142      1.0472
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3229.   3237.   3366.   4225.   4145.   4212.
+         bs   3227.   3236.   3365.   4225.   4145.   4212.
+ max.displ.     280.4310    280.4310    280.4310      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1742.0   bs =  1497.0   max.displ. = 0.22054E+07
+ Box            1
+ Type  1 bn      1.      2.      2.      1.      3.      3.
+         bs      0.      1.      1.      1.      3.      3.
+ max.displ.       0.3945     18.1326     28.0000      3.1415      1.0472      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3302.   3315.   3325.   4177.   4178.   4219.
+         bs   3302.   3314.   3325.   4177.   4177.   4219.
+ max.displ.     270.9084    270.9084    270.9084      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1620.0   bs =  1374.0   max.displ. = 0.19882E+07
+ Box            1
+ Type  1 bn      0.      4.      1.      1.      1.      1.
+         bs      0.      0.      0.      0.      1.      1.
+ max.displ.       0.3945      1.8133      2.8000      0.3142      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3271.   3327.   3400.   4082.   4284.   4168.
+         bs   3271.   3326.   3399.   4082.   4284.   4168.
+ max.displ.     276.0078    276.0078    276.0078      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1635.0   bs =  1432.0   max.displ. = 0.21026E+07
+ Box            1
+ Type  1 bn      0.      0.      0.      1.      2.      0.
+         bs      0.      0.      0.      1.      1.      0.
+ max.displ.       0.3945      1.8133      2.8000      1.0472      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ Box            2
+ Type  1 bn   3273.   3325.   3265.   4293.   4264.   4143.
+         bs   3273.   3322.   3263.   4292.   4263.   4142.
+ max.displ.     278.4026    278.4026    278.4026      3.1415      3.1415      3.1415
+ Type  2 bn      0.      0.      0.      0.      0.      0.
+         bs      0.      0.      0.      0.      0.      0.
+ max.displ.       0.3000      0.3000      0.3000      0.4000      0.4000      0.4000
+ volume change:  bn =     0.0   bs =     0.0   max.displ. = 0.19135E+07
+ volume change:  bn =  1615.0   bs =  1362.0   max.displ. = 0.21578E+07
+ 
+ +++++ end of markov chain +++++
+ 
+ ### Translations ###
+ 
+molecule typ = 1   H2          in box           1
+ x-dir: attempts =     166.0   ratio = 0.560   max.displ. = 0.3945E+00
+ y-dir: attempts =     168.0   ratio = 0.548   max.displ. = 0.1813E+01
+ z-dir: attempts =     199.0   ratio = 0.729   max.displ. = 0.2800E+01
+ 
+molecule typ = 2   CH4         in box           1
+ x-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.3000E+00
+ y-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.3000E+00
+ z-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.3000E+00
+ 
+molecule typ = 1   H2          in box           2
+ x-dir: attempts =  333136.0   ratio = 1.000   max.displ. = 0.2784E+03
+ y-dir: attempts =  334684.0   ratio = 1.000   max.displ. = 0.2784E+03
+ z-dir: attempts =  332768.0   ratio = 1.000   max.displ. = 0.2784E+03
+ 
+molecule typ = 2   CH4         in box           2
+ x-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.3000E+00
+ y-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.3000E+00
+ z-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.3000E+00
+ 
+ ### Rotations ###
+ 
+molecule typ = 1   H2          in box           1
+ x-dir: attempts =     204.0   ratio = 0.922   max.displ. = 0.1047E+01
+ y-dir: attempts =     191.0   ratio = 0.885   max.displ. = 0.3142E+01
+ z-dir: attempts =     204.0   ratio = 0.922   max.displ. = 0.3142E+01
+ 
+molecule typ = 2   CH4         in box           1
+ x-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.4000E+00
+ y-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.4000E+00
+ z-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.4000E+00
+ 
+molecule typ = 1   H2          in box           2
+ x-dir: attempts =  415268.0   ratio = 1.000   max.displ. = 0.3142E+01
+ y-dir: attempts =  416806.0   ratio = 1.000   max.displ. = 0.3142E+01
+ z-dir: attempts =  416317.0   ratio = 1.000   max.displ. = 0.3142E+01
+ 
+molecule typ = 2   CH4         in box           2
+ x-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.4000E+00
+ y-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.4000E+00
+ z-dir: attempts =       0.0   ratio = 0.000   max.displ. = 0.4000E+00
+ 
+ 
+ ### Volume change       ###
+ attempts =     0.0   ratio = 0.000max.displ. = 0.1914E+07   avg.acc.displ. = 0.0000E+00
+ attempts =166769.0   ratio = 0.855max.displ. = 0.2158E+07   avg.acc.displ. = 0.1014E+07
+
+### Molecule swap       ###
+
+molecule typ = 1   H2        
+between box 1 and 2 into box 1   uattempts = 41566 attempts = 41566   accepted = 960
+ suc.growth % = 99.762   accepted % =  2.310
+between box 1 and 2 into box 2   uattempts = 41554 attempts = 1090   accepted = 960
+ suc.growth % =100.000   accepted % =  2.310
+number of times move in: 0  accepted = 0
+number of times move out: 0  accepted = 0
+molecule typ = 2   CH4       
+between box 1 and 2 into box 1   uattempts = 0 attempts = 0   accepted = 0
+between box 1 and 2 into box 2   uattempts = 0 attempts = 0   accepted = 0
+number of times move in: 0  accepted = 0
+number of times move out: 0  accepted = 0
+
+### Molecule swatch     ###
+
+ 
+ ### Charge Fluctuation  ###
+ 
+ 
+ ### Expanded Ensemble Move  ###
+ 
+
+New Biasing Potential
+
+molecule  1:   0.00000000      0.00000000    
+molecule  2:   0.00000000      0.00000000     
+ 
+ sumup control
+ number of chains           0
+number of chains of type    1 H2               0
+number of chains of type    2 CH4              0
+ inter lj energy   0.000000000000000E+000
+ intra lj energy   0.000000000000000E+000
+ Tail correction   0.000000000000000E+000
+ bond vibration    0.000000000000000E+000
+ bond bending      0.000000000000000E+000
+ torsional         0.000000000000000E+000
+ external          0.000000000000000E+000
+ coulombic energy  0.000000000000000E+000
+ fluc Q energy     0.000000000000000E+000
+ well energy       0.000000000000000E+000
+ total energy      0.000000000000000E+000
+ 
+ sumup control
+ number of chains          50
+number of chains of type    1 H2              50
+number of chains of type    2 CH4              0
+ inter lj energy  -1.500066672456178E-002
+ intra lj energy   0.000000000000000E+000
+ Tail correction  -8.977583615624742E-006
+ bond vibration    0.000000000000000E+000
+ bond bending      0.000000000000000E+000
+ torsional         0.000000000000000E+000
+ external          0.000000000000000E+000
+ coulombic energy  0.829415273227559     
+ fluc Q energy     0.000000000000000E+000
+ well energy       0.000000000000000E+000
+ total energy      0.814414606502997     
+ ### problem with energy ###  box            2
+  Total energy:   0.814414606502997       0.802455478781108       1.195912772188890E-002
+ ### problem  ###
+  Coulomb.en.:   0.829415273227559       0.817456075945434       1.195919728212547E-002
+ 
+ vstart       =            0.0000000000            0.6428614323
+ vend         =            0.0000000000            0.8144146065
+ vbox         =           -0.0000000000            0.8024554788
+ 
+ Averages and fluctuations                                  Box  1       Box  2
+ 
+ pressure                                      [kPa] =         5.22         9.87
+ pressure                         [simulation units] =     0.000378     0.000715
+ surface tension                              [mN/m] =       0.0000      -0.0000
+ compress factor                                     =          NaN      0.99997
+ chem. potential of type   1 H2                  [K] =    -3088.444    -4188.667
+ chem. potential of type   2 CH4                 [K] =        0.000        0.000
+ boxlength                                       [A] =       28.210      275.917
+ boxlength                                       [A] =       35.684      275.917
+ boxlength                                       [A] =       31.536      275.917
+ no. of chains of type     1 H2                      =        0.026       49.974
+ no. of chains of type     2 CH4                     =        0.000        0.000
+ molar volume                             [cm^3/mol] =   737893.307   249776.043
+ specific density                           [g/cm^3] =     0.000003     0.000008
+ number density of type    1 H2         [chain/nm^3] =      0.00082      0.00241
+ number density of type    2 CH4        [chain/nm^3] =      0.00000      0.00000
+ molfraction of type       1 H2                      =    0.1656370    1.0000000
+ molfraction of type       2 CH4                     =    0.0000000    0.0000000
+ mean sete length of type  1 H2                [A^2] =        0.549        0.549
+ mean sete length of type  2 CH4               [A^2] =        0.000        0.000
+ 
+ Total energy [K per system and kJ/mol per chain] =        -13.26          0.60        NaN       0.00
+ Inter LJ     [K per system and kJ/mol per chain] =          0.00         -0.25        NaN      -0.00
+ Tail  LJ     [K per system and kJ/mol per chain] =         -0.00         -0.00        NaN      -0.00
+ Intra LJ     [K per system and kJ/mol per chain] =          0.00          0.00        NaN       0.00
+ Stretch      [K per system and kJ/mol per chain] =          0.00          0.00        NaN       0.00
+ Bond bending [K per system and kJ/mol per chain] =          0.00          0.00        NaN       0.00
+ Torsion      [K per system and kJ/mol per chain] =          0.00          0.00        NaN       0.00
+ Coulomb      [K per system and kJ/mol per chain] =          0.00          0.85        NaN       0.00
+ External pot [K per system and kJ/mol per chain] =        -13.26          0.00        NaN       0.00
+ 3-body Garo  [K per system and kJ/mol per chain] =          0.00          0.00        NaN       0.00
+ Fluc Q       [K per system and kJ/mol per chain] =          0.00          0.00        NaN       0.00
+ 
+ fluctuation in <vtot> =       87.25        9.55
+ 
+ type  box       vinter       vintra         vtor        vbend        vtail
+    1    1      0.00000      0.00000      0.00000      0.00000      0.00000
+    1    2      0.00000      0.00000      0.00000      0.00000      0.00000
+    2    1      0.00000      0.00000      0.00000      0.00000      0.00000
+    2    2      0.00000      0.00000      0.00000      0.00000      0.00000
+ 
+ H_vap      [kJ/mol] btwn box    1 and  2 =         0.2132         0.8500         0.1214
+ H_vap LJ  [kJ/mol] btwn box     1 and  2 =         0.0705         0.2790         0.0399
+ H_vap Coul [kJ/mol] btwn box    1 and  2 =         0.0703         0.2790         0.0399
+ pdV        [kJ/mol] btwn box    1 and  2 =         0.0705         0.2790         0.0399
+ CED [cal/cc]   btwn box         1 and  2 =         0.0022         0.0091         0.0013
+ CED_LJ[cal/cc] btwn box         1 and  2 =         0.0000         0.0000         0.0000
+ CED_Coul[cal/cc] btwn box       1 and  2 =         0.0000         0.0000         0.0000
+ HSP [(cal/cc)^1/2]  btwn box    1 and  2 =         0.0085         0.0325         0.0046
+ HSP_LJ[(cal/cc)^1/2] btwn box   1 and  2 =         0.0001         0.0002         0.0000
+ HSP_Cou[(cal/cc)^1/2] btwn box  1 and  2 =         0.0004         0.0002         0.0000
+ 
+ specific density box  1 =  0.27318E-05  0.99742E-06  0.14249E-06
+ specific density box  2 =  0.80704E-05  0.98814E-07  0.14116E-07
+ system volume    box  1 =  0.31746E+05  0.35138E-06  0.50197E-07
+ system volume    box  2 =  0.21144E+08  0.26565E+06  0.37950E+05
+ pressure         box  1 =   5.2188       21.987       3.1410    
+ pressure         box  2 =   9.8658       1.0492      0.14989    
+ surface tension  box  1 =      0.00000      0.00000      0.00000
+ surface tension  box  2 =     -0.00000      0.00002      0.00000
+ compressibility  box  1 =          NaN          NaN          NaN
+ compressibility  box  2 =      0.99997      0.00010      0.00001
+ 
+ Total energy     box  1 = -0.13260E+02  0.51339E+01  0.73342E+00
+ Inter LJ         box  1 =  0.32497E-03  0.27756E-02  0.39651E-03
+ Tail  LJ         box  1 = -0.64005E-04  0.24202E-04  0.34575E-05
+ Intra LJ         box  1 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Stretch          box  1 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Bond bending     box  1 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Torsion          box  1 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Coulomb          box  1 =  0.99618E-03  0.36655E-03  0.52364E-04
+ External pot     box  1 = -0.13262E+02  0.51344E+01  0.73348E+00
+ 3-body Garo      box  1 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Fluc Q           box  1 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Total energy     box  2 =  0.60014E+00  0.32810E+00  0.46872E-01
+ Inter LJ         box  2 = -0.25041E+00  0.32139E+00  0.45914E-01
+ Tail  LJ         box  2 = -0.99191E-05  0.24353E-06  0.34790E-07
+ Intra LJ         box  2 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Stretch          box  2 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Bond bending     box  2 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Torsion          box  2 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Coulomb          box  2 =  0.85055E+00  0.38239E-01  0.54627E-02
+ External pot     box  2 =  0.00000E+00  0.00000E+00  0.00000E+00
+ 3-body Garo      box  2 =  0.00000E+00  0.00000E+00  0.00000E+00
+ Fluc Q           box  2 =  0.00000E+00  0.00000E+00  0.00000E+00
+ 
+ Enthalpy Inst.[kJ/mol] for box  1 =          NaN          NaN          NaN
+ Enthalpy Ext. [kJ/mol] for box  1 =          NaN          NaN          NaN
+ Enthalpy Inst.[kJ/mol] for box  2 =       2.4944       0.0005       0.0001
+ Enthalpy Ext. [kJ/mol] for box  2 =       2.5849       0.2669       0.0381
+ 
+ 
+ chemical potential  itype  1 box  1 =     -3078.556       70.109       10.016
+ chemical potential  itype  1 box  2 =     -4188.649        4.096        0.585
+ chemical potential  itype  2 box  1 =         0.000        0.000        0.000
+ chemical potential  itype  2 box  2 =         0.000        0.000        0.000
+ mean sete length    itype  1 box  1 =         0.549        0.000        0.000
+ mean sete length    itype  1 box  2 =         0.549        0.000        0.000
+ mean sete length    itype  2 box  1 =         0.000        0.000        0.000
+ mean sete length    itype  2 box  2 =         0.000        0.000        0.000
+ number density      itype  1 box  1 =   0.81613E-03  0.29798E-03  0.42568E-04
+ number density      itype  1 box  2 =   0.24110E-02  0.29520E-04  0.42172E-05
+ number density      itype  2 box  1 =   0.00000E+00  0.00000E+00  0.00000E+00
+ number density      itype  2 box  2 =   0.00000E+00  0.00000E+00  0.00000E+00
+ mole fraction       itype  1 box  1 =     0.1656370    0.0229135    0.0032734
+ mole fraction       itype  1 box  2 =     1.0000000    0.0000000    0.0000000
+ mole fraction       itype  2 box  1 =     0.0000000    0.0000000    0.0000000
+ mole fraction       itype  2 box  2 =     0.0000000    0.0000000    0.0000000
+ Ostwald Coefficient itype  1 between box  1 and  2 =         2.954220        1.079218
+ Free Enrgy of Trans itype  1 between box  1 and  2 [kJ/mol] =       -2.701954        0.911217
+ Ostwald Coefficient itype  2 between box  1 and  2 =              NaN             NaN
+ Free Enrgy of Trans itype  2 between box  1 and  2 [kJ/mol] =             NaN             NaN
+ 
+ 
+ -----block averages ------
+  ------------ box:  1
+ block    energy     density    pressure       Z        surf ten   mol fracs
+   1 -0.1526E+02  0.2917E-05 -0.2682E-26         NaN  0.1315E-29  0.8689E-01  0.0000E+00
+   2 -0.9295E+01  0.1837E-05 -0.5362E-26         NaN  0.2624E-29  0.1078E+00  0.0000E+00
+   3 -0.7787E+01  0.1828E-05 -0.8479E-26         NaN  0.8890E-29  0.1163E+00  0.0000E+00
+   4 -0.9016E+01  0.3665E-05 -0.1462E-25         NaN  0.1935E-28  0.1387E+00  0.0000E+00
+   5 -0.1069E+02  0.2100E-05 -0.1710E-25         NaN  0.1816E-28  0.1325E+00  0.0000E+00
+   6 -0.1540E+02  0.2794E-05 -0.2281E-25         NaN  0.2086E-28  0.1422E+00  0.0000E+00
+   7 -0.1027E+02  0.2347E-05 -0.2347E-25         NaN  0.2202E-28  0.1417E+00  0.0000E+00
+   8 -0.9306E+01  0.1999E-05 -0.2685E-25         NaN  0.1967E-28  0.1416E+00  0.0000E+00
+   9 -0.1439E+02  0.2805E-05 -0.2734E-25         NaN  0.1895E-28  0.1505E+00  0.0000E+00
+  10 -0.9789E+01  0.2052E-05 -0.2975E-25         NaN  0.2087E-28  0.1464E+00  0.0000E+00
+  11 -0.1027E+02  0.2041E-05 -0.2975E-25         NaN  0.2087E-28  0.1482E+00  0.0000E+00
+  12 -0.1563E+02  0.3222E-05 -0.3229E-25         NaN  0.2176E-28  0.1598E+00  0.0000E+00
+  13 -0.1267E+02  0.2592E-05 -0.3482E-25         NaN  0.2265E-28  0.1565E+00  0.0000E+00
+  14 -0.1861E+02  0.3549E-05 -0.3482E-25         NaN  0.2266E-28  0.1663E+00  0.0000E+00
+  15 -0.1313E+02  0.2569E-05 -0.3561E-25         NaN  0.2194E-28  0.1575E+00  0.0000E+00
+  16 -0.8752E+01  0.1700E-05 -0.3727E-25         NaN  0.2215E-28  0.1540E+00  0.0000E+00
+  17 -0.1533E+02  0.2978E-05 -0.3980E-25         NaN  0.2367E-28  0.1652E+00  0.0000E+00
+  18 -0.1158E+02  0.2271E-05 -0.4233E-25         NaN  0.2518E-28  0.1608E+00  0.0000E+00
+  19 -0.9048E+01  0.1655E-05 -0.4609E-25         NaN  0.3639E-28  0.1567E+00  0.0000E+00
+  20 -0.1443E+02  0.2838E-05 -0.5037E-25         NaN  0.4483E-28  0.1674E+00  0.0000E+00
+  21 -0.1328E+02  0.2394E-05 -0.5246E-25         NaN  0.4371E-28  0.1647E+00  0.0000E+00
+  22 -0.1409E+02  0.2583E-05 -0.5621E-25         NaN  0.4634E-28  0.1672E+00  0.0000E+00
+  23 -0.1208E+02  0.2543E-05 -0.5621E-25         NaN  0.4634E-28  0.1678E+00  0.0000E+00
+  24 -0.9786E+01  0.1915E-05 -0.5730E-25         NaN  0.4892E-28  0.1634E+00  0.0000E+00
+  25 -0.1957E+02  0.4570E-05 -0.6134E-25         NaN  0.5671E-28  0.1860E+00  0.0000E+00
+  26 -0.2288E+02  0.4589E-05 -0.6250E-25         NaN  0.5926E-28  0.1874E+00  0.0000E+00
+  27 -0.7611E+01  0.1803E-05 -0.6367E-25         NaN  0.6180E-28  0.1661E+00  0.0000E+00
+  28 -0.1334E+02  0.3079E-05 -0.6484E-25         NaN  0.6390E-28  0.1769E+00  0.0000E+00
+  29 -0.2255E+02  0.4336E-05 -0.6652E-25         NaN  0.6600E-28  0.1852E+00  0.0000E+00
+  30 -0.6737E+01  0.1383E-05 -0.6703E-25         NaN  0.6600E-28  0.1652E+00  0.0000E+00
+  31 -0.1185E+02  0.2537E-05  0.6524E+02         NaN -0.4840E-06  0.1737E+00  0.0000E+00
+  32 -0.1137E+02  0.3271E-05  0.0000E+00         NaN  0.1059E-21  0.1790E+00  0.0000E+00
+  33 -0.4367E+01  0.8414E-06  0.3331E-14         NaN -0.1489E-22  0.1625E+00  0.0000E+00
+  34 -0.9888E+01  0.1824E-05  0.1332E-14         NaN -0.9926E-23  0.1707E+00  0.0000E+00
+  35 -0.1351E+02  0.2434E-05 -0.5551E-14         NaN -0.3309E-23  0.1760E+00  0.0000E+00
+  36 -0.2279E+02  0.4232E-05  0.6524E+02         NaN -0.2558E-06  0.1882E+00  0.0000E+00
+  37 -0.1553E+02  0.3343E-05  0.8882E-14         NaN -0.4963E-22  0.1844E+00  0.0000E+00
+  38 -0.2065E+02  0.4013E-05 -0.9770E-14         NaN  0.7941E-22  0.1908E+00  0.0000E+00
+  39 -0.1273E+02  0.2467E-05 -0.1332E-14         NaN -0.1323E-21  0.1792E+00  0.0000E+00
+  40 -0.8249E+01  0.1603E-05  0.7105E-14         NaN  0.7941E-22  0.1728E+00  0.0000E+00
+  41 -0.2027E+02  0.3659E-05  0.1021E-13         NaN  0.1423E-21  0.1896E+00  0.0000E+00
+  42 -0.1448E+02  0.4555E-05  0.2132E-13         NaN -0.1191E-21  0.1974E+00  0.0000E+00
+  43 -0.1797E+02  0.3579E-05  0.3553E-14         NaN  0.5294E-22  0.1902E+00  0.0000E+00
+  44 -0.9732E+01  0.1843E-05  0.1243E-13         NaN  0.9264E-22  0.1772E+00  0.0000E+00
+  45 -0.9397E+01  0.1759E-05  0.8882E-15         NaN -0.4963E-22  0.1768E+00  0.0000E+00
+  46 -0.3058E+02  0.5462E-05  0.2753E-13         NaN -0.1323E-21  0.2069E+00  0.0000E+00
+  47 -0.9352E+01  0.2128E-05  0.2398E-13         NaN -0.1125E-21  0.1810E+00  0.0000E+00
+  48 -0.9425E+01  0.2286E-05  0.0000E+00         NaN  0.2118E-21  0.1826E+00  0.0000E+00
+  49 -0.2120E+02  0.4232E-05 -0.2043E-13         NaN -0.2647E-22  0.1986E+00  0.0000E+00
+  50 -0.7072E+01  0.1569E-05  0.1305E+03         NaN  0.9681E-05  0.1771E+00  0.0000E+00
+  ------------ box:  2
+ block    energy     density    pressure       Z        surf ten   mol fracs
+   1  0.4817E+00  0.8029E-05  0.1053E+02  0.1000E+01 -0.2627E-05  0.1000E+01  0.0000E+00
+   2  0.4167E+00  0.8140E-05  0.7589E+01  0.1000E+01  0.5181E-06  0.1000E+01  0.0000E+00
+   3  0.2100E+00  0.7898E-05  0.9350E+01  0.1000E+01  0.5671E-06  0.1000E+01  0.0000E+00
+   4  0.4550E+00  0.8164E-05  0.1110E+02  0.1000E+01 -0.6740E-05  0.1000E+01  0.0000E+00
+   5  0.4821E+00  0.8064E-05  0.9552E+01  0.1000E+01  0.3158E-05  0.1000E+01  0.0000E+00
+   6  0.7518E+00  0.8105E-05  0.8944E+01  0.1000E+01  0.2976E-06  0.1000E+01  0.0000E+00
+   7  0.5179E+00  0.8100E-05  0.1013E+02  0.1000E+01 -0.9647E-07  0.1000E+01  0.0000E+00
+   8  0.4091E+00  0.8192E-05  0.9840E+01  0.9996E+00 -0.1366E-03  0.1000E+01  0.0000E+00
+   9  0.6436E+00  0.7947E-05  0.9322E+01  0.1000E+01 -0.1745E-06  0.1000E+01  0.0000E+00
+  10  0.4605E+00  0.8086E-05  0.9356E+01  0.1000E+01 -0.1826E-07  0.1000E+01  0.0000E+00
+  11  0.1283E+01  0.8107E-05  0.8409E+01  0.1000E+01 -0.1727E-06  0.1000E+01  0.0000E+00
+  12  0.8260E+00  0.8165E-05  0.9980E+01  0.1000E+01 -0.9795E-07  0.1000E+01  0.0000E+00
+  13  0.8081E+00  0.8186E-05  0.1081E+02  0.1000E+01  0.1628E-06  0.1000E+01  0.0000E+00
+  14  0.1179E+01  0.8020E-05  0.1006E+02  0.1000E+01  0.1483E-05  0.1000E+01  0.0000E+00
+  15  0.4231E+00  0.8044E-05  0.9028E+01  0.1000E+01  0.7247E-06  0.1000E+01  0.0000E+00
+  16  0.4247E+00  0.8146E-05  0.9467E+01  0.1000E+01  0.3447E-05  0.1000E+01  0.0000E+00
+  17  0.4740E+00  0.8053E-05  0.1135E+02  0.1000E+01  0.5089E-06  0.1000E+01  0.0000E+00
+  18  0.2290E+00  0.8048E-05  0.9536E+01  0.1000E+01  0.4087E-06  0.1000E+01  0.0000E+00
+  19  0.5745E+00  0.8184E-05  0.1076E+02  0.1000E+01 -0.3914E-05  0.1000E+01  0.0000E+00
+  20  0.5277E+00  0.8269E-05  0.8941E+01  0.1000E+01  0.3252E-06  0.1000E+01  0.0000E+00
+  21  0.2828E+00  0.8052E-05  0.8993E+01  0.1000E+01  0.4238E-06  0.1000E+01  0.0000E+00
+  22  0.5847E+00  0.7975E-05  0.9069E+01  0.1000E+01 -0.7522E-06  0.1000E+01  0.0000E+00
+  23  0.3257E+00  0.7802E-05  0.9185E+01  0.1000E+01 -0.2293E-06  0.1000E+01  0.0000E+00
+  24  0.2607E+00  0.7994E-05  0.8765E+01  0.1000E+01 -0.6948E-05  0.1000E+01  0.0000E+00
+  25  0.3167E+00  0.8274E-05  0.1043E+02  0.1000E+01 -0.9053E-07  0.1000E+01  0.0000E+00
+  26  0.1908E+00  0.8093E-05  0.1090E+02  0.1000E+01  0.4801E-06  0.1000E+01  0.0000E+00
+  27  0.7862E+00  0.7986E-05  0.8814E+01  0.1000E+01 -0.1216E-06  0.1000E+01  0.0000E+00
+  28  0.3549E+00  0.8159E-05  0.1205E+02  0.9994E+00  0.6399E-04  0.1000E+01  0.0000E+00
+  29  0.2915E+00  0.7873E-05  0.1037E+02  0.1000E+01  0.2711E-06  0.1000E+01  0.0000E+00
+  30  0.1480E+01  0.7954E-05  0.9700E+01  0.1000E+01  0.6347E-06  0.1000E+01  0.0000E+00
+  31  0.5351E+00  0.7909E-05  0.1002E+02  0.1000E+01 -0.1038E-05  0.1000E+01  0.0000E+00
+  32  0.2970E+00  0.8154E-05  0.8464E+01  0.1000E+01  0.2917E-06  0.1000E+01  0.0000E+00
+  33  0.3801E+00  0.8090E-05  0.1122E+02  0.1000E+01 -0.9215E-06  0.1000E+01  0.0000E+00
+  34  0.1466E+01  0.7967E-05  0.1204E+02  0.1000E+01 -0.2712E-06  0.1000E+01  0.0000E+00
+  35  0.1643E+00  0.8097E-05  0.1022E+02  0.1000E+01 -0.1145E-07  0.1000E+01  0.0000E+00
+  36  0.5223E+00  0.7980E-05  0.8311E+01  0.1000E+01  0.1315E-05  0.1000E+01  0.0000E+00
+  37  0.7075E+00  0.8116E-05  0.1107E+02  0.1000E+01  0.9925E-05  0.1000E+01  0.0000E+00
+  38  0.5267E+00  0.8092E-05  0.9945E+01  0.1000E+01  0.2606E-05  0.1000E+01  0.0000E+00
+  39  0.7997E+00  0.8212E-05  0.9412E+01  0.1000E+01  0.1764E-05  0.1000E+01  0.0000E+00
+  40  0.1221E+01  0.8128E-05  0.8571E+01  0.1000E+01 -0.3613E-05  0.1000E+01  0.0000E+00
+  41  0.8448E+00  0.8061E-05  0.1137E+02  0.1000E+01  0.4635E-06  0.1000E+01  0.0000E+00
+  42  0.5641E+00  0.8045E-05  0.9842E+01  0.1000E+01 -0.4481E-06  0.1000E+01  0.0000E+00
+  43  0.5209E+00  0.8118E-05  0.9835E+01  0.1000E+01 -0.1909E-05  0.1000E+01  0.0000E+00
+  44  0.7078E+00  0.7952E-05  0.1073E+02  0.1000E+01  0.5843E-06  0.1000E+01  0.0000E+00
+  45  0.9372E+00  0.8021E-05  0.9083E+01  0.1000E+01  0.3498E-06  0.1000E+01  0.0000E+00
+  46  0.6256E+00  0.8137E-05  0.1062E+02  0.9999E+00 -0.3678E-04  0.1000E+01  0.0000E+00
+  47  0.1228E+01  0.8007E-05  0.8355E+01  0.1000E+01 -0.5508E-07  0.1000E+01  0.0000E+00
+  48  0.6327E+00  0.8191E-05  0.1242E+02  0.1000E+01  0.4349E-06  0.1000E+01  0.0000E+00
+  49  0.7296E-01  0.8008E-05  0.9903E+01  0.1000E+01  0.4566E-05  0.1000E+01  0.0000E+00
+  50  0.8020E+00  0.8127E-05  0.9526E+01  0.1000E+01 -0.2311E-06  0.1000E+01  0.0000E+00
+ Program ended at 2019-11-04 19:36:21.645

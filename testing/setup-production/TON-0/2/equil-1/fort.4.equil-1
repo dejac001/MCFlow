@@ -1,0 +1,179 @@
+&mc_shared
+    seed            =  1
+    nbox            =     2
+    nmolty          =     2
+    nchain          =    50
+    nstep           =  50000
+    time_limit      = 36000
+    iratio          =  500
+    rmin            =  1.0
+    softcut         =     100.000000000000
+    linit           =  F
+    lreadq          =     F
+/
+
+&analysis
+    iprint          =  50001
+    imv             =  1000000
+    iblock          =  100000
+    iratp           =  500
+    iheatcapacity   =     1000000000
+    ianalyze        =     1000000
+/
+
+&mc_volume
+    tavol           =      0.30d0
+    iratv           =  500
+    pmvlmt          = 0.0d0 1.0d0
+    nvolb           =     1
+    pmvolb          =     1.0d0
+    pmvol           =  0.0666
+    pmvolx          =     0.0d0
+    pmvoly          =     0.000000000000000E+000
+    rmvolume        =    1.913518e+06
+    allow_cutoff_failure = 1
+/
+
+&mc_swatch
+    pmswat          =  -1.0
+    nswaty          =  0
+    pmsatc          = 
+/
+
+&mc_swap
+    pmswap          =  0.1
+    pmswmt          = 2.000000e+00 0.0
+/
+
+&mc_cbmc
+    rcutin          =     5.00000000000000
+    pmcb            =  -1.0
+    pmcbmt          =     -1.0 -1.0
+    pmall           =     0.0 0.0
+    nchoi1          =     32 32
+    nchoi           =     16 16
+    nchoir          =     16 16
+    nchoih          =     1 1
+    nchtor          =     100 100
+    nchbna          =     1000 1000
+    nchbnb          =     1000 1000
+    icbdir          =     0  0
+    icbsta          =     0 0
+    rbsmax          =     3.5
+    rbsmin          =     2.5
+    avbmc_version   =     0 0
+    pmbias          =     0.0d0  0.0d0
+    pmbsmt          =     0.0d0  0.0d0
+    pmbias2         =     0.0d0  0.0d0
+    pmfix           =     0.0d0  0.0d0
+    lrig            =     F  
+    lpresim         =     F 
+    iupdatefix      =  5010000
+/
+
+&mc_simple
+    armtra          =     1.000000000000000E-002
+    rmtra           =     0.300000000000000
+    rmrot           =     0.400000000000000
+    tatra           =     0.300000000000000
+    tarot           =     0.300000000000000
+    pmtra           =  0.5
+    pmtrmt          =     2.0 0.0
+    pmromt          =     2.0 0.0
+/
+
+SIMULATION_BOX
+! boxlx   boxly   boxlz   rcut  kalp   rcutnn numDimensionIsIstropic lsolid lrect lideal ltwice temperature pressure(MPa)
+37.420000 37.420000 37.420000 14.0 3.5 0.000 0 F F F F 300.0 0.01
+! nchain_1 ... nchain_nmolty ghost_particles
+0 0 0
+! inix iniy iniz inirot inimix zshift dshift use_linkcell rintramax
+0 0 0 0 0 0  3.11d0 F 0.0
+
+! boxlx   boxly   boxlz   rcut  kalp   rcutnn numDimensionIsIstropic lsolid lrect lideal ltwice temperature pressure(MPa)
+590. 590. 590.  270. 3.5 0.000 0 F F F F 300.0 0.01
+! nchain_1 ... nchain_nmolty ghost_particles
+50 0 0
+! inix iniy iniz inirot inimix zshift dshift use_linkcell rintramax
+4 4 4 0 0 0 2.060604e+01 F 0.0
+
+END SIMULATION_BOX
+
+MOLECULE_TYPE
+!      nunit nugrow ncarbon maxcbmc maxgrow iring lelect lring lrigid lbranch lsetup lq14scale qscale iurot isolute  
+H2        3    3        3      3       3       3    T      F      F F F F 0.5d0 0 1000000
+! n, growpoint_1 ... growpoint_n
+! unit ntype leaderq
+1 1 1
+! stretching
+1
+2 1
+! bending
+1
+2 3 1
+! torsion
+0
+! unit ntype leaderq
+2 2 2
+! stretching
+2
+1 1
+3 1
+! bending
+0
+! torsion
+0
+! unit ntype leaderq
+3 1 3
+! stretching
+1
+2 1
+! bending
+1
+2 1 1
+! torsion
+0
+
+!      nunit nugrow ncarbon maxcbmc maxgrow iring lelect lring lrigid lbranch lsetup lq14scale qscale iurot isolute  
+CH4        1    1        1      1       1       1    F      F      F F F F 0.5d0 0 1000000
+! n, growpoint_1 ... growpoint_n
+! unit ntype leaderq
+1 3 1
+! stretching
+0
+! bending
+0
+! torsion
+0
+
+END MOLECULE_TYPE
+
+SAFE_CBMC
+END SAFE_CBMC
+
+MC_SWAP
+! nswapb pmswapb
+1 1.0000d0
+! box1 box2
+1 2
+! nswapb pmswapb
+1 1.0000d0
+! box1 box2
+1 2
+END MC_SWAP
+
+MC_SWATCH
+END MC_SWATCH
+
+INTERMOLECULAR_EXCLUSION
+END INTERMOLECULAR_EXCLUSION
+
+INTRAMOLECULAR_SPECIAL
+END INTRAMOLECULAR_SPECIAL
+
+INTRAMOLECULAR_OH15
+END INTRAMOLECULAR_OH15
+
+SPECIFIC_ATOM_TRANSL
+END SPECIFIC_ATOM_TRANSL
+

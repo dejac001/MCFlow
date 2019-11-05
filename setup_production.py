@@ -25,13 +25,13 @@ def iaverage(nstep):
     return iprint, iblock
 
 
-def makeProdFiles(path, lastEquilNum, nstep, imv, total_time, type):
+def makeProdFiles(path, lastEquilNum, nstep, imv, total_time, type, rcut_vapor):
     'Note: chdir to correct directory first'
     input_data = read_fort4(path + 'fort.4')
     nbox = int(input_data['&mc_shared']['nbox'])
     nmolty = int(input_data['&mc_shared']['nmolty'])
     new_input_data = copy.deepcopy(input_data)
-    new_input_data['&analysis']['iratp'] = ' %i'%(nstep+100)
+    new_input_data['&analysis']['iratp'] = ' 5'
     new_input_data['&mc_shared']['iratio'] = ' %i'%(nstep+100)
     new_input_data['&mc_volume']['iratv'] = ' %i'%(nstep+100)
     new_input_data['&mc_cbmc']['iupdatefix'] = ' %i'%(nstep+100)
@@ -48,15 +48,19 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time, type):
         rcut_string = new_input_data['SIMULATION_BOX'][box]['rcut']
         if 'd0' in rcut_string:
             rcut_string = rcut_string.rstrip('d0')
-        print(box)
         rcut[box] = float(rcut_string)
 
     restart_file = fo.read(path,'config.',fo.equilName,lastEquilNum)
     restart_data = read_restart(restart_file,nmolty, nbox)
     new_restart_data = copy.deepcopy(restart_data)
     for box, value in restart_data['max displacement']['translation'].items():
+        boxlengths = list(map(float,new_restart_data['box dimensions'][box].rstrip('\n').split()))
+        if len(boxlengths) == 3 and boxlengths[0]*rcut_vapor > 14.:
+            rcut[box] = boxlengths[0]*rcut_vapor
         for mol, line in value.items():
             new_restart_data['max displacement']['translation'][box][mol] = avg_displ(line, 2*rcut[box]) + '\n'
+    for box, val in rcut.items():
+        new_input_data['SIMULATION_BOX'][box]['rcut'] = '%e'%val
     write_fort4(new_input_data, path + 'fort.4.prod-1')
     write_restart(new_restart_data, path +'config.prod-1')
     shutil.copy(path +'config.prod-1', path +'fort.77')
@@ -76,6 +80,7 @@ if __name__ == '__main__':
 
     args = vars(my_parser.parse_args())
 
+    assert args['rcut'] < 0.41, 'Rcut fraction for vapor phase chosen to be too high'
     nstep = args['nstep']
     imv = args['imovie']
     time = args['time']
@@ -86,9 +91,10 @@ if __name__ == '__main__':
             my_dir = '%s/%s/%i/'%(args['path'],feed,seed)
             (old_begin, nfiles) = what2Analyze(my_dir, args['type'],
                                                    args['guessStart'],args['interval'])
-            assert os.path.isfile('%s/fort.4.%s%i'%(my_dir,args['type'],old_begin +nfiles)), 'New fort.4 not found'
-            if os.path.isfile('%s/fort.4.%s%i'%(my_dir,args['type'],old_begin +nfiles)):
-                shutil.copy('%s/fort.4.%s%i'%(my_dir,args['type'],old_begin +nfiles), '%s/fort.4'%my_dir)
+            f_new = '%s/fort.4.%s%i'%(my_dir,args['type'],old_begin +nfiles)
+            assert os.path.isfile(f_new), 'New fort.4 not found {}'.format(f_new)
+            if os.path.isfile(f_new):
+                shutil.copy(f_new, '%s/fort.4'%my_dir)
             if args['verbosity'] > 0:
                 print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
-            makeProdFiles(my_dir, old_begin+nfiles-1, nstep, imv, time, args['type'])
+            makeProdFiles(my_dir, old_begin+nfiles-1, nstep, imv, time, args['type'], args['rcut'])
