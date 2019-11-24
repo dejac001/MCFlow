@@ -99,7 +99,7 @@ class IdealGasAds:
     def dUvX(self):
         U = self.U[self.feed][self.run]
         N = self.N[self.feed][self.run]
-        gen_data = self.gen_data[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run][self.feed]
         file_description = 'Q(%s)     %s    dQ     %s'%(self.units, self.xlabel[0],
                                                        self.xlabel[1])
         file_name = 'dU_%s_mixture.dat'%self.box
@@ -126,7 +126,7 @@ class IdealGasAds:
     def dHigvX(self):
         U = self.U[self.feed][self.run]
         N = self.N[self.feed][self.run]
-        gen_data = self.gen_data[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run][self.feed]
         file_name = 'dHig_vapor_to_%s.dat'%self.box
         X = self.getX()
         N1_tot = sum(N[i][self.box]['mean'] for i in N.keys())
@@ -155,7 +155,7 @@ class IdealGasAds:
 
     def dHvX(self):
         dH = self.dHmixt[self.feed][self.run]
-        gen_data = self.gen_data[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run][self.feed]
         file_description = 'Q(%s)     %s    dQ     %s'%(self.units, self.xlabel[0],
                                                        self.xlabel[1])
         if self.boxes:
@@ -177,8 +177,8 @@ class IdealGasAds:
 
 
     def rho_vapor(self):
-        nIndep = self.gen_data[self.feed][self.run]['numIndep']
-        self.T = self.gen_data[self.feed][self.run]['temperature']
+        nIndep = self.gen_data[self.feed][self.run][self.feed]['numIndep']
+        self.T = self.gen_data[self.feed][self.run][self.feed]['temperature']
         rho, N = self.rho[self.feed][self.run], self.N[self.feed][self.run]
         vapor_box = self.findVapBox( rho, self.mol)
         factor = 1/N_av*R['nm**3*kPa/(mol*K)']*self.T
@@ -226,7 +226,7 @@ class IdealGasAds:
         file_description = '%s    dG(kJ/mol)    %s     dG'%(self.xlabel[0],self.xlabel[1])
         N = self.N[self.feed][self.run]
         dG = self.dG[self.feed][self.run]
-        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        nIndep = self.gen_data[self.feed][self.run][self.feed]['numIndep']
         boxFrom, boxTo = self.boxes
         X = self.getX()
         assert 'box' in boxFrom, 'Wrong notation for box'
@@ -281,7 +281,7 @@ class IdealGasAds:
         '''
         assert self.units, 'Units must be defined for isotherm'
         N = self.N[self.feed][self.run]
-        gen_data = self.gen_data[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run][self.feed]
         file_description = '%s    Q(%s)    %s     dQ'%(self.xlabel[0], self.units,
                                                        self.xlabel[1])
         X = self.getX()
@@ -337,7 +337,7 @@ class IdealGasAds:
         if (0 in self.indep) and (len(self.indep) == 1): raise NotImplemented
         X = self.getX()
         rho = self.rho[self.feed][self.run]
-        gen_data = self.gen_data[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run][self.feed]
         nIndep = gen_data['numIndep']
         file_description = '%s    density(g/mL)    %s     dd'%(self.xlabel[0], self.xlabel[1])
         file_name = 'Dens_v_%s_%s.dat'%(self.xlabel[0], self.box)
@@ -361,7 +361,7 @@ class IdealGasAds:
         N = self.N[self.feed][self.run]
         # N: feed, run, mol, box, mean/stdev
         X = self.getX()
-        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        nIndep = self.gen_data[self.feed][self.run][self.feed]['numIndep']
         file_name = 'R_mol%s_box%s-vs-%s.dat'%(self.mol, self.box, self.xlabel[0])
         file_description = '%s    Recovery  %s     dR'%(self.xlabel[0], self.xlabel[1])
         Ni_tot = sum(N[self.mol][i]['mean'] for i in N[self.mol].keys())
@@ -376,7 +376,7 @@ class IdealGasAds:
         N = self.N[self.feed][self.run]
         mol_frac = self.X[self.feed][self.run]
         X = self.getX()
-        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        nIndep = self.gen_data[self.feed][self.run][self.feed]['numIndep']
         if '95conf' in X.keys():
             dX = X['95conf']
         else:
@@ -412,7 +412,7 @@ class IdealGasAds:
             P = self.P[self.feed][self.run]
         X = self.getX()
         file_description = '%s    S(%s)    %s     dS'%(self.xlabel[0], self.units, self.xlabel[1])
-        gen_data = self.gen_data[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run][self.feed]
         nIndep = gen_data['numIndep']
         for mol_pair in K['box1']:
             K_to = K['box1'][mol_pair]
@@ -529,7 +529,7 @@ class GasBoxAds(IdealGasAds):
             assert self.vapor_box, 'Box needed to calculate pressure (box)'
             self.film = kwargs['film']
     def Txy(self):
-        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        nIndep = self.gen_data[self.feed][self.run][self.feed]['numIndep']
         rho, N = self.rho[self.feed][self.run], self.N[self.feed][self.run]
         try:
             vapor_box = self.findVapBox( rho, self.mol)
@@ -541,7 +541,7 @@ class GasBoxAds(IdealGasAds):
             liquid_box = 'box2'
         else:
             liquid_box = 'box1'
-        T = self.gen_data[self.feed][self.run]['temperature']
+        T = self.gen_data[self.feed][self.run][self.feed]['temperature']
         file_description = '%s     T    %s '%(self.xlabel[0],
                                                        self.xlabel[1])
         file_name = 'Tx_mol%s'%self.mol
@@ -585,7 +585,7 @@ class LoadAds(IdealGasAds):
                 self.film = kwargs['film']
     def getX(self):
         N = self.N[self.feed][self.run]
-        gen_data = self.gen_data[self.feed][self.run]
+        gen_data = self.gen_data[self.feed][self.run][self.feed]
         if self.units == 'molec/uc':
             qfactor = 1/gen_data['zeolite']['unit cells']
         elif self.units == 'g/g':
@@ -679,8 +679,8 @@ class LiqAds(IdealGasAds):
 
 
     def Pig_xy(self):
-        nIndep = self.gen_data[self.feed][self.run]['numIndep']
-        self.T = self.gen_data[self.feed][self.run]['temperature']
+        nIndep = self.gen_data[self.feed][self.run][self.feed]['numIndep']
+        self.T = self.gen_data[self.feed][self.run][self.feed]['temperature']
         rho, N = self.rho[self.feed][self.run], self.N[self.feed][self.run]
         vapor_box = self.findVapBox( rho, self.mol)
         num_box = len(rho.keys())
@@ -731,7 +731,7 @@ class MoleFrac(LiqAds):
 
     def XvX(self):
         assert 'box' in self.box, 'Box needed for mole frac plot'
-        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        nIndep = self.gen_data[self.feed][self.run][self.feed]['numIndep']
         N = self.N[self.feed][self.run]
         x = self.getX(box=self.box)
         file_description = 'x (mol/mol)    x (mol/mol)    dx     dx'
@@ -753,7 +753,7 @@ class MoleFrac(LiqAds):
             return {'mean':0.,'stdev':0.}
 
     def Txy(self):
-        nIndep = self.gen_data[self.feed][self.run]['numIndep']
+        nIndep = self.gen_data[self.feed][self.run][self.feed]['numIndep']
         rho, N = self.rho[self.feed][self.run], self.N[self.feed][self.run]
         try:
             vapor_box = self.findVapBox( rho, self.mol)
@@ -764,7 +764,7 @@ class MoleFrac(LiqAds):
             liquid_box = 'box2'
         else:
             liquid_box = 'box1'
-        T = self.gen_data[self.feed][self.run]['temperature']
+        T = self.gen_data[self.feed][self.run][self.feed]['temperature']
         file_description = '%s     T    %s '%(self.xlabel[0],
                                                        self.xlabel[1])
         file_name = 'Tx_mol%s'%self.mol
@@ -785,13 +785,14 @@ class Temp(MoleFrac):
         MoleFrac.__init__(self, **kwargs)
 
     def getX(self):
-        T = self.gen_data[self.feed][self.run]['temperature']
+        T = self.gen_data[self.feed][self.run][self.feed]['temperature']
         return {'mean':T,'stdev':0.}
 
-from MCFlow.runAnalyzer import checkRun, calc95conf
-from MCFlow.chem_constants import N_av, R
-from MCFlow.calc_tools import eProp_division
-from MCFlow.parser import Plot
+from runAnalyzer import checkRun
+from statistics import calc95conf
+from chem_constants import N_av, R
+from calc_tools import eProp_division
+from analysis_parsers import Plot
 import numpy as np
 import os, math, json 
 extra_film_mass = 24/N_av*1.0079 + 36*2/N_av*1.0079
