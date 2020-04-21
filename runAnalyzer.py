@@ -22,6 +22,7 @@ def findFinalSimRun(path, tag):
     else:
         while os.path.isfile(fo.read(path, 'run.', tag, nfiles + 1)):
             nfiles += 1
+    assert nfiles > 0, 'No files found!'
     return nfiles
 
 
@@ -61,7 +62,15 @@ def findFinalSimIntvl(path, fileNumStart, numIntvl, tag='equil-'):
 
 
 def what2Analyze(path, oldTagName, fileNumStart, numIntvl):
+    """figure out which files to analyze
+
+    :param oldTagName: tag name for file
+    :type oldTagName: tag name for file
+    :param fileNumStart: guess start for file num
+    :param numIntvl: integer number of intervale, defaults to 0 in parsers
+    """
     if '-' in oldTagName:
+        # FIXME: is there a reason for this?
         TAG = oldTagName[:(oldTagName.find('-') + 1)]
     else:
         TAG = oldTagName

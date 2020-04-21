@@ -366,14 +366,14 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
                 for mol in range(1, nMolTy + 1):
                     biasPot[str(mol)] = {}
                     line = f.readline().split()
-                    offSet = 0
-                    for box in range(nBox):
-                        if box == len(line):
-                            line = f.readline().split()
-                            offSet = box
-                        if '*****' not in line[box - offSet]:
-                            bp = float(line[box - offSet])
+                    while nBox > len(line):
+                        line += f.readline().split()
+                    print(len(line), nBox)
+                    for box, val in enumerate(line):
+                        if '*****' not in val:
+                            bp = float(val)
                         else:
+                            # set to dummy val
                             bp = 10 ** 5
                         biasPot[str(mol)]['box%i' % (box + 1)] = bp
             elif 'number of unit cells' in line:
