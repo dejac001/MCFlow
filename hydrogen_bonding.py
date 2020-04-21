@@ -258,10 +258,7 @@ class HB(Struc):
         if self.args['readDB'] and (('nchain count' in hist_data.keys()) and
                 (self.args['box'] in hist_data['nchain count'].keys()) and
                 (len(hist_data['nchain count'][self.args['box']].keys()) > 0)):
-                print('get HB rfrom db')
-                # make HB from database and write
-                HB = hy_bond_fromDB(hist_data, self.args['box'], self.args['htype'],
-                                self.args['name'], self.feed)
+            raise NotImplementedError
         else:
             D.calcHB(self.args['box'], self.args['verbosity'])
             HB = D.countHB(self.args['indep'],self.feed, D.HB)

@@ -26,7 +26,15 @@ def findFinalSimRun(path, tag):
 
 
 def findNextRun(path, tag):
-    Runs = [i.split(tag)[-1] for i in os.listdir(path) if (i.startswith(tag) and len(i.split(tag)) > 1)]
+    """
+
+    :param path: path to files
+    :type path: str
+    :param tag: tag associated with run file (prod- or equil- associated with production or equilibration files
+    :type tag: str
+    :return:
+    """
+    Runs = [i.split('-')[-1] for i in os.listdir(path) if tag in i]
     assert len(Runs) > 0, 'No runs found' + path
     Runs = [i for i in Runs if len(i) > 0]
     Runs = set(Runs)
