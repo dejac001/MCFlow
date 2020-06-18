@@ -60,6 +60,9 @@ def outputGen_json(path, run_type, data, save_old=True):
 
     file_name = path + '/%s-data.json'% data_type
     if save_old and os.path.isfile(file_name):
+        old_file = os.path.join(path, 'old-%s-data.json' % data_type)
+        if os.path.isfile(old_file):
+            os.remove(old_file)
         os.rename(file_name, path + '/old-%s-data.json' % data_type)
 
     with open(file_name, 'w') as f:

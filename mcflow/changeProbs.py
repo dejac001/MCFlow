@@ -637,7 +637,7 @@ def main(feeds, verbosity=0, type='equil-', path='', indep=None, interval=0, gue
             except FileNotFoundError:
                 pass
             nextRun = 'fort.4.%s%i' % (type, findNextRun(my_path, type))
-            writer.write_fort4(input_data, my_path + nextRun)
+            writer.write_fort4(input_data, os.path.join(my_path, nextRun))
             input_data = None
     output_json(path, type, data)
     outputGen_json(path, type, gen_data)
