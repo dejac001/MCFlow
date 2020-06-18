@@ -633,7 +633,7 @@ def main(feeds, verbosity=0, type='equil-', path='', indep=None, interval=0, gue
             for fort4 in old_fort4:
                 os.remove(os.path.join(my_path, fort4))
             try:
-                shutil.move(my_path + 'fort.4', my_path + 'old-fort4')
+                shutil.move(os.path.join(my_path, 'fort.4'), os.path.join(my_path, 'old-fort4'))
             except FileNotFoundError:
                 pass
             nextRun = 'fort.4.%s%i' % (type, findNextRun(my_path, type))
