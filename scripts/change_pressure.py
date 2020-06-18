@@ -34,6 +34,7 @@ def change_pressure_dirs(old_path, new_path, P_new_MPa):
     :type P_new_MPa: float
     """
     assert os.path.isdir(old_path), 'Old path {} not found'.format(old_path)
+    assert old_path != new_path, 'Both paths are the same!'
 
     old = {
         'restart': os.path.join(old_path, 'fort.77'),
