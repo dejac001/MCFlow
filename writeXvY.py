@@ -788,7 +788,7 @@ class Temp(MoleFrac):
         T = self.gen_data[self.feed][self.run][self.feed]['temperature']
         return {'mean':T,'stdev':0.}
 
-from runAnalyzer import checkRun
+from mcflow.runAnalyzer import checkRun
 from statistics import calc95conf
 from chem_constants import N_av, R
 from calc_tools import eProp_division

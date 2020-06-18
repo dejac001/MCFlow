@@ -113,7 +113,7 @@ def read_json(path, my_feed, my_type, boxes):
     return my_hist_data
 
 
-from file_formatting.reader import Movie
+from mcflow.file_formatting.reader import Movie
 
 
 class HydrogenBond(Movie):

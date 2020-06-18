@@ -5,7 +5,7 @@ Take out silanol groups for tabulation.
 
 import argparse, copy
 import numpy as np
-from file_formatting import reader, writer
+from mcflow.file_formatting import writer, reader
 from file_formatting.addMolecules import calculate_distance
 
 if __name__ == '__main__':
@@ -118,13 +118,13 @@ if __name__ == '__main__':
         if (abs(my_charge) > 1e-05):
             print('charge of silanol group is %8.4f'%my_charge)
             print(group_data)
-        writer.xyz(main_dir + 'silanol%i.xyz'%i, my_data)
+        writer.xyz(main_dir + 'silanol%i.xyz' % i, my_data)
     pdb_data = {'atoms':[],'coords':[]}
     for atom in data['coords']:
         for xyz in data['coords'][atom]:
             pdb_data['atoms'].append( atom )
             pdb_data['coords'].append( xyz )
-    writer.xyz( args['file'].rstrip('.pdb') + '_to_tabulate.xyz', pdb_data)
+    writer.xyz(args['file'].rstrip('.pdb') + '_to_tabulate.xyz', pdb_data)
     
     total_charge_fort4 = 0
     for atom in charges_fort4.keys():

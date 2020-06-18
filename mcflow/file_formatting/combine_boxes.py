@@ -301,7 +301,7 @@ def main(inputPaths, boxesToKeep):
         input_data = read_fort4(my_path + '/fort.4')
         nmolty, nbox = input_data['&mc_shared']['nmolty'], input_data['&mc_shared']['nbox']
         restart_data = read_restart(my_path + '/fort.77', nmolty, nbox)
-        restart_new, fort4_new = purify.removeExtraInfo(my_boxes,restart_data,input_data)
+        restart_new, fort4_new = purify.removeExtraInfo(my_boxes, restart_data, input_data)
         restarts.append(restart_new)
         inputs.append(fort4_new)
     restart_combined, fort4_combined = combine(restarts, inputs)
@@ -317,10 +317,10 @@ def testing():
     write_fort4(fort4_combined, path1 + '/fort.4.new')
 
 #import argparse
-from file_formatting.reader import read_restart, read_fort4
-from file_formatting.writer import write_restart, write_fort4, sort_keys
+from mcflow.file_formatting.reader import read_restart, read_fort4
+from mcflow.file_formatting.writer import write_restart, write_fort4, sort_keys
 from specialized.probchanger import calculateProbs, calcCBMCmolTy
-from file_formatting import purify
+from mcflow.file_formatting import purify
 #
 # parser = argparse.ArgumentParser(description = 'Add boxes together for single simulation')
 # parser.add_argument('-p','--paths',help='paths to different input and restart files', type=str,nargs='+')

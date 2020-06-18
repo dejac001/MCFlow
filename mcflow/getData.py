@@ -5,7 +5,7 @@ def output_json(path, type, data, save_old):
         # convert data to json format
         data_to_save = {}
         for feed, vals in data.items():
-            nextRun = runAnalyzer.findNextRun('%s/%s/1/'%(path, feed), type)
+            nextRun = runAnalyzer.findNextRun('%s/%s/1/' % (path, feed), type)
             assert nextRun is not None, 'No run found'
             data_to_save[feed] = {
                     '%s%i'%(type, nextRun-1) : vals[data_type].averages[feed],
@@ -25,7 +25,7 @@ def outputGen_json(path, run_type, general_data, save_old):
     data_type = 'general'
     data_to_save = {}
     for feed, val in general_data.items():
-        nextRun = runAnalyzer.findNextRun('%s/%s/1/'%(path, feed), run_type)
+        nextRun = runAnalyzer.findNextRun('%s/%s/1/' % (path, feed), run_type)
         assert nextRun != None, 'No run found'
         run_key ='%s%i'%(run_type, nextRun-1) 
         data_to_save[feed] = {
@@ -80,7 +80,7 @@ def my_parser():
 import json
 import os
 import time
-import runAnalyzer
+from mcflow import runAnalyzer
 
 if __name__ == '__main__':
     arguments = my_parser()

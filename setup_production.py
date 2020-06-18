@@ -66,10 +66,10 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time, type, rcut_vapor):
     shutil.copy(path +'config.prod-1', path +'fort.77')
 
 import math, copy, shutil, os
-from file_formatting.reader import read_restart, read_fort4
-from file_formatting.writer import write_restart, write_fort4
+from mcflow.file_formatting.reader import read_restart, read_fort4
+from mcflow.file_formatting.writer import write_restart, write_fort4
 import MCFlow.file_organization as fo
-from runAnalyzer import what2Analyze
+from mcflow.runAnalyzer import what2Analyze
 
 if __name__ == '__main__':
     from analysis_parsers import Change

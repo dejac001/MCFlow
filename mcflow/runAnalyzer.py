@@ -1,5 +1,5 @@
 import file_organization as fo
-from file_formatting import reader
+from mcflow.file_formatting import reader
 import math
 import os
 import numpy as np

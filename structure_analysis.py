@@ -32,6 +32,7 @@ class Region:
         else:
             return False
 
+
 def output_json(path, type, data, save_old):
     """Save data in json. If previous data exists, copy it to an old file"""
     data_to_save = {}
@@ -49,6 +50,7 @@ def output_json(path, type, data, save_old):
     
     with open(file_name, 'w') as f:
         json.dump(data_to_save, f)
+
 
 def intersection(coords):
     rcut = 5.0/2.
@@ -147,9 +149,9 @@ class Struc:
             self.myCalcs(analysis)
 
 
-from runAnalyzer import what2Analyze, findNextRun
-from file_formatting.reader import Movie
-from file_formatting.writer import xyz
+from mcflow.runAnalyzer import what2Analyze, findNextRun
+from mcflow.file_formatting.reader import Movie
+from mcflow.file_formatting.writer import xyz
 from analysis_parsers import Results
 from calc_tools import calculate_distance2
 import file_organization as fo

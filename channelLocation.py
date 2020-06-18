@@ -203,7 +203,7 @@ class Channel(FindRegion):
         self.avgIndep()
 
     def output_results(self):
-        from runAnalyzer import findNextRun
+        from mcflow.runAnalyzer import findNextRun
         import time
         import json
         import os

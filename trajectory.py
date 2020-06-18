@@ -63,8 +63,8 @@ class Trajectory():
 import numpy as np
 
 if __name__ == '__main__':
-    from file_formatting import reader
-    import runAnalyzer
+    from mcflow.file_formatting import reader
+    from mcflow import runAnalyzer
     import matplotlib.pyplot as plt
     from analysis_parsers import Results
 

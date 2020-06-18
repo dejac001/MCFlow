@@ -140,7 +140,7 @@ sum(N[i]['box3']['stdev']**2 for i in N.keys())
 '''
 Write isotherm from previously generated databank files
 '''
-from runAnalyzer import checkRun, getRhoTotal
+from mcflow.runAnalyzer import checkRun, getRhoTotal
 from statistics import calc95conf
 from chem_constants import R, N_av
 import math

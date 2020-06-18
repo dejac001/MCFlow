@@ -191,9 +191,9 @@ from chem_constants import N_av
 
 if __name__ == '__main__':
     from analysis_parsers import Change
-    from runAnalyzer import getFileData, findNextRun
-    from file_formatting import writer, reader
-    from getData import outputGenDB, outputDB
+    from mcflow.runAnalyzer import getFileData, findNextRun
+    from mcflow.file_formatting import writer, reader
+    from mcflow.getData import outputGenDB, outputDB
     from setup_production import iaverage
 
     my_parser = Change()
@@ -217,9 +217,9 @@ if __name__ == '__main__':
         data, gen_data = getFileData(**args)
         nbox = len(data['rho'].averages[feed].keys())
         try:
-            input_data = reader.read_fort4(args['path']+'/' + feed + '/1/fort.4')
+            input_data = reader.read_fort4(args['path'] + '/' + feed + '/1/fort.4')
         except FileNotFoundError:
-            input_data = reader.read_fort4(args['path']+'/' + feed + '/1/old-fort4')
+            input_data = reader.read_fort4(args['path'] + '/' + feed + '/1/old-fort4')
         if not (data['P'].averages[feed][vapor_box]['mean']  > 0):
             print('pressure not found, using input p = ', args['pressure'])
             data['P'].averages[feed][vapor_box]['mean'] = args['pressure']
@@ -248,14 +248,14 @@ if __name__ == '__main__':
         # write new files
         for sim in gen_data[feed]['indepSims']:
             input_data['&mc_shared']['seed'] = '%i'%sim
-            restart_data = reader.read_restart(args['path'] + '/' + feed +'/%i/fort.77'%sim,
-                                            int(input_data['&mc_shared']['nmolty']),
-                                            int(input_data['&mc_shared']['nbox']))
+            restart_data = reader.read_restart(args['path'] + '/' + feed + '/%i/fort.77' % sim,
+                                               int(input_data['&mc_shared']['nmolty']),
+                                               int(input_data['&mc_shared']['nbox']))
             restart_data['box dimensions'][vapor_box] = vapor_box_dimens + '\n'
             my_path = '%s/%s/%i'%(args['path'],feed,sim)
             nextRun = findNextRun(my_path, args['type'])
             new_file = '%s/fort.4.%s%i'%(my_path, args['type'], nextRun)
             writer.write_fort4(input_data, new_file)
-            writer.write_restart(restart_data, args['path'] + '/' + feed + '/%i/fort.77'%sim)
+            writer.write_restart(restart_data, args['path'] + '/' + feed + '/%i/fort.77' % sim)
         outputDB(args['path'], args['feeds'],args['type'], data )
         outputGenDB(args['path'], args['feeds'],args['type'], gen_data )

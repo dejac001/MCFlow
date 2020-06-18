@@ -1,11 +1,6 @@
 '''
 Write isotherm from previously generated databank files
 '''
-from runAnalyzer import checkRun
-from statistics import calc95conf
-from file_formatting.writer import writeAGR
-from chem_constants import R, N_av
-import math
 
 if __name__ == '__main__':
     from analysis_parsers import Plot

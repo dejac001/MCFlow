@@ -448,12 +448,12 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
     return (newSwaps, newSwatches, pctAct, nActCycle, normSwaps, normSwatches,
             pmvol, pmvol+pSwapTot*alpha, pmvol+pSwapTot*alpha+pSwapTot)
 
-from MCFlow.runAnalyzer import getFileData, findNextRun
-from MCFlow.file_formatting import writer, reader
-from MCFlow.getData import output_json, outputGen_json
+from .runAnalyzer import getFileData, findNextRun
+from mcflow.file_formatting import writer, reader
+from .getData import output_json, outputGen_json
 import numpy as np
 import os, shutil
-from MCFlow.dataUtil import sortMolKeys
+from .dataUtil import sortMolKeys
 
 if __name__ == '__main__':
     from analysis_parsers import Change

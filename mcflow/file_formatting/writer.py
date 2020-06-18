@@ -131,7 +131,7 @@ def vtkRectilinearMesh(file_name, edges3d, binnedData):
 def write_new_prob(PATH, pswapMolTy, pswatchMolTy, pmvol, pmswap, pswatch,
                    composition, nindep, boxLengths, rcut_vapor, time, 
                     nstepnew=25000, tag='equil-',Pdir1=False):
-    import runAnalyzer
+    from mcflow import runAnalyzer
     def writePMT(probs):
         val = ''
         for pmt in probs:
@@ -143,7 +143,7 @@ def write_new_prob(PATH, pswapMolTy, pswatchMolTy, pmvol, pmswap, pswatch,
     for i in nindep:
         os.chdir(PATH + '/%i' % i)
         f = open('fort.4')
-        newRun = runAnalyzer.findNextRun(PATH + '/%i'%i, tag)
+        newRun = runAnalyzer.findNextRun(PATH + '/%i' % i, tag)
         fnew = open('fort.4.' + tag + str(newRun),'w')
         box = 0
         numSwatchTy = -1

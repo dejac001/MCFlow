@@ -1,6 +1,6 @@
 if __name__ == '__main__':
     from analysis_parsers import Main
-    from runAnalyzer import what2Analyze
+    from mcflow.runAnalyzer import what2Analyze
     import numpy as np
     my_parser = Main()
     my_parser.other()
