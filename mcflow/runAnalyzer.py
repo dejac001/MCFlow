@@ -1,4 +1,4 @@
-import file_organization as fo
+import mcflow.file_organization as fo
 from mcflow.file_formatting import reader
 import math
 import os

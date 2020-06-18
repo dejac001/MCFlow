@@ -359,7 +359,7 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
         else:
             newSwatches[swatchType]['total'] = 0.
     # make lists for moves by molecule type for fort.4
-    orderedMols = dataUtil.sortMolKeys(newSwaps)
+    orderedMols = sortMolKeys(newSwaps)
     print('ordered mols for calculating swaps is {}'.format(orderedMols))
     normSwaps = []
     totalProb = 0
@@ -370,7 +370,7 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
         else:
             normSwaps.append(totalProb)
     if swatchInfo.keys():
-        orderedMoves = dataUtil.sortMolKeys(newSwatches)
+        orderedMoves = sortMolKeys(newSwatches)
         print('ordered mols for calculating swatches is {}'.format(orderedMoves))
         normSwatches = []
         totalProb = 0
@@ -451,12 +451,20 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
             pmvol, pmvol + pSwapTot * alpha, pmvol + pSwapTot * alpha + pSwapTot)
 
 
-import runAnalyzer
-from .file_formatting import writer, reader
-import getData
+import os
+import shutil
+import sys
+
+# my dir
+my_dir = os.path.dirname(os.path.abspath(__file__))
+
+# add parent directory to pythonpath
+sys.path.append(os.path.join(my_dir, '..'))
+from mcflow.dataUtil import sortMolKeys
+from mcflow.getData import output_json, outputGen_json
 import numpy as np
-import os, shutil
-import dataUtil
+from mcflow.runAnalyzer import getFileData, findNextRun
+from mcflow.file_formatting import writer, reader
 
 if __name__ == '__main__':
     from analysis_parsers import Change
@@ -468,7 +476,7 @@ if __name__ == '__main__':
 
     for feed in feeds:
         args['feeds'] = [feed]
-        data[feed], gen_data[feed] = runAnalyzer.getFileData(**args)
+        data[feed], gen_data[feed] = getFileData(**args)
         nbox = len(data[feed]['rho'].averages[feed].keys())
         # TODO: format return from analyzeTransfers to fit well with fort4 data dict
         try:
@@ -625,8 +633,8 @@ if __name__ == '__main__':
                 shutil.move(my_path + 'fort.4', my_path + 'old-fort4')
             except FileNotFoundError:
                 pass
-            nextRun = 'fort.4.%s%i' % (args['type'], runAnalyzer.findNextRun(my_path, args['type']))
+            nextRun = 'fort.4.%s%i' % (args['type'], findNextRun(my_path, args['type']))
             writer.write_fort4(input_data, my_path + nextRun)
             input_data = None
-    getData.output_json(args['path'], args['type'], data, 'Yes')
-    getData.outputGen_json(args['path'], args['type'], gen_data, 'Yes')
+    output_json(args['path'], args['type'], data, 'Yes')
+    outputGen_json(args['path'], args['type'], gen_data, 'Yes')
