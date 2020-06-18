@@ -68,7 +68,7 @@ def makeProdFiles(path, lastEquilNum, nstep, imv, total_time, type, rcut_vapor):
 import math, copy, shutil, os
 from mcflow.file_formatting.reader import read_restart, read_fort4
 from mcflow.file_formatting.writer import write_restart, write_fort4
-import MCFlow.file_organization as fo
+import mcflow.file_organization as fo
 from mcflow.runAnalyzer import what2Analyze
 
 if __name__ == '__main__':

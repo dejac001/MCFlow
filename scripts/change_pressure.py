@@ -19,7 +19,7 @@ from mcflow.file_formatting.writer import write_fort4
 
 def set_pressure(data, val):
     for box in data['SIMULATION_BOX'].keys():
-        data['SIMULATION_BOX'][box]['pressure'] = '%e' % val
+        data['SIMULATION_BOX'][box]['pressure'] = '%3.2e' % val
     return data
 
 
@@ -55,6 +55,7 @@ def change_pressure_dirs(old_path, new_path, P_new_MPa):
         'struc': os.path.join(new_path, 'input_struc.xyz'),
         'zeo struc': os.path.join(new_path, 'zeolite.cif'),
         'zeo tab pot': os.path.join(new_path, 'zeolite.ztb'),
+        'parameter': os.path.join(new_path, 'topmon.inp'),
     }
 
     # copy input files
@@ -64,9 +65,17 @@ def change_pressure_dirs(old_path, new_path, P_new_MPa):
     for f_name in ('struc', 'zeo struc', 'zeo tab pot', 'parameter'):
         if os.path.islink(old[f_name]):
             source = os.readlink(old[f_name])
-            os.symlink(source, new[f_name])
+            try:
+                os.symlink(source, new[f_name])
+            except FileExistsError:
+                os.remove(new[f_name])
+                os.symlink(source, new[f_name])
         elif os.path.isfile(old[f_name]):
-            os.symlink(old[f_name], new[f_name])
+            try:
+                os.symlink(old[f_name], new[f_name])
+            except FileExistsError:
+                os.remove(new[f_name])
+                os.symlink(old[f_name], new[f_name])
 
     # change pressure
     data = read_fort4(old['input'])
@@ -79,6 +88,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-od', '--olddir', help='old directory of files')
     parser.add_argument('-nd', '--newdir', help='new directory of files')
-    parser.add_argument('-P', '--pressure', help='New pressure [MPa]')
+    parser.add_argument('-P', '--pressure', help='New pressure [MPa]', type=float)
     args = vars(parser.parse_args())
     change_pressure_dirs(args['olddir'], args['newdir'], args['pressure'])
