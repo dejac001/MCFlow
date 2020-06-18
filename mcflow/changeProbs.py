@@ -592,6 +592,8 @@ if __name__ == '__main__':
             input_data['&mc_shared']['rmin'] = '1.0'
             iblock = int(args['nstep'] / 10)
             if iblock > 1000: iblock = 1000
+            if '&analysis' not in input_data.keys():
+                input_data['&analysis'] = {}
             input_data['&analysis']['iblock'] = '%i' % iblock
             input_data['&mc_volume']['pmvol'] = '%e' % pmvol
             #   other probabilities

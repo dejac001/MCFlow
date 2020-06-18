@@ -9,6 +9,11 @@ The probabilities of a batch of input files can be changed via
 
 where :code:`/paths/to/file/dirs` are the paths to the parent directories
 of the independent simulations, and :code:`names` are the names of the independent simulations.
+
+.. note::
+   it is recommended to add the :code:`-vv` argument to get extra verbosity to see what happens
+
+
 For example, the invocation might be
 
 .. code-block:: python
