@@ -113,7 +113,7 @@ def checkRun(tag, listOfDBs, feed):
 
 
 # ----finding number densities / performing calculations with them-----------------------------------------------------
-def getRealRho(rhoBias, bias, T):
+def getRealRho(rhoBias, bias, T, debug=True):
     """get real number densities: note: units in chain/nm**3"""
     rhoReal = {}
     for mol in rhoBias.keys():
@@ -124,8 +124,9 @@ def getRealRho(rhoBias, bias, T):
             elif rhoBias[mol][box] > 0.:
                 if mol not in rhoReal.keys(): rhoReal[mol] = {}
                 rhoReal[mol][box] = rhoBias[mol][box] * math.exp(bias[mol][box] / T)
-    assert rhoReal, ('All number densities = 0.0. It is likely that ' +
-                     'the previous simulation did not run to iblock cycles')
+    if debug:
+        assert rhoReal, ('All number densities = 0.0. It is likely that ' +
+                         'the previous simulation did not run to iblock cycles')
     return rhoReal
 
 
@@ -259,7 +260,7 @@ def calc_dU_dH(U, P, Ntot, box_length_x, box_length_y, box_length_z):
 
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
-                verbosity, liq=False, mol=None, energies=None, box=None):
+                verbosity, liq=False, mol=None, energies=None, box=None, debug=True):
     """
 
     :param feeds: parent directories to iterate over
@@ -291,7 +292,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
         nNotFound = 0
         for seed in indep:
             try:
-                my_dir = '%s/%s/%i' % (path, feed, seed)
+                my_dir = os.path.join(path, feed, '%i' % seed)
                 (old_begin, nfiles) = what2Analyze(my_dir, type,
                                                    guessStart, interval)
                 if verbosity > 0:
@@ -311,7 +312,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                                                       tag=type)
 
                 # do calculations for other data that may be needed
-                number_dens_real = getRealRho(number_densities, biasPot, T)
+                number_dens_real = getRealRho(number_densities, biasPot, T, debug=debug)
                 deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
                 if energies == 'Yes':
                     deltaU, deltaH = calc_dU_dH(U, P, Ntotal, boxlx, boxly, boxlz)
@@ -380,5 +381,6 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
         general_data[feed]['temperature'] = T
         if zeolite:
             general_data[feed]['zeolite'] = zeolite
-    os.chdir(path)
+    if path != '':
+        os.chdir(path)
     return data, general_data

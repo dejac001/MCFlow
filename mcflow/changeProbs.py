@@ -468,7 +468,7 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
 
 
 def main(feeds, verbosity=0, type='equil-', path='', indep=None, interval=0, guessStart=1, time=345000,
-         rcut=0.5, nstep=50000, liq=False, mol=None, energies=None, box=None):
+         rcut=0.5, nstep=50000, liq=False, mol=None, energies=None, box=None, debug=True):
     if indep is None:
         indep = range(1, 9)
     data = {}
@@ -477,7 +477,7 @@ def main(feeds, verbosity=0, type='equil-', path='', indep=None, interval=0, gue
     for feed in feeds:
         data[feed], gen_data[feed] = getFileData(feeds=[feed], indep=indep, path=path, type=type, guessStart=guessStart,
                                                  interval=interval, verbosity=verbosity, liq=liq, mol=mol,
-                                                 energies=energies, box=box)
+                                                 energies=energies, box=box, debug=debug)
         nbox = len(data[feed]['rho'].averages[feed].keys())
         # TODO: format return from analyzeTransfers to fit well with fort4 data dict
         try:
@@ -493,11 +493,11 @@ def main(feeds, verbosity=0, type='equil-', path='', indep=None, interval=0, gue
         print(newSwaps)
         # read and write
         for sim in indep:
-            my_path = '%s/%s/%i/' % (path, feed, sim)
+            my_path = os.path.join(path, feed, '%i' % sim)
             try:
-                input_data = reader.read_fort4(my_path + 'fort.4')
+                input_data = reader.read_fort4(os.path.join(my_path, 'fort.4'))
             except FileNotFoundError:
-                input_data = reader.read_fort4(my_path + 'old-fort4')
+                input_data = reader.read_fort4(os.path.join(my_path, 'old-fort4'))
             # add in swaps
             if input_data['&mc_swap']['pmswap'][-2:] == 'd0':
                 input_data['&mc_swap']['pmswap'] = input_data['&mc_swap']['pmswap'][:-2]
@@ -631,7 +631,7 @@ def main(feeds, verbosity=0, type='equil-', path='', indep=None, interval=0, gue
             # make new run
             old_fort4 = [i for i in os.listdir(my_path) if 'fort.4.%s' % type in i]
             for fort4 in old_fort4:
-                os.remove(my_path + fort4)
+                os.remove(os.path.join(my_path, fort4))
             try:
                 shutil.move(my_path + 'fort.4', my_path + 'old-fort4')
             except FileNotFoundError:

@@ -2,11 +2,11 @@ import os
 
 
 def rob(path, name, type, num):
-    return '%s/%s%i/%s%s%i' % (path, type, num, name, type, num)
+    return os.path.join(path, '%s%i' % (type, num), '%s%s%i' % (name, type, num))
 
 
 def tjo(path, name, type, num):
-    return '%s/%s%s%i' % (path, name, type, num)
+    return os.path.join(path, '%s%s%i' % (name, type, num))
 
 
 # note: need to change file here based off of how you organize your files
@@ -17,4 +17,4 @@ def tjo(path, name, type, num):
 # else:
 equilName = 'equil-'
 prodName = 'prod-'
-read = tjo
+read = rob

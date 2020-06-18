@@ -15,17 +15,20 @@ def output_json(path, run_type, data, save_old=True):
         # convert data to json format
         data_to_save = {}
         for feed, vals in data.items():
-            nextRun = runAnalyzer.findNextRun('%s/%s/1/' % (path, feed), run_type)
+            nextRun = runAnalyzer.findNextRun(os.path.join(path, feed, '1'), run_type)
             assert nextRun is not None, 'No run found'
             data_to_save[feed] = {
                 '%s%i' % (run_type, nextRun - 1): vals[data_type].averages[feed],
                 'time': time.time()
             }
 
-        file_name = path + '/%s-data.json'% data_type
+        file_name = os.path.join(path, '%s-data.json' % data_type)
         if save_old and os.path.isfile(file_name):
-            os.rename(file_name, path + '/old-%s-data.json' % data_type)
-        
+            old_file = os.path.join(path, 'old-%s-data.json' % data_type)
+            if os.path.isfile(old_file):
+                os.remove(old_file)
+            os.rename(file_name, old_file)
+
         with open(file_name, 'w') as f:
             json.dump(data_to_save, f)
 
