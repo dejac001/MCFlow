@@ -1,42 +1,62 @@
-def output_json(path, type, data, save_old):
-    """Save data in json. If previous data exists, copy it to an old file"""
+def output_json(path, run_type, data, save_old=True):
+    """Save data in json. If previous data exists, copy it to an old file
+
+    :param path: path to *feed* directories
+    :type path: str
+    :param run_type: type of run tag
+    :type run_type: str
+    :param data: data to be saved
+    :type data: dict
+    :param save_old: whether or not to save old data, defaults to True
+    :type save_old: bool, optional
+    """
     first_feed = list(data.keys())[0]
     for data_type in data[first_feed].keys():
         # convert data to json format
         data_to_save = {}
         for feed, vals in data.items():
-            nextRun = runAnalyzer.findNextRun('%s/%s/1/' % (path, feed), type)
+            nextRun = runAnalyzer.findNextRun('%s/%s/1/' % (path, feed), run_type)
             assert nextRun is not None, 'No run found'
             data_to_save[feed] = {
-                    '%s%i'%(type, nextRun-1) : vals[data_type].averages[feed],
-                    'time' : time.time()
+                '%s%i' % (run_type, nextRun - 1): vals[data_type].averages[feed],
+                'time': time.time()
             }
 
         file_name = path + '/%s-data.json'% data_type
-        if save_old == 'Yes' and os.path.isfile(file_name):
+        if save_old and os.path.isfile(file_name):
             os.rename(file_name, path + '/old-%s-data.json' % data_type)
         
         with open(file_name, 'w') as f:
             json.dump(data_to_save, f)
 
 
-def outputGen_json(path, run_type, general_data, save_old):
-    """Save data in json. If previous data exists, copy it to an old file"""
+def outputGen_json(path, run_type, data, save_old=True):
+    """Save data in json. If previous data exists, copy it to an old file
+
+    :param path: path to *feed* directories
+    :type path: str
+    :param run_type: type of run tag
+    :type run_type: str
+    :param data: data to be saved
+    :type data: dict
+    :param save_old: whether or not to save old data, defaults to True
+    :type save_old: bool, optional
+    """
     data_type = 'general'
     data_to_save = {}
-    for feed, val in general_data.items():
+    for feed, val in data.items():
         nextRun = runAnalyzer.findNextRun('%s/%s/1/' % (path, feed), run_type)
         assert nextRun != None, 'No run found'
-        run_key ='%s%i'%(run_type, nextRun-1) 
+        run_key = '%s%i' % (run_type, nextRun - 1)
         data_to_save[feed] = {
-                run_key : {},
-                'time' : time.time()
+            run_key: {},
+            'time': time.time()
         }
         for key, val2 in val.items():
             data_to_save[feed][run_key][key] = val2
 
     file_name = path + '/%s-data.json'% data_type
-    if save_old == 'Yes' and os.path.isfile(file_name):
+    if save_old and os.path.isfile(file_name):
         os.rename(file_name, path + '/old-%s-data.json' % data_type)
 
     with open(file_name, 'w') as f:

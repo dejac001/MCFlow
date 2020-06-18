@@ -17,6 +17,10 @@ def sortMolKeys(my_molecules):
         for molStart in sorted(nums.keys()):
             for molFinish in sorted(nums[molStart]):
                 for key in my_molecules:
-                    if (key.split()[0] == '%i'%molStart) and (key.split()[-2] == '%i'%molFinish):
-                        my_sort.append( key )
+                    if (key.split()[0] == '%i' % molStart) and (key.split()[-2] == '%i' % molFinish):
+                        my_sort.append(key)
     return my_sort
+
+
+def box_str_to_boxname(name: str):
+    return 'box' + name

@@ -1,5 +1,7 @@
 import mcflow.file_organization as fo
+import typing
 from mcflow.file_formatting import reader
+from mcflow.dataUtil import box_str_to_boxname
 import math
 import os
 import numpy as np
@@ -257,7 +259,32 @@ def calc_dU_dH(U, P, Ntot, box_length_x, box_length_y, box_length_z):
 
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
-                verbosity, liq=False, mol='-1', **kwargs):
+                verbosity, liq=False, mol=None, energies=None, box=None):
+    """
+
+    :param feeds: parent directories to iterate over
+    :type feeds: list
+    :param indep: names of independent simulation directories within parent directories, defaults to :code:`range(1,9)`
+    :type indep: range, optional
+    :param path: parent path to feed directories
+    :param type: str
+    :param guessStart: integer of file number to start at
+    :type guessStart: int
+    :param interval: number of files to attempt to analyze
+    :type interval: int
+    :param verbosity: amount of verbosity you want
+    :type verbosity: int
+    :param liq: whether or not you want to do liquid phase analysis, defaults to False
+    :type liq: bool, optional
+    :param mol: molecule number for liquid phase analysis, defaults to None
+    :type mol: str, optional
+    :param energies: whether or not you want to calculate the energies, defaults to None
+    :type energies: str, optional
+    :param box: box number for analysis, defaults to None
+    :type box: str, optional
+    :return: parsed data
+    :rtype: typing.Tuple[dict, dict]
+    """
     general_data = {key: {} for key in feeds}
     for feed in feeds:
         if verbosity > 0: print('-' * 12 + 'Dir is %s' % feed + '-' * 12)
@@ -286,13 +313,14 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 # do calculations for other data that may be needed
                 number_dens_real = getRealRho(number_densities, biasPot, T)
                 deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
-                if 'energies' in kwargs.keys() and kwargs['energies'] == 'Yes':
+                if energies == 'Yes':
                     deltaU, deltaH = calc_dU_dH(U, P, Ntotal, boxlx, boxly, boxlz)
                 if liq:
                     concentrations = {}
-                    assert kwargs['box'], 'box needed for liquid phase'
-                    if 'box' not in kwargs['box']: kwargs['box'] = 'box' + kwargs['box']
-                    l_box = kwargs['box']
+                    assert box is not None, 'box needed for liquid phase'
+                    if 'box' not in box:
+                        box = box_str_to_boxname(str(box))
+                    l_box = box
                     c = calc_tools.g_mL(N[mol][l_box], boxlx[l_box],
                                         MW=molWeights[mol])
                     concentrations[mol] = {l_box: c}
@@ -316,7 +344,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                             print('Box 2 should be liquid phase')
                         C = properties.AnyProperty(concentrations)
                         data['Conc'] = C
-                    if 'energies' in kwargs.keys() and kwargs['energies'] == 'Yes':
+                    if energies == 'Yes':
                         dH = properties.AnyProperty(deltaH)
                         dU = properties.AnyProperty(deltaU)
                         data['dH'] = dH
@@ -331,7 +359,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 X.addVals(mole_frac)
                 if liq:
                     C.addVals(concentrations)
-                if 'energies' in kwargs.keys() and kwargs['energies'] == 'Yes':
+                if energies == 'Yes':
                     dU.addVals(deltaU)
                     dH.addVals(deltaH)
             except FileNotFoundError:

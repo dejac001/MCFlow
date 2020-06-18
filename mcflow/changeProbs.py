@@ -1,3 +1,19 @@
+import os
+import shutil
+import sys
+
+# my dir
+my_dir = os.path.dirname(os.path.abspath(__file__))
+
+# add parent directory to pythonpath
+sys.path.append(os.path.join(my_dir, '..'))
+from mcflow.dataUtil import sortMolKeys
+from mcflow.getData import output_json, outputGen_json
+import numpy as np
+from mcflow.runAnalyzer import getFileData, findNextRun
+from mcflow.file_formatting import writer, reader
+
+
 class NoSwapsAccepted(BaseException):
     pass
 
@@ -451,32 +467,17 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
             pmvol, pmvol + pSwapTot * alpha, pmvol + pSwapTot * alpha + pSwapTot)
 
 
-import os
-import shutil
-import sys
-
-# my dir
-my_dir = os.path.dirname(os.path.abspath(__file__))
-
-# add parent directory to pythonpath
-sys.path.append(os.path.join(my_dir, '..'))
-from mcflow.dataUtil import sortMolKeys
-from mcflow.getData import output_json, outputGen_json
-import numpy as np
-from mcflow.runAnalyzer import getFileData, findNextRun
-from mcflow.file_formatting import writer, reader
-
-if __name__ == '__main__':
-    from analysis_parsers import Change
-
-    args = vars(Change().parse_args())
-    feeds = args.pop('feeds')
+def main(feeds, verbosity=0, type='equil-', path='', indep=None, interval=0, guessStart=1, time=345000,
+         rcut=0.5, nstep=50000, liq=False, mol=None, energies=None, box=None):
+    if indep is None:
+        indep = range(1, 9)
     data = {}
     gen_data = {}
 
     for feed in feeds:
-        args['feeds'] = [feed]
-        data[feed], gen_data[feed] = getFileData(**args)
+        data[feed], gen_data[feed] = getFileData(feeds=[feed], indep=indep, path=path, type=type, guessStart=guessStart,
+                                                 interval=interval, verbosity=verbosity, liq=liq, mol=mol,
+                                                 energies=energies, box=box)
         nbox = len(data[feed]['rho'].averages[feed].keys())
         # TODO: format return from analyzeTransfers to fit well with fort4 data dict
         try:
@@ -484,15 +485,15 @@ if __name__ == '__main__':
              nActCycle, normSwaps, normSwatches,
              pmvol, pswatch_norm, pswap_norm) = analyzeTransfers(data[feed]['SWAP'].averages[feed],
                                                                  gen_data[feed][feed]['ncycle'],
-                                                                 #                                                       nActPerCycle=3656/200, tavol=0.3,
+                                                                 # nActPerCycle=3656/200, tavol=0.3,
                                                                  gen_data[feed][feed]['compositions'])
         except NoSwapsAccepted:
             print('no swaps accepted for {}'.format(feed))
             continue
         print(newSwaps)
         # read and write
-        for sim in args['indep']:
-            my_path = '%s/%s/%i/' % (args['path'], feed, sim)
+        for sim in indep:
+            my_path = '%s/%s/%i/' % (path, feed, sim)
             try:
                 input_data = reader.read_fort4(my_path + 'fort.4')
             except FileNotFoundError:
@@ -533,8 +534,8 @@ if __name__ == '__main__':
             # take out extraneous swatches
             unique_swatches = []
             for iswatch, info in input_data['MC_SWATCH'].items():
-                in_line_1 = [];
-                in_line_2 = [];
+                in_line_1 = []
+                in_line_2 = []
                 splist = []
                 for i, line in enumerate(info.split('\n')):
                     if not line.startswith('!'):
@@ -586,11 +587,11 @@ if __name__ == '__main__':
             input_data['&mc_swatch']['nswaty'] = '%i' % nSwatch
             # add in other stuff
             #   general info
-            input_data['&mc_shared']['time_limit'] = '%i' % args['time']
-            input_data['&mc_shared']['nstep'] = '%i' % args['nstep']
+            input_data['&mc_shared']['time_limit'] = '%i' % time
+            input_data['&mc_shared']['nstep'] = '%i' % nstep
             input_data['&mc_shared']['iratio'] = '500'
             input_data['&mc_shared']['rmin'] = '1.0'
-            iblock = int(args['nstep'] / 10)
+            iblock = int(nstep / 10)
             if iblock > 1000: iblock = 1000
             if '&analysis' not in input_data.keys():
                 input_data['&analysis'] = {}
@@ -622,21 +623,29 @@ if __name__ == '__main__':
                 input_data['SIMULATION_BOX']['box%i' % box]['dimensions'] = (
                         '%8f %8f %8f' % (boxLengths, boxLengths, boxLengths)
                 )
-                if (boxLengths > 100.) and (args['rcut'] < 1.):
-                    input_data['SIMULATION_BOX']['box%i' % box]['rcut'] = '%5e' % (boxLengths * args['rcut'])
+                if (boxLengths > 100.) and (rcut < 1.):
+                    input_data['SIMULATION_BOX']['box%i' % box]['rcut'] = '%5e' % (boxLengths * rcut)
                 if (input_data['SIMULATION_BOX']['box%i' % box]['defaults'].split()[-2] == 'T'):
                     # if ideal gas
                     input_data['SIMULATION_BOX']['box%i' % box]['rcut'] = '14.0'
             # make new run
-            old_fort4 = [i for i in os.listdir(my_path) if 'fort.4.%s' % args['type'] in i]
+            old_fort4 = [i for i in os.listdir(my_path) if 'fort.4.%s' % type in i]
             for fort4 in old_fort4:
                 os.remove(my_path + fort4)
             try:
                 shutil.move(my_path + 'fort.4', my_path + 'old-fort4')
             except FileNotFoundError:
                 pass
-            nextRun = 'fort.4.%s%i' % (args['type'], findNextRun(my_path, args['type']))
+            nextRun = 'fort.4.%s%i' % (type, findNextRun(my_path, type))
             writer.write_fort4(input_data, my_path + nextRun)
             input_data = None
-    output_json(args['path'], args['type'], data, 'Yes')
-    outputGen_json(args['path'], args['type'], gen_data, 'Yes')
+    output_json(path, type, data)
+    outputGen_json(path, type, gen_data)
+
+
+if __name__ == '__main__':
+    from analysis_parsers import Change
+
+    args = vars(Change().parse_args())
+    feeds = args.pop('feeds')
+    main(feeds, **args)
