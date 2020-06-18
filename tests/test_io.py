@@ -1,6 +1,7 @@
 import os
 import numpy as np
 path = os.path.abspath(os.path.dirname(__file__))
+from scripts.change_pressure import set_pressure
 
 
 def test_fort4():
@@ -11,8 +12,7 @@ def test_fort4():
     assert int(data['&mc_shared']['nbox']) == 2, 'Incorrect box'
     assert int(data['&mc_shared']['nchain']) == 600, 'Incorrect nchain'
     assert np.isclose(float(data['SIMULATION_BOX']['box1']['pressure']), 0.001), 'Incorrect pressure'
-    for box in data['SIMULATION_BOX'].keys():
-        data['SIMULATION_BOX'][box]['pressure'] = '0.01'
+    data = set_pressure(data, 0.01)
     write_fort4(data, os.path.join('test-data', 'fort.4.new'))
     new_file_name = os.path.join(path, 'test-data', 'fort.4.new')
     new_data = read_fort4(new_file_name)
