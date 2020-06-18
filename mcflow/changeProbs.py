@@ -451,12 +451,12 @@ def analyzeTransfers(my_transferInfo, ncycle, numberMoleculeTypes,
             pmvol, pmvol + pSwapTot * alpha, pmvol + pSwapTot * alpha + pSwapTot)
 
 
-from . import runAnalyzer
+import runAnalyzer
 from .file_formatting import writer, reader
-from . import getData
+import getData
 import numpy as np
 import os, shutil
-from . import dataUtil
+import dataUtil
 
 if __name__ == '__main__':
     from analysis_parsers import Change
