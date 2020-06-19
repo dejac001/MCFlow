@@ -1,5 +1,5 @@
-def makeNewLine(pad, name, val):
-    #:: val is a string
+def makeNewLine(pad: str, name: str, val: str):
+    """"""
     newLine = '%s%-15s = %s\n' % (pad, name, val)
     return newLine
 
@@ -382,6 +382,10 @@ def write_fort4(data, newfile):
     :param newfile: name of new file to write
     :type newfile: str
     """
+    if '&analysis' not in data.keys():
+        data['&analysis'] = {key: str(int(data['&mc_shared']['nstep']) + 10) for key in ('iprint', 'imv', 'iblock', 'iratp')}
+    if '&mc_swatch' not in data.keys():
+        data['&mc_swatch'] = dict(pmswat='-1.0', nswaty='0', pmsatc= '')
     indent = ' ' * 4
     f = open(newfile, 'w')
     namelists = [i for i in data.keys() if i.startswith('&')]
@@ -408,9 +412,11 @@ def write_fort4(data, newfile):
                      'INTERMOLECULAR_EXCLUSION', 'INTRAMOLECULAR_SPECIAL',
                      'INTRAMOLECULAR_OH15', 'UNIFORM_BIASING_POTENTIALS',
                      'SPECIFIC_ATOM_TRANSL']
-    if len(namelists) != len(namelist_order):
-        print('amount of namelists not provided correctly')
+    if len(namelists) < len(namelist_order):
+        print('not enough namelists!, missing {}. quitting'.format(set(namelist_order) - set(namelists)))
         quit()
+    elif len(namelists) < len(namelist_order):
+        print('too namelists!, ignoring {}'.format(set(namelists) - set(namelist_order)))
     elif len(sections) != len(section_order):
         #       print('Not enough sections provided')
         #       print('- missing sections: ',[i for i in section_order if i not in sections])
