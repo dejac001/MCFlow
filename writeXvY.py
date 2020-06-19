@@ -199,16 +199,22 @@ class IdealGasAds:
             [self.feed], file_name, file_description)
 
     def read_json(self):
-        if 'dH-mixt-data.json' in self.files:
-            index = self.files.index('dH-mixt-data.json')
-            self.files.pop(index)
-            self.variables.pop(index)
+        indices_to_ignore = []
         for file, var in zip(self.files, self.variables):
-            with open('%s/%s'%(self.path, file)) as f:
-                data = json.load(f)
-            for feed in self.feeds:
-                assert feed in data.keys(), 'Feed {} not in database for file {}'.format(feed, file)
-                var[feed] = data[feed]
+            f_name = os.path.join(self.path, file)
+            if os.path.isfile(f_name):
+                with open(f_name) as f:
+                    data = json.load(f)
+                for feed in self.feeds:
+                    assert feed in data.keys(), 'Feed {} not in database for file {}'.format(feed, f_name)
+                    var[feed] = data[feed]
+            else:
+                print('didnt find file {}; ignoring'.format(f_name))
+                index = self.files.index(file)
+                indices_to_ignore.append(index)
+
+        self.files = [self.files[i] for i in range(len(self.files)) if i not in indices_to_ignore]
+        self.variables = [self.variables[i] for i in range(len(self.variables)) if i not in indices_to_ignore]
 
     def getMolAds(self, num_molec):
         mols_adsorbed = []
