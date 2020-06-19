@@ -1,4 +1,4 @@
-def writeAGR(x, y, dx, dy, names, file, description):
+def writeCSV(x, y, dx, dy, names, file, description):
     file = file.replace('/','_')
     #TODO: when writing to file, sort all lines (previously written too) by x-value
     if os.path.isfile(file):
@@ -8,18 +8,17 @@ def writeAGR(x, y, dx, dy, names, file, description):
         assert description, 'Description needed before writing to file %s'%file
     with open(file,'a') as f:
         if description:
-            if '@' not in description: description = '# ' + description
-            f.write('%s\n'%description)
+            f.write('%s,note\n'%description.replace('    ',','))
         for i in sorted(x):
             my_index = x.index(i)
             my_line = ''
             if dx and dy:
                 for data in (x, y, dx, dy):
-                    my_line += '%e '%data[my_index]
+                    my_line += '%e,'%data[my_index]
             elif x and y:
                 for data in (x, y):
-                    my_line += '%e '%data[my_index]
-            my_line += '#%s\n'%names[my_index]
+                    my_line += '%e,'%data[my_index]
+            my_line += '%s\n'%names[my_index]
             assert my_line.count('\n') == 1, 'Too many line endings %s'%my_line
             f.write(my_line)
 
@@ -100,7 +99,7 @@ class IdealGasAds:
         U = self.U[self.feed][self.run]
         N = self.N[self.feed][self.run]
         gen_data = self.gen_data[self.feed][self.run][self.feed]
-        file_description = 'Q(%s)     %s    dQ     %s'%(self.units, self.xlabel[0],
+        file_description = 'Q(%s)    %s    dQ    %s'%(self.units, self.xlabel[0],
                                                        self.xlabel[1])
         file_name = 'dU_%s_mixture.dat'%self.box
         X = self.getX()
@@ -119,7 +118,7 @@ class IdealGasAds:
             (-1*U[self.box]['mean']/N2['mean']**2)**2*N2['stdev']**2
             ,0.5)*8.314/1000
         dU_mean, dU_stdev = dU, ddU
-        writeAGR([X['mean']],[dU_mean],
+        writeCSV([X['mean']],[dU_mean],
                 [calc95conf(X['stdev'], nIndep)], [calc95conf(dU_stdev, nIndep)],
                 [self.feed], file_name, file_description)
 
@@ -145,18 +144,18 @@ class IdealGasAds:
             (-1*U[vapor_box]['mean']/N2['mean']**2)**2*N2['stdev']**2
             ,0.5)*8.314/1000
         dH_mean, dH_stdev = dH, ddH
-        file_description = 'dHig     %s    ddHig     %s'%(self.xlabel[0],
+        file_description = 'dHig    %s    ddHig    %s'%(self.xlabel[0],
                                                        self.xlabel[1])
         if '95conf' not in X.keys():
             X['95conf'] = calc95conf(X['stdev'], nIndep)
-        writeAGR([X['mean']],[dH_mean],
+        writeCSV([X['mean']],[dH_mean],
                 [X['95conf']], [calc95conf(dH_stdev, nIndep)],
                 [self.feed], file_name, file_description)
 
     def dHvX(self):
         dH = self.dHmixt[self.feed][self.run]
         gen_data = self.gen_data[self.feed][self.run][self.feed]
-        file_description = 'Q(%s)     %s    dQ     %s'%(self.units, self.xlabel[0],
+        file_description = 'Q(%s)    %s    dQ    %s'%(self.units, self.xlabel[0],
                                                        self.xlabel[1])
         if self.boxes:
             boxFrom, boxTo = self.boxes
@@ -171,7 +170,7 @@ class IdealGasAds:
         dH_mean, dH_stdev = dH[transfer]['mean'], dH[transfer]['stdev']
         if '95conf' not in X.keys():
             X['95conf'] = calc95conf(X['stdev'], nIndep)
-        writeAGR([X['mean']],[dH_mean],
+        writeCSV([X['mean']],[dH_mean],
                 [X['95conf']], [calc95conf(dH_stdev, nIndep)],
                 [self.feed], file_name, file_description)
 
@@ -183,18 +182,18 @@ class IdealGasAds:
         vapor_box = self.findVapBox( rho, self.mol)
         factor = 1/N_av*R['nm**3*kPa/(mol*K)']*self.T
         X = self.getX()
-        file_description = '%s     Pig    %s     dP'%(self.xlabel[0],
+        file_description = '%s    Pig    %s    dP'%(self.xlabel[0],
                                                        self.xlabel[1])
         file_name = 'rho-mol%s-%s_vs_%s.dat'%(self.mol, vapor_box, self.xlabel[0])
         if (0 in self.indep) and (len(self.indep) == 1):
             vals = rho[self.mol][vapor_box]['raw']
             x_vals = X['raw']
-            writeAGR(x_vals,vals,
+            writeCSV(x_vals,vals,
                         None, None,
                      [self.feed for i in x_vals], file_name, file_description)
         else:
             mean, stdev = rho[self.mol][vapor_box]['mean'], rho[self.mol][vapor_box]['stdev']
-            writeAGR([X['mean']],[mean],
+            writeCSV([X['mean']],[mean],
             [calc95conf(X['stdev'], nIndep)], [calc95conf(stdev, nIndep)],
             [self.feed], file_name, file_description)
 
@@ -229,7 +228,7 @@ class IdealGasAds:
 
     def dGvX(self):
         assert len(self.boxes) == 2, 'Too many boxes {}'.format(self.boxes)
-        file_description = '%s    dG(kJ/mol)    %s     dG'%(self.xlabel[0],self.xlabel[1])
+        file_description = '%s    dG(kJ/mol)    %s    dG'%(self.xlabel[0],self.xlabel[1])
         N = self.N[self.feed][self.run]
         dG = self.dG[self.feed][self.run]
         nIndep = self.gen_data[self.feed][self.run][self.feed]['numIndep']
@@ -244,7 +243,7 @@ class IdealGasAds:
             if (0 in self.indep) and (len(self.indep) == 1):
                 dG_vals = dG[mol]['--'.join([boxFrom,boxTo])]['raw']
                 x_vals = X['raw']
-                writeAGR(x_vals,dG_vals,
+                writeCSV(x_vals,dG_vals,
                         None, None,
                      [self.feed for i in x_vals], file_name, file_description)
             else:
@@ -252,7 +251,7 @@ class IdealGasAds:
                                     dG[mol]['--'.join([boxFrom, boxTo])]['stdev'])
                 if '95conf' not in X.keys():
                     X['95conf'] = calc95conf(X['stdev'], nIndep)
-                writeAGR([X['mean']],[dG_mean],
+                writeCSV([X['mean']],[dG_mean],
                      [X['95conf']], [calc95conf(dG_stdev, nIndep)],
                      [self.feed], file_name, file_description)
 
@@ -321,7 +320,7 @@ class IdealGasAds:
                     Q_stdev = [N[mol]['box1']['stdev']*qfactor for i in Q_vals]
                 else:
                     raise NotImplemented
-                writeAGR( X['raw'], Q_vals, None,
+                writeCSV( X['raw'], Q_vals, None,
                             None, ['%s/%i'%(self.feed,j) for j in
                             range(1, nIndep+1)], file_name, file_description)
             else:
@@ -334,7 +333,7 @@ class IdealGasAds:
                     dX = X['95conf']
                 else:
                     dX = calc95conf(X['stdev'], nIndep)
-                writeAGR([X['mean']],[Q_mean],
+                writeCSV([X['mean']],[Q_mean],
                          [dX], [calc95conf(Q_stdev, nIndep)],
                          [self.feed], file_name, file_description)
 
@@ -356,7 +355,7 @@ class IdealGasAds:
                 density['mean'] += dens_molec_nm3['mean']*factor
                 density['stdev'] += math.pow(dens_molec_nm3['stdev']*factor,2)
         density['stdev'] = math.sqrt( density['stdev'] )
-        writeAGR([X['mean']],[density['mean']],
+        writeCSV([X['mean']],[density['mean']],
                      [calc95conf(X['stdev'], nIndep)], [calc95conf(density['stdev'], nIndep)],
                      [self.feed], file_name, file_description)
 
@@ -373,7 +372,7 @@ class IdealGasAds:
         Ni_tot = sum(N[self.mol][i]['mean'] for i in N[self.mol].keys())
         R_mean = N[self.mol]['box%s'%self.box]['mean']/Ni_tot*100
         R_stdev = pow(pow(1/Ni_tot - N[self.mol]['box%s'%self.box]['mean']/pow(Ni_tot,2),2)*pow(N[self.mol]['box%s'%self.box]['stdev'],2),0.5)*100
-        writeAGR([X['mean']],[R_mean],
+        writeCSV([X['mean']],[R_mean],
                          [calc95conf(X['stdev'], nIndep)], [calc95conf(R_stdev, nIndep)],
                          [self.feed], file_name, file_description)
 
@@ -400,7 +399,7 @@ class IdealGasAds:
                         assert self.T, 'Temperature needed for vapor p'
                         rho = self.rho[self.feed][self.run]
                         x_mean, x_stdev = calculateIGMolFrac(rho, mol1, box, X, self.T)
-                    writeAGR([X['mean']],[x_mean],
+                    writeCSV([X['mean']],[x_mean],
                          [dX], [calc95conf(x_stdev, nIndep)],
                          [self.feed], file_name, file_description)
 
@@ -442,7 +441,7 @@ class IdealGasAds:
                 S_mean = K_to['mean'] / K_from['mean']
                 S_stdev = eProp_division(K_to['mean'], K_to['stdev'],
                                       K_from['mean'], K_from['stdev'])
-                writeAGR([X['mean']], [S_mean],
+                writeCSV([X['mean']], [S_mean],
                          [calc95conf(X['stdev'],nIndep)], [calc95conf(S_stdev,nIndep)],
                          [self.feed], file_name, file_description)
             elif 'kH' in self.xlabel[0]:
@@ -465,7 +464,7 @@ class IdealGasAds:
                         math.pow(dS_drho*self.density[1],2) +
                         math.pow(dS_dC*X['95conf'],2)
                     )
-                    writeAGR([X['mean']], [S_mean],
+                    writeCSV([X['mean']], [S_mean],
                              [X['95conf']], [S_95conf],
                              [self.feed], file_name, file_description)
                 elif self.mol == '1':
@@ -490,7 +489,7 @@ class IdealGasAds:
                         math.pow(dS_drho*self.density[1],2) +
                         math.pow(dS_dC*X['95conf'],2)
                     )
-                    writeAGR([X['mean']], [S_mean],
+                    writeCSV([X['mean']], [S_mean],
                              [X['95conf']], [S_95conf],
                              [self.feed], file_name, file_description)
                 else:
@@ -552,12 +551,12 @@ class GasBoxAds(IdealGasAds):
                                                        self.xlabel[1])
         file_name = 'Tx_mol%s'%self.mol
         X = self.getX(box=liquid_box)
-        writeAGR([X['mean']],[T],
+        writeCSV([X['mean']],[T],
         [calc95conf(X['stdev'], nIndep)], [0.],
         [self.feed], file_name, file_description)
         file_name = 'Ty_mol%s'%self.mol
         X = self.getX(box=vapor_box)
-        writeAGR([X['mean']],[T],
+        writeCSV([X['mean']],[T],
         [calc95conf(X['stdev'], nIndep)], [0.],
         [self.feed], file_name, file_description)
 
@@ -706,12 +705,12 @@ class LiqAds(IdealGasAds):
                                                        self.xlabel[1])
         file_name = 'Pig_x_mol%s'%self.mol
         X = self.getX(box=liquid_box)
-        writeAGR([X['mean']],[p_mean],
+        writeCSV([X['mean']],[p_mean],
         [calc95conf(X['stdev'], nIndep)], [calc95conf(p_stdev, nIndep)],
         [self.feed], file_name, file_description)
         file_name = 'Pig_y_mol%s'%self.mol
         X = self.getX(box=vapor_box)
-        writeAGR([X['mean']],[p_mean],
+        writeCSV([X['mean']],[p_mean],
         [calc95conf(X['stdev'], nIndep)], [calc95conf(p_stdev, nIndep)],
         [self.feed], file_name, file_description)
 
@@ -745,7 +744,7 @@ class MoleFrac(LiqAds):
             y = self.getX(box=self.box, myMol=mol)
             if y['mean'] > 0.:
                 file_name = 'XvX_%s_%s.dat'%(self.mol,mol)
-                writeAGR([x['mean']],[y['mean']],
+                writeCSV([x['mean']],[y['mean']],
                         [calc95conf(x['stdev'], nIndep)], [calc95conf(y['stdev'], nIndep)],
                         [self.feed], file_name, file_description)
 
@@ -775,12 +774,12 @@ class MoleFrac(LiqAds):
                                                        self.xlabel[1])
         file_name = 'Tx_mol%s'%self.mol
         X = self.getX(box=liquid_box)
-        writeAGR([X['mean']],[T],
+        writeCSV([X['mean']],[T],
         [calc95conf(X['stdev'], nIndep)], [0.],
         [self.feed], file_name, file_description)
         file_name = 'Ty_mol%s'%self.mol
         X = self.getX(box=vapor_box)
-        writeAGR([X['mean']],[T],
+        writeCSV([X['mean']],[T],
         [calc95conf(X['stdev'], nIndep)], [0.],
         [self.feed], file_name, file_description)
 
