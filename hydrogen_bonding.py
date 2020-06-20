@@ -272,7 +272,7 @@ nx_options = {
 'width': 1}
 
 import networkx as nx
-from calc_tools import calculate_distance2, calculate_angle
+from mcflow.calc_tools import calculate_distance2, calculate_angle
 from analysis_parsers import MultMols
 import numpy as np
 import json, os

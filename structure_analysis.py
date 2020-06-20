@@ -153,7 +153,7 @@ from mcflow.runAnalyzer import what2Analyze, findNextRun
 from mcflow.file_formatting.reader import Movie
 from mcflow.file_formatting.writer import xyz
 from analysis_parsers import Results
-from calc_tools import calculate_distance2
+from mcflow.calc_tools import calculate_distance2
 import file_organization as fo
 
 

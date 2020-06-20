@@ -6,7 +6,7 @@ import math
 import os
 import numpy as np
 import properties
-import calc_tools
+from mcflow import calc_tools
 from chem_constants import R, N_av
 
 

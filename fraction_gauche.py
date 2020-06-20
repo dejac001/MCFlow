@@ -1,4 +1,4 @@
-from calc_tools import calculate_torsion, get_vector, determine_gauche
+from mcflow.calc_tools import calculate_torsion, get_vector, determine_gauche
 
 class NoTorsions(BaseException):
     def __init__(self):

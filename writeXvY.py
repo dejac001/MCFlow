@@ -796,7 +796,7 @@ class Temp(MoleFrac):
 from mcflow.runAnalyzer import checkRun
 from statistics import calc95conf
 from chem_constants import N_av, R
-from calc_tools import eProp_division
+from mcflow.calc_tools import eProp_division
 from analysis_parsers import Plot
 import numpy as np
 import os, math, json 

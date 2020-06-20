@@ -257,7 +257,7 @@ class Movie:
         :param box: String box number.
         of all molecules in this box
         '''
-        from calc_tools import calculate_angle
+        from mcflow.calc_tools import calculate_angle
         angle_histogram = {}
         for iframe, FRAME_DATA in enumerate(self.frame_data):
             for box in FRAME_DATA.keys():
@@ -290,7 +290,7 @@ class Movie:
         :param box: String box number.
         of all molecules in this box
         '''
-        from calc_tools import get_tors
+        from mcflow.calc_tools import get_tors
         torsion_histogram = {}
         for iframe, FRAME_DATA in enumerate(self.frame_data):
             for box in FRAME_DATA.keys():
@@ -875,5 +875,5 @@ import os
 import copy
 import numpy as np
 import properties
-from calc_tools import weighted_avg_and_std
+from mcflow.calc_tools import weighted_avg_and_std
 import math
