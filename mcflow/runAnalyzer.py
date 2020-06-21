@@ -1,4 +1,4 @@
-import mcflow.file_organization as fo
+import file_organization as fo
 import typing
 from mcflow.file_formatting import reader
 from mcflow.dataUtil import box_str_to_boxname
