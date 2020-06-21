@@ -260,7 +260,7 @@ def calc_dU_dH(U, P, Ntot, box_length_x, box_length_y, box_length_z):
 
 
 def getFileData(feeds, indep, path, type, guessStart, interval,
-                verbosity, liq=False, mol=None, energies=None, box=None, debug=True):
+                verbosity, liq=False, mol=None, energies=None, box=None, debug=True, **kwargs):
     """
 
     :param feeds: parent directories to iterate over
@@ -286,6 +286,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
     :return: parsed data
     :rtype: typing.Tuple[dict, dict]
     """
+    del kwargs
     general_data = {key: {} for key in feeds}
     for feed in feeds:
         if verbosity > 0: print('-' * 12 + 'Dir is %s' % feed + '-' * 12)
