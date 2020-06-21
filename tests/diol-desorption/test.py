@@ -1,4 +1,4 @@
-from mcflow import getData
+import getData
 
 
 def default_args():

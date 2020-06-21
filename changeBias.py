@@ -193,7 +193,7 @@ if __name__ == '__main__':
     from analysis_parsers import Change
     from mcflow.runAnalyzer import getFileData, findNextRun
     from mcflow.file_formatting import writer, reader
-    from mcflow.getData import outputGenDB, outputDB
+    from getData import outputGenDB, outputDB
     from setup_production import iaverage
 
     my_parser = Change()

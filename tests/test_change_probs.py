@@ -1,4 +1,4 @@
-from mcflow.changeProbs import main
+from changeProbs import main
 import os
 
 path = os.path.abspath(os.path.dirname(__file__))
