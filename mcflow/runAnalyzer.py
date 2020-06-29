@@ -292,71 +292,80 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
         if verbosity > 0: print('-' * 12 + 'Dir is %s' % feed + '-' * 12)
         nNotFound = 0
         for seed in indep:
+            my_dir = os.path.join(path, feed, '%i' % seed)
+            (old_begin, nfiles) = what2Analyze(my_dir, type,
+                                               guessStart, interval)
+            if verbosity > 0:
+                print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
+            # get data from old files
+            read_fort12 = True
             try:
-                my_dir = os.path.join(path, feed, '%i' % seed)
-                (old_begin, nfiles) = what2Analyze(my_dir, type,
-                                                   guessStart, interval)
-                if verbosity > 0:
-                    print('old_begin = {}, nfiles = {}'.format(old_begin, nfiles))
-                # get data from old files
                 (N, P, boxlx, boxly, boxlz,
                  ncycle_old, molWeights, U) = reader.read_fort12(my_dir, old_begin,
                                                                  nfiles, tag=type)
                 Ntotal = getTotalMols(N)
 
                 K, mole_frac = getKX(N, Ntotal)
-                (number_densities, chemical_potential,
-                 swap_info, biasPot, average_volumes,
-                 totalComposition, cbmc_info,
-                 T, zeolite) = reader.go_through_runs(my_dir, ncycle_old,
-                                                      old_begin, nfiles,
-                                                      tag=type)
+            except FileNotFoundError:
+                read_fort12 = False
+                ncycle_old = 0
 
-                # do calculations for other data that may be needed
-                number_dens_real = getRealRho(number_densities, biasPot, T, debug=debug)
-                deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
-                if energies == 'Yes':
-                    deltaU, deltaH = calc_dU_dH(U, P, Ntotal, boxlx, boxly, boxlz)
-                if liq:
-                    concentrations = {}
-                    assert box is not None, 'box needed for liquid phase'
-                    if 'box' not in box:
-                        box = box_str_to_boxname(str(box))
-                    l_box = box
-                    c = calc_tools.g_mL(N[mol][l_box], boxlx[l_box],
-                                        MW=molWeights[mol])
-                    concentrations[mol] = {l_box: c}
-                # initialize vars
-                if (seed == indep[0]) and (feed == feeds[0]):
+            (number_densities, chemical_potential,
+             swap_info, biasPot, average_volumes,
+             totalComposition, cbmc_info,
+             T, zeolite) = reader.go_through_runs(my_dir, ncycle_old,
+                                                  old_begin, nfiles,
+                                                  tag=type)
+
+            # do calculations for other data that may be needed
+            number_dens_real = getRealRho(number_densities, biasPot, T, debug=debug)
+            deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
+            if energies == 'Yes' and read_fort12:
+                deltaU, deltaH = calc_dU_dH(U, P, Ntotal, boxlx, boxly, boxlz)
+            if liq and read_fort12:
+                concentrations = {}
+                assert box is not None, 'box needed for liquid phase'
+                if 'box' not in box:
+                    box = box_str_to_boxname(str(box))
+                l_box = box
+                c = calc_tools.g_mL(N[mol][l_box], boxlx[l_box],
+                                    MW=molWeights[mol])
+                concentrations[mol] = {l_box: c}
+            # initialize vars
+            if (seed == indep[0]) and (feed == feeds[0]):
+                if read_fort12:
                     k_ratio = properties.AnyProperty(K)
                     X = properties.AnyProperty(mole_frac)
-                    CBMC = properties.AnyProperty(cbmc_info)
-                    Press = properties.AnyProperty(P)
-                    Nmlcl = properties.AnyProperty(N)
-                    SWAP = properties.AnyProperty(swap_info)
-                    rho = properties.AnyProperty(number_dens_real)
-                    dG = properties.AnyProperty(deltaG)
-                    data = {'CBMC': CBMC, 'P': Press, 'N': Nmlcl,
-                            'SWAP': SWAP, 'rho': rho,
-                            'dG': dG, 'K': k_ratio,
-                            'X': X}
-                    if liq:
-                        if (verbosity > 1):
-                            print('Doing analysis for C [ g/mL ] for mol {}'.format(mol))
-                            print('Box 2 should be liquid phase')
-                        C = properties.AnyProperty(concentrations)
-                        data['Conc'] = C
-                    if energies == 'Yes':
-                        dH = properties.AnyProperty(deltaH)
-                        dU = properties.AnyProperty(deltaU)
-                        data['dH'] = dH
-                        data['dU'] = dU
-                CBMC.addVals(cbmc_info)
-                Press.addVals(P)
-                Nmlcl.addVals(N)
-                SWAP.addVals(swap_info)
-                rho.addVals(number_dens_real)
-                dG.addVals(deltaG)
+                CBMC = properties.AnyProperty(cbmc_info)
+                Press = properties.AnyProperty(P)
+                Nmlcl = properties.AnyProperty(N)
+                SWAP = properties.AnyProperty(swap_info)
+                rho = properties.AnyProperty(number_dens_real)
+                dG = properties.AnyProperty(deltaG)
+                data = {'CBMC': CBMC, 'P': Press, 'N': Nmlcl,
+                        'SWAP': SWAP, 'rho': rho,
+                        'dG': dG}
+                if read_fort12:
+                    data['K'] = k_ratio
+                    data['X'] = X
+                if liq and read_fort12:
+                    if (verbosity > 1):
+                        print('Doing analysis for C [ g/mL ] for mol {}'.format(mol))
+                        print('Box 2 should be liquid phase')
+                    C = properties.AnyProperty(concentrations)
+                    data['Conc'] = C
+                if energies == 'Yes' and read_fort12:
+                    dH = properties.AnyProperty(deltaH)
+                    dU = properties.AnyProperty(deltaU)
+                    data['dH'] = dH
+                    data['dU'] = dU
+            CBMC.addVals(cbmc_info)
+            Press.addVals(P)
+            Nmlcl.addVals(N)
+            SWAP.addVals(swap_info)
+            rho.addVals(number_dens_real)
+            dG.addVals(deltaG)
+            if read_fort12:
                 k_ratio.addVals(K)
                 X.addVals(mole_frac)
                 if liq:
@@ -364,12 +373,6 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 if energies == 'Yes':
                     dU.addVals(deltaU)
                     dH.addVals(deltaH)
-            except FileNotFoundError:
-                nNotFound += 1
-                print('File not found for dir {}'.format(my_dir))
-                print('Not averaging for this directory')
-                continue
-        if nNotFound == len(indep): raise NoFilesAnalyzed
         for cls in data.values():
             cls.avgVals(feed)
         general_data[feed]['numIndep'] = len(indep)
