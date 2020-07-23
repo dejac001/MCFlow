@@ -252,7 +252,11 @@ def calc_dU_dH(U, P, Ntot, box_length_x, box_length_y, box_length_z, zeolite: di
                         # pressure was not calculated, no need to calculate dH
                         continue
                     V_from = box_length_x[boxFrom][i] * box_length_y[boxFrom][i] * box_length_z[boxFrom][i]
-                    V_to = box_length_x[boxTo][i] * box_length_y[boxTo][i] * box_length_z[boxTo][i]
+                    if zeolite and boxTo == 'box1':
+                        V_to = zeolite['volume [Angst.^3]']
+                    else:
+                        V_to = box_length_x[boxTo][i] * box_length_y[boxTo][i] * box_length_z[boxTo][i]
+
                     molar_volume_from, molar_volume_to = V_from / N_from * N_av, V_to / N_to * N_av
                     delta_H = delta_U + p * (molar_volume_to - molar_volume_from) / R['\AA**3*kPa/(mol*K)'] * R[
                         'kJ/(mol*K)']

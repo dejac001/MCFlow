@@ -520,11 +520,11 @@ def read_fort12(path, start_of_runs, num_files, tag='equil-'):
             for mol in range(1, nmolty + 1):
                 N_mlcls.data[str(mol)]['box%i' % box].append(int(my_split[offset + mol]))
             if 'E' in my_split[4]:
-                Pressure.data['box%i' % box].append(float(my_split[4]))
+                Pressure.data['box%i' % box].append(float(my_split[offset]))
             else:
                 # pressure has not been calculated yet
                 Pressure.data['box%i' % box].append(np.nan)
-            InternalEnergy.data['box%i' % box].append(float(my_split[3]))
+            InternalEnergy.data['box%i' % box].append(float(my_split[offset-1]))
             box_length_x.data['box%i' % box].append(float(my_split[0]))
             box_length_y.data['box%i' % box].append(float(my_split[1]))
             box_length_z.data['box%i' % box].append(float(my_split[2]))
