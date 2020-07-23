@@ -217,7 +217,7 @@ def calcDGfromNumDens(rho, N_i, T):
     return dG
 
 
-def calc_dU_dH(U, P, Ntot, box_length_x, box_length_y, box_length_z):
+def calc_dU_dH(U, P, Ntot, box_length_x, box_length_y, box_length_z, zeolite: dict):
     """
 
     :param U: Internal energy from fort12 file (units of K*nchain)
@@ -226,6 +226,7 @@ def calc_dU_dH(U, P, Ntot, box_length_x, box_length_y, box_length_z):
     :param box_length_x: length of box in x-direction in Angstrom
     :param box_length_y: length of box in z-direction in Angstrom
     :param box_length_z: length of box in z-direction in Angstrom
+    :param zeolite: data for zeolite (empty dict if no zeolite)
     :return: dH, dU
     """
     if 'box3' not in U.keys():
@@ -290,7 +291,6 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
     general_data = {key: {} for key in feeds}
     for feed in feeds:
         if verbosity > 0: print('-' * 12 + 'Dir is %s' % feed + '-' * 12)
-        nNotFound = 0
         for seed in indep:
             my_dir = os.path.join(path, feed, '%i' % seed)
             (old_begin, nfiles) = what2Analyze(my_dir, type,
@@ -316,12 +316,11 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
              T, zeolite) = reader.go_through_runs(my_dir, ncycle_old,
                                                   old_begin, nfiles,
                                                   tag=type)
-
             # do calculations for other data that may be needed
             number_dens_real = getRealRho(number_densities, biasPot, T, debug=debug)
             deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
             if energies == 'Yes' and read_fort12:
-                deltaU, deltaH = calc_dU_dH(U, P, Ntotal, boxlx, boxly, boxlz)
+                deltaU, deltaH = calc_dU_dH(U, P, Ntotal, boxlx, boxly, boxlz, zeolite)
             if liq and read_fort12:
                 concentrations = {}
                 assert box is not None, 'box needed for liquid phase'

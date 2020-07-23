@@ -1,3 +1,6 @@
+import file_organization as fo
+
+
 def convertMovieCoordsXYZ(each_molecule):
     conv = {'61': 'H', '62': 'O', '64': 'C', '5': 'C', 'COM': 'F'}
     data = {'atoms': [], 'coords': []}
@@ -312,9 +315,6 @@ class Movie:
         return torsion_histogram
 
 
-import file_organization as fo
-
-
 def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
     def initVars(nbox, nmolty):
         chemical_potential = properties.MolProperty(nbox, nmolty)
@@ -382,7 +382,7 @@ def go_through_runs(path, ncycle_total, start_of_runs, num_files, tag='equil-'):
             elif 'framework mass' in line:
                 zeolite['mass (g)'] = float(line.split()[3])
             elif 'framework volume' in line:
-                zeolite['volume'] = float(line.split()[3])
+                zeolite['volume [Angst.^3]'] = float(line.split()[3])
             elif 'one adsorbed molecule in sim box' in line:
                 zeolite[' mol/kg / 1 mlcl adsorbed'] = float(line.split()[-2])
             elif '###' in line:  # find what section we are in

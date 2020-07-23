@@ -1,4 +1,5 @@
 from mcflow.save_data import output_json, outputGen_json
+from mcflow import runAnalyzer
 
 
 def main(args):
@@ -35,7 +36,6 @@ def my_parser():
     return vars(my_parser.parse_args())
 
 
-from mcflow import runAnalyzer
 
 if __name__ == '__main__':
     arguments = my_parser()
