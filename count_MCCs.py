@@ -25,7 +25,7 @@ if __name__ == '__main__':
                 except FileNotFoundError:
                     continue
             feed_MCCS.append(sim_MCCS)
-        print(' ' *5 + 'MCCs was %5e +/- %5e for feed:%s'%( np.mean(feed_MCCS), np.std(feed_MCCS), feed ) )
+        print(' ' *5 + 'MCCs was %5e +/- %5e for feed:%s'%( np.mean(feed_MCCS), np.std(feed_MCCS, ddof=1), feed ) )
         all_MCCS.append( np.mean(feed_MCCS) )
-    print('MCCs for all feeds was %5e +/- %5e'%(np.mean(all_MCCS), np.std(all_MCCS)))
+    print('MCCs for all feeds was %5e +/- %5e'%(np.mean(all_MCCS), np.std(all_MCCS, ddof=1)))
     print('MCCs for all feeds ranged from %5e to %5e'%(np.min(all_MCCS), np.max(all_MCCS)))

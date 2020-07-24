@@ -97,7 +97,7 @@ class Channel(FindRegion):
                 mean = np.mean(values)
                 self.averages[self.feed][mol][channel] = {}
                 self.averages[self.feed][mol][channel]['mean'] = mean
-                self.averages[self.feed][mol][channel]['stdev'] = np.std(values)
+                self.averages[self.feed][mol][channel]['stdev'] = np.std(values, ddof=1)
                 self.averages[self.feed][mol][channel]['raw'] = values
                 N_total = N_total + mean
             if N_total < 1e-8:

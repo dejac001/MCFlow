@@ -120,7 +120,7 @@ class Plotter:
                 N_tot_raw += vals['raw'][j]
         N_tot_raw = [i/nIndep for i in N_tot_raw]
         R_raw = [N[mol][box]['raw'][i]/N_tot_raw[i]*100 for i in range(len(N_tot_raw))]
-        return {'mean':np.mean(R_raw), 'stdev':np.std(R_raw), 'raw':R_raw}
+        return {'mean':np.mean(R_raw), 'stdev':np.std(R_raw, ddof=1), 'raw':R_raw}
 
     def moleFrac(self,mol,box):
         mol_frac = self.X[self.feed][self.run]

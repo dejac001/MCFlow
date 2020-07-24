@@ -19,5 +19,5 @@ if __name__ == '__main__':
                 f.write('%e #%s/%s/%i\n'%(np.mean(dH12), T,L,seed))
 #               dH['raw data'].append( np.mean(dH12) )
 #           mean = np.mean( dH['raw data'] )
-#           stdev = np.std( dH['raw data'] )
+#           stdev = np.std( dH['raw data'], ddof=1)
 #           f.write('%e %e #%s\n'%(mean, calc95conf(stdev, numIndep), L))

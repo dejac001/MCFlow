@@ -20,6 +20,6 @@ if __name__ == '__main__':
     MW = float(MW)
     data = readDat(file)
     dG = np.mean(data[1])
-    dG_std = np.std(data[1])
+    dG_std = np.std(data[1], ddof=1)
     print(kH([dG,dG_std], MW))
 

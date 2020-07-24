@@ -45,7 +45,7 @@ class AnyProperty():
                             stop = int(iblock*block_length)
                             block_data = value[start:stop]
                             means.append(np.mean(block_data))
-                            stdevs.append(np.std(block_data))
+                            stdevs.append(np.std(block_data, ddof=1))
                         blockMean[key].append(means)
                         blockStdev[key].append(stdevs)
                     else:
@@ -70,7 +70,7 @@ class AnyProperty():
 #                    averageValues(dataToAverage[key], allAverages[key])
 #                elif isinstance(value, list):
 #                    mean = np.mean(value)
-#                    stdev = np.std(value)
+#                    stdev = np.std(value, ddof=1)
 #                    allAverages[key] = {'mean':mean, 'stdev':stdev}
 #                    dataToAverage[key].clear()
 #        if not self.averaging: # if havent started averaging need to make new dict
@@ -92,7 +92,7 @@ class AnyProperty():
                     averageValues(dataToAverage[key], allAverages[key], blockMean[key], blockStd[key])
                 elif isinstance(value, list):
                     mean = np.mean(value)
-                    stdev = np.std(value)
+                    stdev = np.std(value, ddof=1)
                     allAverages[key] = {'mean':mean, 'stdev':stdev, 'raw':value[:]}
                     if key in blockMean.keys() and key in blockStd.keys():
                         allAverages[key]['block means'] = blockMean[key]

@@ -130,8 +130,8 @@ class Torsion(Movie):
                         f_all_trans.append(seed_data.count(True)/len(seed_data))
                 fraction_gauche[box][mlcl]['mean'] = np.mean(fraction_gauche[box][mlcl]['raw data'])
                 fraction_gauche[box][mlcl]['all trans mean'] = np.mean(f_all_trans)
-                fraction_gauche[box][mlcl]['all trans stdev'] = np.std(f_all_trans)
-                fraction_gauche[box][mlcl]['stdev'] = np.std(fraction_gauche[box][mlcl]['raw data'])
+                fraction_gauche[box][mlcl]['all trans stdev'] = np.std(f_all_trans, ddof=1)
+                fraction_gauche[box][mlcl]['stdev'] = np.std(fraction_gauche[box][mlcl]['raw data'], ddof=1)
 #               fraction_gauche[box][mlcl]['hist'] = hist
         return fraction_gauche
 

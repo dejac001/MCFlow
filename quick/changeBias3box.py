@@ -1,5 +1,5 @@
 def addBias(n_des, vals):
-    mean, std = np.mean(vals), np.std(vals)
+    mean, std = np.mean(vals), np.std(vals, ddof=1)
     dG = T*np.log(mean/n_des)
     ddG = np.sqrt(pow(T*std/mean,2))
     return dG, ddG

@@ -186,7 +186,7 @@ class Movie:
                         num_molec_data.pop(mol_num)
                         continue
                 else:
-                    mean, stdev = np.mean(N[box][mol]['raw data'][0]), np.std(N[box][mol]['raw data'][0])
+                    mean, stdev = np.mean(N[box][mol]['raw data'][0]), np.std(N[box][mol]['raw data'][0], ddof=1)
                 num_molec_data[mol_num][box]['mean'] = mean.tolist()
                 num_molec_data[mol_num][box]['stdev'] = stdev
                 # make histogram
