@@ -264,6 +264,41 @@ def calc_dU_dH(U, P, Ntot, box_length_x, box_length_y, box_length_z, zeolite: di
     return dU, dH
 
 
+def calc_U_bar(U_all: typing.Dict[str, list], N_i: typing.Dict[str, typing.Dict[str, list]]) -> typing.Dict[str, typing.Dict[str, float]]:
+    """
+    Calculate partial molar properties as in Josephson2019_
+
+    .. _Josephson2019:: Josephson, T. R.; Singh, R.; Minkara, M. S.; Fetisov, E. O.; Siepmann, J. I.
+        Partial Molar Properties from Molecular Simulation Using Multiple Linear Regression.
+        Mol. Phys. https://doi.org/10.1080/00268976.2019.1648898
+
+    :param U_all: potential energy, units of K*number of molecules
+    :type U_all: typing.Dict[boxes, steps]
+    :param N: numbers of molecules
+    :type N: typing.Dict[molec_numbers, typing.Dict[boxes, steps]]
+    :return: partial molar internal energies for each molecule in each box
+    """
+    molecules = list(N_i.keys())
+    n = len(molecules)  # number of species
+    assert 'box' not in molecules[0], 'Inconsistent calculation of number of molecules'
+
+    U_bars = {}
+    for box, vals in U_all.items():
+        M = len(vals)  # number of frames
+        N = np.zeros((M, n))
+        U = np.array(vals)
+        for i, name in enumerate(molecules):
+            assert len(N_i[name][box]) == M, 'Inconsistent molecules vector N_i'
+            N[:, i] = N_i[name][box]
+        NT = N.T
+        U_bar = np.dot(np.dot(np.linalg.inv(np.dot(NT, N)), NT), U)
+        U_bars[box] = {
+            name: val*R['kJ/(mol*K)'] for name, val in zip(molecules, U_bar)
+        }
+
+    return U_bars
+
+
 def getFileData(feeds, indep, path, type, guessStart, interval,
                 verbosity, liq=False, mol=None, energies=None, box=None, debug=True, **kwargs):
     """
@@ -325,6 +360,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
             deltaG = calcDGfromNumDens(number_dens_real, totalComposition, T)
             if energies == 'Yes' and read_fort12:
                 deltaU, deltaH = calc_dU_dH(U, P, Ntotal, boxlx, boxly, boxlz, zeolite)
+                Ubar = calc_U_bar(U, N)
             if liq and read_fort12:
                 concentrations = {}
                 assert box is not None, 'box needed for liquid phase'
@@ -360,8 +396,10 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 if energies == 'Yes' and read_fort12:
                     dH = properties.AnyProperty(deltaH)
                     dU = properties.AnyProperty(deltaU)
+                    U_bar = properties.AnyProperty(Ubar)
                     data['dH'] = dH
                     data['dU'] = dU
+                    data['Ubar'] = U_bar
             CBMC.addVals(cbmc_info)
             Press.addVals(P)
             Nmlcl.addVals(N)
@@ -376,6 +414,7 @@ def getFileData(feeds, indep, path, type, guessStart, interval,
                 if energies == 'Yes':
                     dU.addVals(deltaU)
                     dH.addVals(deltaH)
+                    U_bar.addVals(Ubar)
         for cls in data.values():
             cls.avgVals(feed)
         general_data[feed]['numIndep'] = len(indep)
