@@ -5,7 +5,7 @@ import time
 from mcflow import runAnalyzer
 
 
-def output_json(path, run_type, data, save_old=True):
+def output_json(path, run_type, data, save_old='Yes'):
     """Save data in json. If previous data exists, copy it to an old file
 
     :param path: path to *feed* directories
@@ -14,8 +14,8 @@ def output_json(path, run_type, data, save_old=True):
     :type run_type: str
     :param data: data to be saved
     :type data: dict
-    :param save_old: whether or not to save old data, defaults to True
-    :type save_old: bool, optional
+    :param save_old: whether or not to save old data, defaults to Yes
+    :type save_old: str, optional
     """
     first_feed = list(data.keys())[0]
     for data_type in data[first_feed].keys():
@@ -30,7 +30,7 @@ def output_json(path, run_type, data, save_old=True):
             }
 
         file_name = os.path.join(path, '%s-data.json' % data_type)
-        if save_old and os.path.isfile(file_name):
+        if save_old == 'Yes' and os.path.isfile(file_name):
             old_file = os.path.join(path, 'old-%s-data.json' % data_type)
             if os.path.isfile(old_file):
                 os.remove(old_file)
@@ -40,7 +40,7 @@ def output_json(path, run_type, data, save_old=True):
             json.dump(data_to_save, f)
 
 
-def outputGen_json(path, run_type, data, save_old=True):
+def outputGen_json(path, run_type, data, save_old='Yes'):
     """Save data in json. If previous data exists, copy it to an old file
 
     :param path: path to *feed* directories
@@ -49,8 +49,8 @@ def outputGen_json(path, run_type, data, save_old=True):
     :type run_type: str
     :param data: data to be saved
     :type data: dict
-    :param save_old: whether or not to save old data, defaults to True
-    :type save_old: bool, optional
+    :param save_old: whether or not to save old data, defaults to Yes
+    :type save_old: str, optional
     """
     data_type = 'general'
     data_to_save = {}
@@ -66,7 +66,7 @@ def outputGen_json(path, run_type, data, save_old=True):
             data_to_save[feed][run_key][key] = val2
 
     file_name = path + '/%s-data.json'% data_type
-    if save_old and os.path.isfile(file_name):
+    if save_old == 'Yes' and os.path.isfile(file_name):
         old_file = os.path.join(path, 'old-%s-data.json' % data_type)
         if os.path.isfile(old_file):
             os.remove(old_file)
