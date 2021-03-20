@@ -7,7 +7,7 @@ commonmark==0.9.1
 docutils==0.16
 idna==2.9
 imagesize==1.2.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 latexcodec==2.0.0
 MarkupSafe==1.1.1
 oset==0.1.3
