@@ -17,7 +17,7 @@ pybtex-docutils==0.2.2
 Pygments==2.6.1
 pyparsing==2.4.7
 pytz==2020.1
-PyYAML==5.3.1
+PyYAML==5.4
 recommonmark==0.6.0
 requests==2.24.0
 six==1.15.0
